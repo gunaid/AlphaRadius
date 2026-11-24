@@ -1966,9 +1966,9 @@
         {% endif %}
 
         <!-- Top Header Bar -->
-        <header class="max-topbar bg-[#0b0f19]/95 backdrop-blur-md border-b border-[#1c2840] sticky {% if session.get('original_admin_id') %}top-10{% else %}top-0{% endif %} z-40 h-16 flex items-center px-4 sm:px-6 justify-between gap-4 shadow-sm">
+        <header class="alpha-topbar bg-[#0b0f19]/95 backdrop-blur-md border-b border-[#1c2840] sticky {% if session.get('original_admin_id') %}top-10{% else %}top-0{% endif %} z-40 h-16 flex items-center px-4 sm:px-6 justify-between gap-4 shadow-sm">
             <!-- Title & Mobile Toggle -->
-            <div class="max-topbar-title flex items-center gap-3">
+            <div class="alpha-topbar-title flex items-center gap-3">
                 <button onclick="toggleMobileSidebar()" aria-label="فتح قائمة التنقل" class="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition lg:hidden">
                     <i class="fa-solid fa-bars text-lg"></i>
                 </button>
@@ -1979,7 +1979,7 @@
             </div>
 
             <!-- Quick Status Indicators & Theme Switcher & Profile -->
-            <div class="max-topbar-actions flex items-center gap-2 sm:gap-3">
+            <div class="alpha-topbar-actions flex items-center gap-2 sm:gap-3">
                 <!-- Live NTP & Dynamic Timezone Clock Widget -->
                 <div id="topLiveClockWidget" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#070b14] border border-[#1c2840] hover:border-blue-500/30 text-xs font-semibold flex items-center gap-2 shadow-sm transition" title="الوقت المباشر المتزامن مع بروتوكول NTP والمنطقة الزمنية المحددة">
                     <div class="flex items-center gap-1.5">

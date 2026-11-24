@@ -10,14 +10,14 @@ import time
 
 
 def configured():
-    return (os.environ.get('MAX_CONTROL_MODE', '') not in ('', 'local')
-            or bool(os.environ.get('MAX_CONTROL_SOCKET') or os.environ.get('MAX_CONTROL_TENANT_ID')))
+    return (os.environ.get('ALPHA_CONTROL_MODE', '') not in ('', 'local')
+            or bool(os.environ.get('ALPHA_CONTROL_SOCKET') or os.environ.get('ALPHA_CONTROL_TENANT_ID')))
 
 
 def request(method, path, body=None):
-    if os.environ.get('MAX_CONTROL_MODE') != 'hosted':
+    if os.environ.get('ALPHA_CONTROL_MODE') != 'hosted':
         raise RuntimeError('إعداد وصلة المضيف غير مكتمل؛ لم يستخدم Docker بديلًا.')
-    endpoint = os.environ.get('MAX_CONTROL_SOCKET', '')
+    endpoint = os.environ.get('ALPHA_CONTROL_SOCKET', '')
     if not endpoint.startswith('/') or '..' in Path(endpoint).parts:
         raise RuntimeError('مسار وصلة المضيف غير صالح.')
 
@@ -48,7 +48,7 @@ def request(method, path, body=None):
 
 def state():
     data = request('GET', '/max/v1/state')
-    tenant = os.environ.get('MAX_CONTROL_TENANT_ID', '')
+    tenant = os.environ.get('ALPHA_CONTROL_TENANT_ID', '')
     if (not isinstance(data, dict) or data.get('schema') != 1
             or not re.fullmatch('[a-f0-9]{32}', tenant)
             or data.get('tenant_id') != tenant

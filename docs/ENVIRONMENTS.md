@@ -72,7 +72,7 @@
 
 ## مراجعة جاهزية max1.max-r.cc — 10 نوفمبر 2026
 
-قراءة فقط بطلب السؤال عن الإرسال والأمان، دون تفويض نشر أو تحديث. الدومين إنتاج Native على Hetzner بإصدار 270/db5c و Core6e71 وقاعدة مشتركة.8583 كرتًا و 70 جلسة أولًا، وقبول طبيعي جديد وتقدم 12 من 69 جلسة مشتركة دون تراجع؛ الترخيص والتوقيع وسائق SQL+03 سليمة. لا MAX_UPDATE_SOCKET ولا engine/progress مهيآن داخل Web، فلا تعتمد جاهزية NET له. أول 271 سيبذر الجدولة، و 15 كرتًا يحقق شرط عمر 14 يومًا الأولي. يلزم قبول Native مقيد لهذا الهدف ونسخة/رجوع معزول ومراجعة أثر الافتراضيات قبل إتاحة Web فقط. راجع [الجاهزية والأدلة](MAX1_R_271_READINESS_20261110.md). PRIVATE/max1-r271-readiness-20261110-r1؛ آخر عينة 17:46 عدن، لا apply أوإعلانأومراقبة.
+قراءة فقط بطلب السؤال عن الإرسال والأمان، دون تفويض نشر أو تحديث. الدومين إنتاج Native على Hetzner بإصدار 270/db5c و Core6e71 وقاعدة مشتركة.8583 كرتًا و 70 جلسة أولًا، وقبول طبيعي جديد وتقدم 12 من 69 جلسة مشتركة دون تراجع؛ الترخيص والتوقيع وسائق SQL+03 سليمة. لا ALPHA_UPDATE_SOCKET ولا engine/progress مهيآن داخل Web، فلا تعتمد جاهزية NET له. أول 271 سيبذر الجدولة، و 15 كرتًا يحقق شرط عمر 14 يومًا الأولي. يلزم قبول Native مقيد لهذا الهدف ونسخة/رجوع معزول ومراجعة أثر الافتراضيات قبل إتاحة Web فقط. راجع [الجاهزية والأدلة](MAX1_R_271_READINESS_20261110.md). PRIVATE/max1-r271-readiness-20261110-r1؛ آخر عينة 17:46 عدن، لا apply أوإعلانأومراقبة.
 
 ## إلغاء إشعارات المهام وإتاحة r29 — 10 نوفمبر 2026
 
@@ -260,7 +260,7 @@ Web e45b9c2d782b بالصورة533df0883992، رقم2.7.0 ثابت؛ Core/DB ث�
 
 ## 2 نوفمبر 2026 — صور 2.7.0 مرفوعة بوسم مستقل
 
-[نتيجة الرفع والبصمات والحدود](RELEASE_270_PUBLISHED_20261102.md): Web5455db7ca85a وCore10cc88946c5e تحت2.7.0-20261102-r1؛Registryمطابقة وlatestوأصول269ثابتة. إصلاحالهويةبعدr6داخلWeb،وملفاتDBمرفقةفي/opt/max-deploy/2.7.0/db-memoryولا تفعّل تلقائيًا.37اختبارمصدر و15مترجمًا و13حالةMariaDB/HTTPناجحة. لا تحويلmأوتثبيتHetznerأوتحديثدومين/كتالوجأوGitpush. الصورةمنشورة؛قبولربطالمضيفواللوحةوضبطDBوالأنفاققبلالتحويلمتبقٍ. الخمسالمختبريةموقوفة ومعاينة5270محفوظة. لاreplayلجولةالنشر.
+[نتيجة الرفع والبصمات والحدود](RELEASE_270_PUBLISHED_20261102.md): Web5455db7ca85a وCore10cc88946c5e تحت2.7.0-20261102-r1؛Registryمطابقة وlatestوأصول269ثابتة. إصلاحالهويةبعدr6داخلWeb،وملفاتDBمرفقةفي/opt/alpha-deploy/2.7.0/db-memoryولا تفعّل تلقائيًا.37اختبارمصدر و15مترجمًا و13حالةMariaDB/HTTPناجحة. لا تحويلmأوتثبيتHetznerأوتحديثدومين/كتالوجأوGitpush. الصورةمنشورة؛قبولربطالمضيفواللوحةوضبطDBوالأنفاققبلالتحويلمتبقٍ. الخمسالمختبريةموقوفة ومعاينة5270محفوظة. لاreplayلجولةالنشر.
 
 ## 1 نوفمبر 2026 — Web 2.6.9 المصححة منشورة وافتراضية للإنشاء الجديد
 
@@ -268,11 +268,11 @@ Web e45b9c2d782b بالصورة533df0883992، رقم2.7.0 ثابت؛ Core/DB ث�
 
 ## 1 نوفمبر 2026 — صور الإنشاء الجديدة في control.max-r.cc
 
-تم تعديل كتالوج المنفذ في السيرفر الجديد فقط: الإصدار الافتراضي 2.6.9 يستخدم Web eab5cd4ff443 وCore 9786df38bb3c المثبتتين بالبصمة. بقيت بقية الإعدادات و7 حاويات و5 ملفات ربط ثابتة. أعيد تشغيل max-host-r فقط بعد التأكد من عدم وجود مهام جارية/معلقة/غير محسومة. نجح settings RPC وinventory الذي تقرؤه الواجهة ومدقق الإنشاء دون إنشاء منظومة، وHTTP200 للأصل والواجهة العامة. طلب urllib من المضيف عبر Cloudflare أعاد403، بينما طلب curl الخارجي والأصل نجحا؛ لا تغيير لإعدادات Cloudflare. لا تحديث منظومات قائمة أو لوحة قديمة أو latest أو ترخيص/SQL/NAS. نسخة إعداد سابقة محفوظة محليًا وعلى المضيف في دليل الجولة المحمي. الإيصال releases/control-creation-20261101-v2.6.9.json؛ الأدلة PRIVATE/control-creation269-20261101-r1، لا replay.
+تم تعديل كتالوج المنفذ في السيرفر الجديد فقط: الإصدار الافتراضي 2.6.9 يستخدم Web eab5cd4ff443 وCore 9786df38bb3c المثبتتين بالبصمة. بقيت بقية الإعدادات و7 حاويات و5 ملفات ربط ثابتة. أعيد تشغيل alpha-host-r فقط بعد التأكد من عدم وجود مهام جارية/معلقة/غير محسومة. نجح settings RPC وinventory الذي تقرؤه الواجهة ومدقق الإنشاء دون إنشاء منظومة، وHTTP200 للأصل والواجهة العامة. طلب urllib من المضيف عبر Cloudflare أعاد403، بينما طلب curl الخارجي والأصل نجحا؛ لا تغيير لإعدادات Cloudflare. لا تحديث منظومات قائمة أو لوحة قديمة أو latest أو ترخيص/SQL/NAS. نسخة إعداد سابقة محفوظة محليًا وعلى المضيف في دليل الجولة المحمي. الإيصال releases/control-creation-20261101-v2.6.9.json؛ الأدلة PRIVATE/control-creation269-20261101-r1، لا replay.
 
 ## 1 نوفمبر 2026 — رفع صورتي 2.6.9 بوسم مستقل
 
-بتفويض المستخدم رُفعت الصورتان المختبرتان إلى Docker Hub بالوسم `2.6.9-maintenance-20261101-r1`: `mohd777/alpha-radius-web` ببصمة eab5cd4ff443، و`mohd777/alpha-radius-core` ببصمة 9786df38bb3c. ثبت تطابق Registry وطبقات rootfs مع الصور المختبرة وثبات latest لكليهما. لا تحديث دومين أو إعلان أو تغيير قناة أو Git push. إيصال النشر: `releases/publish-20261101-v2.6.9-maintenance-r1.json`؛ الأدلة PRIVATE/registry269-publish-20261101-r1، لا replay. الفقرات السابقة عن عدم الرفع تصف وقت الاختبار قبل هذا التفويض.
+بتفويض المستخدم رُفعت الصورتان المختبرتان إلى Docker Hub بالوسم `2.6.9-maintenance-20261101-r1`: `gunaid/alpha-radius-web` ببصمة eab5cd4ff443، و`gunaid/alpha-radius-core` ببصمة 9786df38bb3c. ثبت تطابق Registry وطبقات rootfs مع الصور المختبرة وثبات latest لكليهما. لا تحديث دومين أو إعلان أو تغيير قناة أو Git push. إيصال النشر: `releases/publish-20261101-v2.6.9-maintenance-r1.json`؛ الأدلة PRIVATE/registry269-publish-20261101-r1، لا replay. الفقرات السابقة عن عدم الرفع تصف وقت الاختبار قبل هذا التفويض.
 
 ## مرجع نطاق النسخ — 30 أكتوبر 2026
 
@@ -434,11 +434,11 @@ latest يشير إلىef10effb، برقم2.6.5، بعد مطابقةbe1b5a03 و�
 
 ## 21 أكتوبر 2026 — تحديث دومين MAX المعتمد
 
-اعتمد دومين `max.alpha.amtik.online` الساعة13:58:43 عدن على صور LAB المقبولة مع حدود الاستضافة المشتركة: Core `sha256:b0e1b2e1f4a9fd35845800013fe59b95536efaaa71548e1a34ed6e1556da3a00`، DB `sha256:0d0945c57f75b3a3b9ebe71aedaaad005fa5305054e8fca3d2e42a8c92b43b5e`، Web `sha256:afd466f451a6ee817a71222b679711250802a0a23e9749cc04af46c5acbd9a86` المبني على Web LAB2.6.3 مع تعديلين موقّعين لبدء الاستضافة فقط. محرك MariaDB بقي10.11.19. المرجع المحلي المحمي `accepted-hosted-max-update-reference.private.txt`؛ تفاصيل الوصول والنسخ خارج Git.
+اعتمد دومين `max.alpha.amtik.online` الساعة13:58:43 عدن على صور LAB المقبولة مع حدود الاستضافة المشتركة: Core `sha256:b0e1b2e1f4a9fd35845800013fe59b95536efaaa71548e1a34ed6e1556da3a00`، DB `sha256:0d0945c57f75b3a3b9ebe71aedaaad005fa5305054e8fca3d2e42a8c92b43b5e`، Web `sha256:afd466f451a6ee817a71222b679711250802a0a23e9749cc04af46c5acbd9a86` المبني على Web LAB2.6.3 مع تعديلين موقّعين لبدء الاستضافة فقط. محرك MariaDB بقي10.11.19. المرجع المحلي المحمي `accepted-hosted-alpha-update-reference.private.txt`؛ تفاصيل الوصول والنسخ خارج Git.
 
 نجحت جولات التحديث والتراجع المعزولة، وترحيل نسخة بيانات كاملة دون فرق في13جدول أعمال/12140صفًا. مجموعة DB/storage/config حديثة مشفرة ومتحققة خارج الخادم، بمفتاح خاص محلي فقط. بعد النشر: الحاويات الثلاث healthy،76جلسة NAS فعلية مطابقة،300صف محاسبة مجمد دون فقد أو تغيرUID أو انخفاض عدادات،9صفوف جديدة بعد بدءCore تطابق صيغة الهوية الجديدة. هذه لقطة مؤرخة وليست ضمانًا دائمًا أو اختبار حمل طويلًا. خدمة nas-reload الموجودة أعادت تشغيلCore مرة واحدة بنجاح لالتقاط هويته الجديدة؛ ليست انهيارًا.
 
-L2TP/Autoheal المشتركان وبقية المستأجرين وعميلAS لم يتغيروا. الحاويات السابقة وwritable layers محفوظة ومتوقفة، وCompose مثبت ببصمات الصور. جولة `hosted-max-update-20261021t093848z` مقبولة ولا تعاد؛ المراقب مكتمل والتراجع بعد القبول no-op. التعافي المستقبلي يتطلب جولة جديدة وCore متوافقًا مع أحدث المحاسبة، دونDBrestore تاريخية. مسار تحديث اللوحة العام لم يُعدّل ولا يضمن نشر الحزمة الخاصة؛ يحتاج تكييفًا واختبارًا مستقلين قبل استخدامه لذلك. لاGit/Registry push ولا تنظيف.
+L2TP/Autoheal المشتركان وبقية المستأجرين وعميلAS لم يتغيروا. الحاويات السابقة وwritable layers محفوظة ومتوقفة، وCompose مثبت ببصمات الصور. جولة `hosted-alpha-update-20261021t093848z` مقبولة ولا تعاد؛ المراقب مكتمل والتراجع بعد القبول no-op. التعافي المستقبلي يتطلب جولة جديدة وCore متوافقًا مع أحدث المحاسبة، دونDBrestore تاريخية. مسار تحديث اللوحة العام لم يُعدّل ولا يضمن نشر الحزمة الخاصة؛ يحتاج تكييفًا واختبارًا مستقلين قبل استخدامه لذلك. لاGit/Registry push ولا تنظيف.
 
 ## 21 أكتوبر2026 — اعتماد هوية المحاسبة على LAB فقط
 
@@ -458,7 +458,7 @@ L2TP/Autoheal المشتركان وبقية المستأجرين وعميلAS ل
 
 لم يُعدّل كود MAX في هذه الجولة؛ طابقت بصمات خدمات L2TP والمحدّث وملفات docker/l2tp المصدر المجمد. اختُبر الخادم الأصلي في Linux 6.6.142 داخل QEMU وحاوية معزولة لتجاوز قيد نواة WSL دون تغييرها. نجح PPP مع RouterOS والربط من اللوحة وNAS API و105/105 حزم ناجحة، وصف SQL واحد مع Interim عند 900 ثانية وStop فعلي عند 1052 ثانية؛ الإدخال 92614 والإخراج 77370 بايت وactive=0. نجح التعافي الصريح والتحديث الأصلي والتراجع ورفض مرشح تالف؛ التوقيع والترخيص والـlease بعد الرجوع صحيحة.
 
-التقرير والدليل في المشروع الشقيق `max_saas_panel_v2_local/reports/LINUX_L2TP_ACCEPTANCE_20261019.md` وJSON المجاور، ووصفة `docs/LINUX_L2TP_LAB.md` فيه. يعلن التقرير ترجمة QEMU وNAS API ومسارات المختبر وإعادة RADIUS الصريحة، وإيصال تراجع تحقق بعد مهلة الرد دون إعادة تنفيذه. لا تعيد أي مرحلة أو driver أو restore من هذه الجولة؛ صفها المالي مغلق فعليًا. توقفت جميع الحاويات الـ39 الجديدة، وحالات 344 حاوية سابقة لم تتغير. لا نشر أو عميل أو مفاتيح إنتاجية.
+التقرير والدليل في المشروع الشقيق `alpha_saas_panel_v2_local/reports/LINUX_L2TP_ACCEPTANCE_20261019.md` وJSON المجاور، ووصفة `docs/LINUX_L2TP_LAB.md` فيه. يعلن التقرير ترجمة QEMU وNAS API ومسارات المختبر وإعادة RADIUS الصريحة، وإيصال تراجع تحقق بعد مهلة الرد دون إعادة تنفيذه. لا تعيد أي مرحلة أو driver أو restore من هذه الجولة؛ صفها المالي مغلق فعليًا. توقفت جميع الحاويات الـ39 الجديدة، وحالات 344 حاوية سابقة لم تتغير. لا نشر أو عميل أو مفاتيح إنتاجية.
 
 المتبقي: HTTPS enrollment/heartbeat وRegistry، وشبكة نشر ممثلة دون الترجمة، وتقوية افتراضات عناوين/اعتمادات Linux وإبطال اعتماد قديم، وإعادة تشغيل مضيف كامل والحمل الطويل. هذه نتيجة مختبر مستقلة ولا تعتمد أي بيئة LAB أو عميل تاريخية أخرى.
 
@@ -496,7 +496,7 @@ Web `0cfbacf21ded`، الصورة المثبتة `sha256:ca23489b2ce1ce06b268a33
 
 اعتمد Web العميل وحده: الحاوية `487d98ec8b3197c68b7c543ce2c7d1eb1aac866c0de51144b7b653d999661f2c`، الصورة `sha256:b54664ea702633b9c27bf71c26c2dc739b085114fe9455ea8be8d5e91dd68cd2`، StartedAt `2026-10-18T20:38:11.998828036Z`، RestartCount0. بُنيت فوق صورة العميل656b4f44 نفسها، مع تغيير وحدة backup_service المجمعة وحدها من224ملفًا محميًا؛ لا نقل صورةLAB2.6.3 أو تغيير وحدات المصادقة/المحاسبة/الترخيص/الماليات أو تعريفاتSQL. تستثنى ملفات uploads/card_backgrounds من النسخ الجديدة مع بقاء بيانات التصميم والصور الأصلية، دون تغيير نصوص أو واجهة.
 
-نسخة أمان كاملة مشفرة تحققت خارج العميل قبل التبديل؛ المفتاح الخاص لم يرفع. أصدرت Web lease جديدة خلال10.672ثانية ثم اجتازت900ثانية مراقبة مستقلة مع مرورNAS/SQL حقيقي وعدّادات غير متناقصة؛الأربع الأخرى بهوياتها وصورها وStartedAt السابقة. القديمةa3578df47dc1 محفوظة متوقفة restart=no باسمmax_web_prev_backup_media_20261018 ومعهاcommit للطبقة، وكل الأرشيفات محفوظة. المراقب اكتمل وعُطل؛ بعد القبول لا يعاد المشغل أو علاماتattempted/accepted، والرجوع اللاحق يحتاج جولة جديدة تحفظ أحدث محاسبة ولا تستعيدDBقديمة.
+نسخة أمان كاملة مشفرة تحققت خارج العميل قبل التبديل؛ المفتاح الخاص لم يرفع. أصدرت Web lease جديدة خلال10.672ثانية ثم اجتازت900ثانية مراقبة مستقلة مع مرورNAS/SQL حقيقي وعدّادات غير متناقصة؛الأربع الأخرى بهوياتها وصورها وStartedAt السابقة. القديمةa3578df47dc1 محفوظة متوقفة restart=no باسمalpha_web_prev_backup_media_20261018 ومعهاcommit للطبقة، وكل الأرشيفات محفوظة. المراقب اكتمل وعُطل؛ بعد القبول لا يعاد المشغل أو علاماتattempted/accepted، والرجوع اللاحق يحتاج جولة جديدة تحفظ أحدث محاسبة ولا تستعيدDBقديمة.
 
 مرجع الأدلة PRIVATE/as-client-access-check-20261016/monitor-reports/client-backup-no-card-images-20261018T230201/FINAL.private.json وRESULTS.private.ar.md. أكد Telegram إرسال نسخة المحرك الجديدة كاملة بحجم10451552bytes،باسم وحجم ووجهة مطابقة،محاولةواحدة198.857ثانية،وأكد المستخدم وصولها؛صفرملفاتcard_backgroundsبالأرشيفوالصورالأصليةمحفوظة. مراقبةasنفسهانشطةكل15دقيقة ومُحدّثة للهويةالمقبولة؛لاGit/Registrypush أوتنظيف أوتغييرراوتر. ما يلي لقطات تاريخية.
 
@@ -512,17 +512,17 @@ Web الحالي c0055fd18c57e2b2ee228f4e105a8f11d318e7da5dce8a78439d746a1478acd
 
 ## 2026-10-18 — LAB: إزالة الرقم النصي من كرت الحقوق
 
-بطلب المستخدم أزيل سطر الهاتف الظاهر فقط من license_status، مع بقاء روابط واتساب/الاتصال وطلب الترخيص والترقية دون تغيير. Web الحالي995c9454 بالصورة المثبتةsha256:d5c7bb5d3e66125f951fac34f72cfc0f772bf2b97cc7c4b2e50f065b03432192،StartedAt06:25:23Z،healthy/RestartCount0/ReadonlyRootfs=true. اختلاف runtime الوحيد وحدةالقوالبالمضمنة؛بقية الملفات مطابقة للمعاينة السابقة611db035. فحوص المصدر10ناجحة،والعرض1280داكن/390داكن/390فاتح بلا رقم مرئي ولا overflow أو أخطاءJS،والروابط محفوظة. الأربعالأخرى ثابتة،والترخيص/leaseحديثة،18تعريفSQL و1734بصمةكرت والعدادات المختارة ثابتة. نسخةمشـفرة حديثةفُحصت خارجالمضيف،وWebالسابق8e6324bbمحفوظمتوقفًاrestart=no باسمmax_web_prev_phone_label_v1_20261018. جذر جديد/var/lib/alpha-radius-rollout/20261018-identity-phone-label-v1مكتملaccepted؛لا تعِدswitchأوتمحُmarkers،والرجوعالخاصلنفسالجولةيعيدالحاويةالمحفوظةدونDBrestore. لا تغييرللعميل أو نشرGit/Registry/latest. الأدلة PRIVATE/identity-phone-label-20261018T091846/FINAL.private.json. هذه معاينة فقط.
+بطلب المستخدم أزيل سطر الهاتف الظاهر فقط من license_status، مع بقاء روابط واتساب/الاتصال وطلب الترخيص والترقية دون تغيير. Web الحالي995c9454 بالصورة المثبتةsha256:d5c7bb5d3e66125f951fac34f72cfc0f772bf2b97cc7c4b2e50f065b03432192،StartedAt06:25:23Z،healthy/RestartCount0/ReadonlyRootfs=true. اختلاف runtime الوحيد وحدةالقوالبالمضمنة؛بقية الملفات مطابقة للمعاينة السابقة611db035. فحوص المصدر10ناجحة،والعرض1280داكن/390داكن/390فاتح بلا رقم مرئي ولا overflow أو أخطاءJS،والروابط محفوظة. الأربعالأخرى ثابتة،والترخيص/leaseحديثة،18تعريفSQL و1734بصمةكرت والعدادات المختارة ثابتة. نسخةمشـفرة حديثةفُحصت خارجالمضيف،وWebالسابق8e6324bbمحفوظمتوقفًاrestart=no باسمalpha_web_prev_phone_label_v1_20261018. جذر جديد/var/lib/alpha-radius-rollout/20261018-identity-phone-label-v1مكتملaccepted؛لا تعِدswitchأوتمحُmarkers،والرجوعالخاصلنفسالجولةيعيدالحاويةالمحفوظةدونDBrestore. لا تغييرللعميل أو نشرGit/Registry/latest. الأدلة PRIVATE/identity-phone-label-20261018T091846/FINAL.private.json. هذه معاينة فقط.
 
 ## 2026-10-18 — LAB فقط، معاينة هوية الناشر
 
-Web المعاينة `8e6324bb58433e2af1821dab5fdb88c8ba242bd0d3aca80e2a1fecf453a3cf3c`، الصورة `sha256:611db035fc8843d30c8269759ae59410d77eef6c4cd671f4671102156f1ee47a`، StartedAt21:28:04Z17أكتوبر،ReadonlyRootfs=true وصفرrestarts؛الأربعالأخرى ثابتة. الأصل2f068d22محفوظمتوقفًاrestart=no باسمmax_web_prev_identity_preview_v3_20261018 مع writable layer. [HANDOFF](../HANDOFF.md) يوثق جولةv3والنسخة المشفرة والرجوع؛ لا تعِد attempted/switch ولا جولتَيv1/v2المتراجعتين. هذه معاينة فقط وليست نشرًا عامًا أو تحديثًا لـDesktop/CLIENT_AS. [التصميم والحدود](PRODUCT_IDENTITY_PREVIEW.md).
+Web المعاينة `8e6324bb58433e2af1821dab5fdb88c8ba242bd0d3aca80e2a1fecf453a3cf3c`، الصورة `sha256:611db035fc8843d30c8269759ae59410d77eef6c4cd671f4671102156f1ee47a`، StartedAt21:28:04Z17أكتوبر،ReadonlyRootfs=true وصفرrestarts؛الأربعالأخرى ثابتة. الأصل2f068d22محفوظمتوقفًاrestart=no باسمalpha_web_prev_identity_preview_v3_20261018 مع writable layer. [HANDOFF](../HANDOFF.md) يوثق جولةv3والنسخة المشفرة والرجوع؛ لا تعِد attempted/switch ولا جولتَيv1/v2المتراجعتين. هذه معاينة فقط وليست نشرًا عامًا أو تحديثًا لـDesktop/CLIENT_AS. [التصميم والحدود](PRODUCT_IDENTITY_PREVIEW.md).
 
 ## 2026-10-17 — تحسين Telegram مكتمل على CLIENT_AS فقط
 
 بتفويض صريح نُشر تحسين رفع النسخ وحده فوق صورة العميل السابقة dc3ba09b، دون إدخال فروقات R13 العامة الأخرى. Web الحالي `a3578df47dc1feac328f05b8248e2a6702d06fb21af0d456da9b023ea4f9ccda` بالصورة `sha256:656b4f44bc1a016d3cf605705c39cee3651449d1a2a72dc0179cb67d9bb64757`، StartedAt `2026-10-17T20:06:34.233384634Z`، RestartCount0. خمسة مسارات runtime فقط تغيرت؛ وحدات الترخيص/المحاسبة/الماليات وبقية الملفات مطابقة. نفس مفتاح الختم وصفر مصدر Python محمي، و46 اختبارًا على المرشح المترجم الخاص بالعميل.
 
-نسخة DB/config/storage مشفرة حديثة متحقق منها خارج المضيف، والمفتاح الخاص لم يصعد. الأصل محفوظ متوقفًا باسم `/max_web_prev_tg_20261017` مع writable layer وصورة commit، وباقي الأرشيفات محفوظة. جذر جديد `/var/lib/alpha-radius-rollout/20261017-telegram-upload-v1` مكتمل accepted=true دون rollback؛ لا تعد تشغيل attempted أو supervisor. مراقبة مستقلة 901.682ث، lease جديدة بعد 10.577ث، وأدنى lease مرصودة 59ث. المشرف عُطل بعد القبول، والتراجع اللاحق يحتاج جولة جديدة لا DB restore.
+نسخة DB/config/storage مشفرة حديثة متحقق منها خارج المضيف، والمفتاح الخاص لم يصعد. الأصل محفوظ متوقفًا باسم `/alpha_web_prev_tg_20261017` مع writable layer وصورة commit، وباقي الأرشيفات محفوظة. جذر جديد `/var/lib/alpha-radius-rollout/20261017-telegram-upload-v1` مكتمل accepted=true دون rollback؛ لا تعد تشغيل attempted أو supervisor. مراقبة مستقلة 901.682ث، lease جديدة بعد 10.577ث، وأدنى lease مرصودة 59ث. المشرف عُطل بعد القبول، والتراجع اللاحق يحتاج جولة جديدة لا DB restore.
 
 القراءة النهائية 516 Accept/399 Start/393 Stop حقيقية، و217 مطابقة SQL/NAS منها 85 جلسات RADIUS جديدة، و5 radius=false مستثناة. 252 صفًا مجمدًا:0فقد/0تناقص،205 تقدمت/75 Stops جديدة؛ 27461 هوية/اعتماد محفوظة و18 تعريف SQL دون تغيير. إعدادات الإشعارات والأربع الأخرى Config/HostConfig/Mounts/الهويات/الصور/StartedAt ثابتة، وboot/NTP ثابتان، دون اختبارات عميل مصطنعة.
 
@@ -536,7 +536,7 @@ Web المعاينة `8e6324bb58433e2af1821dab5fdb88c8ba242bd0d3aca80e2a1fecf453
 
 تنظيف LAB_UBUNTU بتاريخ17أكتوبر2026 بتفويض المستخدم: تبقى خدمات R12 الخمس وهوياتها أدناه، لكن حُذفت كل حاويات الرجوع وبيانات الاختبارات والنسخ والمجلدات القديمة على LAB. إعدادا runtime-release.env وrelease.json مثبتان على R12، وملف deploy.override.json الحالي محفوظ. لا تحاول تشغيل أرشيفات LAB التاريخية؛ أرشيف العميل لم يتغير. انظر [HANDOFF](../HANDOFF.md).
 
-لقطة17أكتوبر2026 بعد R12: CLIENT_AS Web `88d04fd67d6be25256a7aa3b3c70ed83a311df62aa8d9559aa277c16a8e3fbc0` بالصورة `sha256:0136dd3833fe2bec0af781f3809a8016dc330361d339fb6becdfbdb7f6fdb0f3`، وLAB_UBUNTU Web `8cbae8399733fb3979af5d51df6a4bf7e205125da13f93cd1c4929e9fa7f591e` بالصورة `sha256:0136dd3833fe2bec0af781f3809a8016dc330361d339fb6becdfbdb7f6fdb0f3`. المرجع المثبت العام `mohd777/alpha-radius-web@sha256:0136dd3833fe2bec0af781f3809a8016dc330361d339fb6becdfbdb7f6fdb0f3`؛ تغير Web وحده، والأربعالأخرى ثابتة. الأرشيفات السابقة متوقفة عمدًا ومحفوظة؛لا تستخدمها لاختيار الخدمة الجارية. المراقبة الدوريةasموقوفة. تفاصيل الوصول تبقى في الإحالات الخاصة.
+لقطة17أكتوبر2026 بعد R12: CLIENT_AS Web `88d04fd67d6be25256a7aa3b3c70ed83a311df62aa8d9559aa277c16a8e3fbc0` بالصورة `sha256:0136dd3833fe2bec0af781f3809a8016dc330361d339fb6becdfbdb7f6fdb0f3`، وLAB_UBUNTU Web `8cbae8399733fb3979af5d51df6a4bf7e205125da13f93cd1c4929e9fa7f591e` بالصورة `sha256:0136dd3833fe2bec0af781f3809a8016dc330361d339fb6becdfbdb7f6fdb0f3`. المرجع المثبت العام `gunaid/alpha-radius-web@sha256:0136dd3833fe2bec0af781f3809a8016dc330361d339fb6becdfbdb7f6fdb0f3`؛ تغير Web وحده، والأربعالأخرى ثابتة. الأرشيفات السابقة متوقفة عمدًا ومحفوظة؛لا تستخدمها لاختيار الخدمة الجارية. المراقبة الدوريةasموقوفة. تفاصيل الوصول تبقى في الإحالات الخاصة.
 
 ## LAB_UBUNTU — أسماء تنزيل الحزم،17 أكتوبر2026
 
@@ -556,7 +556,7 @@ Webالعميل الآنR11بالصورة `sha256:542794f6689cfbd635fa6b1456bc9f
 
 ## CLIENT_AS — R10، 16 أكتوبر 2026، اعتماد نهائي 12:43 عدن
 
-نُشر Web المحمي المخصص `mohd777/alpha-radius-web:20261016-voucher-lock-r10` بهوية `sha256:dc0bfce378226c69d3baf7450753385f06beac753061069be3c8c6cde6822837` على CLIENT_AS وحده. الحاوية الحالية0a76c98fafad بدأت12:27:59عدن. نجح الاعتماد الذري بعد112ثانية؛ اكتملت مراقبة الرجوع المستقلة15دقيقة عند12:42:44عدن، validation_passed=true، دون تراجع أو إعادة تشغيل جديدة. فحص12:42:59أكد بقاء27401هوية/عقد، وتقدم32من32عداد جلسة خط أساس دون تناقص و20Stopحقيقيًا. تفعيل/دورة طبيعية واحدة استبعدت من ثبات اللقطة، وازداد البيع من237إلى238. رُصدت53بداية و49نهاية جلسة و83صف محاسبة محدثًا منذ التبديل. آخر مطابقة12:41:36جلسةRADIUS معSQL/NAS، وخمس جلسات محليةradius=false مستثناة، وصفرمرشحين لانتهاء. هناك حالتاAccess-Reject في الفترة؛ السبب التفصيلي غير محفوظ فيradpostauth، ولا دليل على أنهما عطل أو انتهاء حصرًا. لم يتغير Core/DB/L2TP/Autoheal أو MAX أو latest أو Git البعيد.
+نُشر Web المحمي المخصص `gunaid/alpha-radius-web:20261016-voucher-lock-r10` بهوية `sha256:dc0bfce378226c69d3baf7450753385f06beac753061069be3c8c6cde6822837` على CLIENT_AS وحده. الحاوية الحالية0a76c98fafad بدأت12:27:59عدن. نجح الاعتماد الذري بعد112ثانية؛ اكتملت مراقبة الرجوع المستقلة15دقيقة عند12:42:44عدن، validation_passed=true، دون تراجع أو إعادة تشغيل جديدة. فحص12:42:59أكد بقاء27401هوية/عقد، وتقدم32من32عداد جلسة خط أساس دون تناقص و20Stopحقيقيًا. تفعيل/دورة طبيعية واحدة استبعدت من ثبات اللقطة، وازداد البيع من237إلى238. رُصدت53بداية و49نهاية جلسة و83صف محاسبة محدثًا منذ التبديل. آخر مطابقة12:41:36جلسةRADIUS معSQL/NAS، وخمس جلسات محليةradius=false مستثناة، وصفرمرشحين لانتهاء. هناك حالتاAccess-Reject في الفترة؛ السبب التفصيلي غير محفوظ فيradpostauth، ولا دليل على أنهما عطل أو انتهاء حصرًا. لم يتغير Core/DB/L2TP/Autoheal أو MAX أو latest أو Git البعيد.
 
 يحتوي الإصدار إصلاح أقفال التفعيل مع فهرس PIN وتعريف التريغر المطابق؛ فُحصت الصورة المجمعة نفسها في المختبر، وليست اختبارات مصدر فقط. التوقيع صحيح و94وحدة محمية بلا مصادرPython تشغيلية مكشوفة. حافظ الفحص الأولي على27401هوية وعقد كرت، ومفاتيح الهوية، والترخيص active وlease حديثة؛ تحركت العدادات ووصل Stop حقيقي. عند12:28تطابقت33جلسةRADIUS مع SQL/NAS واستبعدت جلستان محليتان radius=false؛ لا مرشحين لانتهاء غير مفصول. تحذير DB واحد عن اتصال مغلق وافق إيقاف Web القديم، دون أخطاء Core/Web جديدة عند الاعتماد. هذه القراءات لا تثبت انعدام كل فقد حزم أو جميع حالات الراوتر.
 
@@ -586,7 +586,7 @@ Webالعميل الآنR11بالصورة `sha256:542794f6689cfbd635fa6b1456bc9f
 | LOCAL | تطبيق المستأجر في Docker Desktop | ملف Compose الجذر مع override تطوير خارج المستودع؛ المسارات في LOCAL_WEB | metadata حالية |
 | MAX / 4K / AS | ثلاثة مستأجرين مستقلين على VPS | Compose و DB و storage وشبكة لكل مستأجر؛ سجلات PRIVATE: MAX_RUN/4K_RUN/AS_RUN | metadata وبصمات ومخطط حالية |
 | CENTRAL_PANEL | saas-manager-next، مستقل عن المستأجر | خدمة WSGI على المضيف مع Nginx، وليست حاوية تطبيق عميل | service metadata وملفات المصدر؛ اختلاف محلي مسجل |
-| LICENSE_ISSUER | max-license-server، مستقل عن المشروعين | خدمة WSGI على المضيف و SQLite؛ ليس Docker في النشر الحالي | metadata؛30 ملفًا مشتركًا مطابقًا |
+| LICENSE_ISSUER | alpha-license-server، مستقل عن المشروعين | خدمة WSGI على المضيف و SQLite؛ ليس Docker في النشر الحالي | metadata؛30 ملفًا مشتركًا مطابقًا |
 | SHARED_TRANSPORT | L2TP/PPP المركزي والأنفاق/عمال اللوحة | حاوية نقل مشتركة وعمال systemd؛ ملكية كل نفق في سجل اللوحة | metadata وسجل ملكية قراءة فقط |
 | LOCAL_CHR | مختبر RouterOS/CHR | أدلة المحاكاة في مساحة الجولات | تاريخي؛ الاتصال الحالي لم يُختبر |
 | CLIENT_TESTS | عملاء محاكاة تاريخيون | حاويات محلية متوقفة؛ لا تعاد drivers المالية | قائمة Docker حالية + أدلة تاريخية |
@@ -599,21 +599,21 @@ Webالعميل الآنR11بالصورة `sha256:542794f6689cfbd635fa6b1456bc9f
 
 | البيئة | الحاوية/الدور | مرجع الصورة الحالي | Image ID الحالي | الحالة |
 |---|---|---|---|---|
-| LOCAL | `alpha_radius_web` | `mohd777/alpha-radius-web:20261013-auto-enrollment` | `sha256:2b69714d16c709625af2c40049a5f907e3386cb1a485f17ff36a630f257a32ea` | healthy |
-| LOCAL | `alpha_radius_core` | `mohd777/alpha-radius-core:latest` | `sha256:4fc47d656557294424c3fc05f4dbc7bb95a52b6ec33e45a6dbab89c876f88c74` | healthy |
+| LOCAL | `alpha_radius_web` | `gunaid/alpha-radius-web:20261013-auto-enrollment` | `sha256:2b69714d16c709625af2c40049a5f907e3386cb1a485f17ff36a630f257a32ea` | healthy |
+| LOCAL | `alpha_radius_core` | `gunaid/alpha-radius-core:latest` | `sha256:4fc47d656557294424c3fc05f4dbc7bb95a52b6ec33e45a6dbab89c876f88c74` | healthy |
 | LOCAL | `alpha_radius_db` | `mariadb:10.11` | `sha256:7f22313fc130a377a44999965bcb0a08dd5b21e8502824c1b864f792f9bc66ab` | healthy |
-| LOCAL | `alpha_radius_l2tp` | `mohd777/alpha-radius-l2tp:latest` | `sha256:27550c5e217d8c4a77906a917b430da4fee4386889e02c87bb3a88c4884adea7` | healthy |
+| LOCAL | `alpha_radius_l2tp` | `gunaid/alpha-radius-l2tp:latest` | `sha256:27550c5e217d8c4a77906a917b430da4fee4386889e02c87bb3a88c4884adea7` | healthy |
 | LOCAL | `alpha_radius_autoheal` | `willfarrell/autoheal:latest` | `sha256:658d4db0d5d570d07f1977e6cd344d5d9789f4453a050abf784caa330458ab26` | healthy |
-| MAX | `alpha_radius_max_web` | `alpha-radius-web:20261013-auto-enrollment-max` | `sha256:c70d634ce16bc2547ec0ae60f0038ba29267e3be0c0eaaf92442bc0d7b08c488` | healthy |
-| MAX | `alpha_radius_max_core` | `mohd777/alpha-radius-core:20261013-auto-enrollment` | `sha256:4d609e0c03a32be6a979dfd110ccd10d8c8ceda72c3495a1c4734de653f42d59` | healthy |
-| MAX | `alpha_radius_max_db` | `mariadb:10.11` | `sha256:7db29378d4fdab73f8123bbc2b48905c90d1a4b00cf848b028f1e81e623257f2` | healthy |
+| MAX | `alpha_radius_alpha_web` | `alpha-radius-web:20261013-auto-enrollment-max` | `sha256:c70d634ce16bc2547ec0ae60f0038ba29267e3be0c0eaaf92442bc0d7b08c488` | healthy |
+| MAX | `alpha_radius_alpha_core` | `gunaid/alpha-radius-core:20261013-auto-enrollment` | `sha256:4d609e0c03a32be6a979dfd110ccd10d8c8ceda72c3495a1c4734de653f42d59` | healthy |
+| MAX | `alpha_radius_alpha_db` | `mariadb:10.11` | `sha256:7db29378d4fdab73f8123bbc2b48905c90d1a4b00cf848b028f1e81e623257f2` | healthy |
 | 4K | `alpha_radius_4k_web` | `alpha-radius-web:20261013-backup-notice-4k` | `sha256:0b8bfba136d7bf285bf7bc9d218dcb37ca23fd4f2c0876c0d7577e4f1a3ba2a1` | healthy |
-| 4K | `alpha_radius_4k_core` | `mohd777/alpha-radius-core:latest` | `sha256:ee4b06f9ecdf1941bf1345e45528e341bef28bb3f7aeec30c4bce01d2ce0ad1b` | healthy |
+| 4K | `alpha_radius_4k_core` | `gunaid/alpha-radius-core:latest` | `sha256:ee4b06f9ecdf1941bf1345e45528e341bef28bb3f7aeec30c4bce01d2ce0ad1b` | healthy |
 | 4K | `alpha_radius_4k_db` | `mariadb:10.11` | `sha256:7db29378d4fdab73f8123bbc2b48905c90d1a4b00cf848b028f1e81e623257f2` | healthy |
-| AS | `alpha_radius_as_web` | `mohd777/alpha-radius-web:as-nas-preview-20261013` | `sha256:e7d644d5bf6d9955a854ca9b08a1d9770dd4455c90510d26cba4c9c9a5c29719` | healthy |
-| AS | `alpha_radius_as_core` | `mohd777/alpha-radius-core@sha256:4fc47d656557294424c3fc05f4dbc7bb95a52b6ec33e45a6dbab89c876f88c74` | `sha256:4fc47d656557294424c3fc05f4dbc7bb95a52b6ec33e45a6dbab89c876f88c74` | healthy |
+| AS | `alpha_radius_as_web` | `gunaid/alpha-radius-web:as-nas-preview-20261013` | `sha256:e7d644d5bf6d9955a854ca9b08a1d9770dd4455c90510d26cba4c9c9a5c29719` | healthy |
+| AS | `alpha_radius_as_core` | `gunaid/alpha-radius-core@sha256:4fc47d656557294424c3fc05f4dbc7bb95a52b6ec33e45a6dbab89c876f88c74` | `sha256:4fc47d656557294424c3fc05f4dbc7bb95a52b6ec33e45a6dbab89c876f88c74` | healthy |
 | AS | `alpha_radius_as_db` | `mariadb:10.11` | `sha256:7db29378d4fdab73f8123bbc2b48905c90d1a4b00cf848b028f1e81e623257f2` | healthy |
-| SHARED_TRANSPORT | `max_panel_l2tp` | `max-panel-l2tp:4` | `sha256:6091005066b1c636dfd2c80c7fdd0dd61dfd734fa403895666e1ae5d0cdaaf5b` | running |
+| SHARED_TRANSPORT | `alpha_panel_l2tp` | `alpha-panel-l2tp:4` | `sha256:6091005066b1c636dfd2c80c7fdd0dd61dfd734fa403895666e1ae5d0cdaaf5b` | running |
 
 ## LOCAL: ملفات Compose والروابط تتقدم على الصورة
 
@@ -658,11 +658,11 @@ Webالعميل الآنR11بالصورة `sha256:542794f6689cfbd635fa6b1456bc9f
 | الخدمة | الدور والنطاق | الحالة الحالية |
 |---|---|---|
 | saas-manager.service | WSGI اللوحة؛ لا حاوية tenant | active |
-| max-license-server.service | WSGI الإصدار و SQLite؛ لا Docker | active |
-| max-panel-l2tp.service | تجهيز PPP المركزي وقواعده حسب الملكية | active |
-| max-panel-tunnels.service | عامل الأنفاق المركزي | active |
-| max-panel-nas-reload.service | إعادة تحميل عملاء NAS لتطبيق المستأجر المقيد | active |
-| max-panel-fleet@{max,4k,as}.socket/service | metadata/controller خاص بالمستأجر؛ ليست Docker socket عامة | active لكل نسخة |
+| alpha-license-server.service | WSGI الإصدار و SQLite؛ لا Docker | active |
+| alpha-panel-l2tp.service | تجهيز PPP المركزي وقواعده حسب الملكية | active |
+| alpha-panel-tunnels.service | عامل الأنفاق المركزي | active |
+| alpha-panel-nas-reload.service | إعادة تحميل عملاء NAS لتطبيق المستأجر المقيد | active |
+| alpha-panel-fleet@{max,4k,as}.socket/service | metadata/controller خاص بالمستأجر؛ ليست Docker socket عامة | active لكل نسخة |
 | max-as-nas-preview-status.service | قراءة حالة نفق AS فقط عبر Unix socket؛ لا تحكم أو SQL تعديل | active |
 | alpha-radius-wg-bridge.service | جسر WireGuard قديم على المضيف؛ لا يفترض أنه داخل Compose لكل مستأجر | active؛ تفاصيله في المرجع الخاص |
 | nginx.service / ssh.service | proxy والوصول الإداري | active |
@@ -707,9 +707,9 @@ Webالعميل الآنR11بالصورة `sha256:542794f6689cfbd635fa6b1456bc9f
 
 | الصورة | digest latest الحالي |
 |---|---|
-| mohd777/alpha-radius-web | `sha256:2b69714d16c709625af2c40049a5f907e3386cb1a485f17ff36a630f257a32ea` |
-| mohd777/alpha-radius-core | `sha256:4d609e0c03a32be6a979dfd110ccd10d8c8ceda72c3495a1c4734de653f42d59` |
-| mohd777/alpha-radius-l2tp | `sha256:a7fa96b5a7a485ce47755e0379c5553d1a0490855fcfda950602d6c1d9affee7` |
+| gunaid/alpha-radius-web | `sha256:2b69714d16c709625af2c40049a5f907e3386cb1a485f17ff36a630f257a32ea` |
+| gunaid/alpha-radius-core | `sha256:4d609e0c03a32be6a979dfd110ccd10d8c8ceda72c3495a1c4734de653f42d59` |
+| gunaid/alpha-radius-l2tp | `sha256:a7fa96b5a7a485ce47755e0379c5553d1a0490855fcfda950602d6c1d9affee7` |
 
 ## الحاويات المساندة
 
@@ -725,12 +725,12 @@ Webالعميل الآنR11بالصورة `sha256:542794f6689cfbd635fa6b1456bc9f
 - `max_acceptance_clients` — عميل محاكاة/متصفح أو NAS mock تاريخي، متوقف
 - `max_chr_clients` — عميل محاكاة/متصفح أو NAS mock تاريخي، متوقف
 - `alpha_radius_simulator` — عميل محاكاة/متصفح أو NAS mock تاريخي، متوقف
-- `max_evolution_whatsapp` — بوابة تكامل WhatsApp متوقفة
+- `alpha_evolution_whatsapp` — بوابة تكامل WhatsApp متوقفة
 - `max_browser_client` — عميل محاكاة/متصفح أو NAS mock تاريخي، متوقف
-- `max_client2` — عميل محاكاة/متصفح أو NAS mock تاريخي، متوقف
-- `max_client1` — عميل محاكاة/متصفح أو NAS mock تاريخي، متوقف
-- `max_client3` — عميل محاكاة/متصفح أو NAS mock تاريخي، متوقف
-- `max_mock_routeros` — عميل محاكاة/متصفح أو NAS mock تاريخي، متوقف
+- `alpha_client2` — عميل محاكاة/متصفح أو NAS mock تاريخي، متوقف
+- `alpha_client1` — عميل محاكاة/متصفح أو NAS mock تاريخي، متوقف
+- `alpha_client3` — عميل محاكاة/متصفح أو NAS mock تاريخي، متوقف
+- `alpha_mock_routeros` — عميل محاكاة/متصفح أو NAS mock تاريخي، متوقف
 
 ## LAB_UBUNTU — جولة التهيئة16أكتوبر2026
 
@@ -755,7 +755,7 @@ Webالعميل الآنR11بالصورة `sha256:542794f6689cfbd635fa6b1456bc9f
 
 Web الفعلية `2c60b361c7d6` / image `sha256:97f5400e875f40547d74208a4896856305f28c9b2db8db4fee6332ae22cb9b3e`، وCore `1c85dc48f1b77` / image `sha256:160d4a1aa6ec966437a5d6298693251339db64e8d0ecc8ea7c8500eb816677cd`. مرجع الهوية الكامل المحمي `monitor-reports/accepted-lab-db-maintenance-reference.private.txt`؛ مرجع Autoheal القديم يبقى لتوثيق إلغاء إضافاته وهوية Autoheal الأصلية، وتجاوزته جولة الصيانة لهويتي Web/Core فقط. DB/L2TP/Autoheal وأوقاتها ومجلداتها لم تتغير، وجامع المراقبة بقي معطلًا.
 
-حُفظت النسخة المشفرة وتحققت خارج الخادم، وحفظت الحاويتان السابقتان وصورتا طبقتيهما القابلتين للكتابة. مسار `/var/lib/alpha-radius-rollout/20261019-db-maintenance-fixes-v1` مكتمل ومقبول؛ لا يعاد تشغيل أي سكربت فيه. أسماء `max_web_prev_dbmf_20261019` و`max_core_prev_dbmf_20261019` متوقفة مقصودة restart=no. أوقفت الموارد المعزولة وحفظت أدلتها. غموض commit في إعادة المصنع يحجز الاسترداد للمراجعة، ولا يعاد المسح؛ فشل أرشفة حالة التشغيل يمنع إعادة Core حتى إكمالها.
+حُفظت النسخة المشفرة وتحققت خارج الخادم، وحفظت الحاويتان السابقتان وصورتا طبقتيهما القابلتين للكتابة. مسار `/var/lib/alpha-radius-rollout/20261019-db-maintenance-fixes-v1` مكتمل ومقبول؛ لا يعاد تشغيل أي سكربت فيه. أسماء `alpha_web_prev_dbmf_20261019` و`alpha_core_prev_dbmf_20261019` متوقفة مقصودة restart=no. أوقفت الموارد المعزولة وحفظت أدلتها. غموض commit في إعادة المصنع يحجز الاسترداد للمراجعة، ولا يعاد المسح؛ فشل أرشفة حالة التشغيل يمنع إعادة Core حتى إكمالها.
 
 الحدود: لا NAS/CoA/Stop فعلي ولا benchmark لقاعدة كبيرة في هذه الجولة؛ تطابقت بصمات 8 جداول عند استرجاع نسخة اختبار أخرى معزولة تشمل مبيعات ومحفظة. دليل الجولة الخاص `db-maintenance-fixes-20261019T180339Z/FINAL.private.json` و`RESULTS.private.ar.md`. لا تستأنف AS الموقوفة تلقائيًا.
 
@@ -768,7 +768,7 @@ Web الحالية `4220970ade6bd7617bf5b73a98ded66485d1d4e1c94c402f5796aad06abc
 
 نجحت 20 حالة مصدر وأعيدت العشرون على الامتداد المجمع؛ اختبرت خمسة restart فعلية والسجلات في حاويات network=none معزولة بلا بيانات حية، والطلبات القديمة والأجنبية لم تُنفذ. اختبرت الواجهة الحية: السجلات الخمسة، وحمولات الأزرار الستة، ونوافذ تأكيد restart بالإلغاء. لا restart اختباري للخدمات الفعلية؛ استبدلت Web وحدها لنشر التصحيح. التنبيه الخاطئ 43 عُلم كمحلول من الواجهة مع حفظ تاريخه؛ جارية(0).
 
-حفظت نسخة مشفرة حديثة وتحققت خارج الخادم، وWeb السابقة وطبقتها القابلة للكتابة محفوظتان باسم `max_web_prev_binding_20261019` وrestart=no. جولة `/var/lib/alpha-radius-rollout/20261019-autoheal-container-binding-v1` مكتملة ومقبولة ولا تُعاد؛ التراجع المقاس مستقل عن SSH. أوقفت كل موارد الاختبار ووكيلها وأبقيت الأرشيفات والmarkers. الأدلة الخاصة `lab-autoheal-binding-fix-20261019T190048Z/FINAL.private.json` و`RESULTS.private.ar.md`. لا عميل أو Docker محلي مشغل أو Git/Registry أو مخطط DB، ولا استئناف AS الموقوفة.
+حفظت نسخة مشفرة حديثة وتحققت خارج الخادم، وWeb السابقة وطبقتها القابلة للكتابة محفوظتان باسم `alpha_web_prev_binding_20261019` وrestart=no. جولة `/var/lib/alpha-radius-rollout/20261019-autoheal-container-binding-v1` مكتملة ومقبولة ولا تُعاد؛ التراجع المقاس مستقل عن SSH. أوقفت كل موارد الاختبار ووكيلها وأبقيت الأرشيفات والmarkers. الأدلة الخاصة `lab-autoheal-binding-fix-20261019T190048Z/FINAL.private.json` و`RESULTS.private.ar.md`. لا عميل أو Docker محلي مشغل أو Git/Registry أو مخطط DB، ولا استئناف AS الموقوفة.
 ## 2026-10-28 — Local 2.7.0 source preview
 
 `http://127.0.0.1:5270/__preview270` is a disposable synthetic source preview, not a hosted domain or release image. Docker Desktop containers `dev270-preview` and `dev270-db` carry label `max.lab=dev270`; the preview source is mounted read-only from the current checkout. `alpha-radius-dev:270-runtime` is a dependency runtime based on the existing local 2.6.9 image, not the compiled 2.7.0 release. The lab DB was raised locally to 1.5 GiB/2 CPU for the large restore comparison after a failed 768 MiB test; no production cap changed. Protected round `PRIVATE/development270-20261028-r1` contains aggregate evidence, fixture credentials and finite drivers; do not copy credentials into Git/images or replay completed restore/import rounds. See [scope and acceptance](DEVELOPMENT_270_LOCAL_20261028.md). Hosted monitoring stays PAUSED.

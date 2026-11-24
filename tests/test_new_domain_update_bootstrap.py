@@ -40,7 +40,7 @@ class BootstrapTests(unittest.TestCase):
         self.path=self.root/'tenants'/'fresh';self.path.mkdir(parents=True)
         self.meta={'subdomain':'fresh','tunnel_mode':'central','instance_uuid':'INST-ABCDEF1234'}
         (self.path/'tenant.json').write_text(json.dumps(self.meta))
-        self.reference='mohd777/alpha-radius-web@sha256:'+'a'*64;self.image='sha256:'+'b'*64
+        self.reference='gunaid/alpha-radius-web@sha256:'+'a'*64;self.image='sha256:'+'b'*64
         (self.path/'creation-release.json').write_text(json.dumps({'web':{'reference':self.reference,'image_id':self.image}}))
         self.compose={'services':{'web':{'image':self.reference,'environment':{},'volumes':['./storage:/app/storage','/metadata.sock:/var/run/docker.sock:ro']},
                                   'radius_core':{'image':'core-original'},'db':{'image':'db-original'}}}
@@ -91,7 +91,7 @@ class BootstrapTests(unittest.TestCase):
             with self.assertRaises(hook.BootstrapError):hook.prepare_new_domain_updates(self.path,'fresh')
         self.assertFalse((self.root/'private').exists())
     def test_unpinned_creation_image_rejected(self):
-        (self.path/'creation-release.json').write_text(json.dumps({'web':{'reference':'mohd777/alpha-radius-web:latest','image_id':self.image}}))
+        (self.path/'creation-release.json').write_text(json.dumps({'web':{'reference':'gunaid/alpha-radius-web:latest','image_id':self.image}}))
         with self.assertRaises(hook.BootstrapError):self.prepare()
         self.assertEqual(self.calls,[])
     def test_new_creation_provisions_target_controller_without_changing_db_or_core(self):
@@ -103,7 +103,7 @@ class BootstrapTests(unittest.TestCase):
         self.assertEqual(config['reader_id'],self.enrollment['reader_id']);self.assertEqual(config['identity'],'fresh.example.test')
         self.assertNotIn(self.enrollment['token'],(self.path/'docker-compose.yml').read_text())
         self.assertNotIn(self.enrollment['token'],(self.root/'private/fresh.bootstrap.private.json').read_text())
-        self.assertEqual(document['services']['web']['environment']['MAX_UPDATE_SOCKET'],'/max-update-socket/controller.sock')
+        self.assertEqual(document['services']['web']['environment']['ALPHA_UPDATE_SOCKET'],'/alpha-update-socket/controller.sock')
     def test_completed_preparation_is_not_replayed(self):
         self.prepare();n=len(self.calls)
         with self.assertRaises(hook.BootstrapError):self.prepare()

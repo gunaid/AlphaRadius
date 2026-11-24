@@ -24,7 +24,7 @@ from services.system_update_runtime import Docker, UpdateError, inspect, write_j
 WEB = 'sha256:c5ab9fe42359c867c6dedabaf607ff492b2652e8160fa5df987e34e645db098b'
 DB = 'sha256:0d0945c57f75b3a3b9ebe71aedaaad005fa5305054e8fca3d2e42a8c92b43b5e'
 CORE = 'sha256:bc4d4644108018c7f67188e639bfeea9a4d12deedc01602bc15e219406ac4932'
-L2TP = 'mohd777/alpha-radius-l2tp@sha256:a7fa96b5a7a485ce47755e0379c5553d1a0490855fcfda950602d6c1d9affee7'
+L2TP = 'gunaid/alpha-radius-l2tp@sha256:a7fa96b5a7a485ce47755e0379c5553d1a0490855fcfda950602d6c1d9affee7'
 AUTOHEAL = 'willfarrell/autoheal@sha256:658d4db0d5d570d07f1977e6cd344d5d9789f4453a050abf784caa330458ab26'
 ORACLE = """import json
 from database.db import query_one
@@ -41,13 +41,13 @@ def main():
         raise SystemExit('Do not replay a completed or uncertain experiment')
     transport = Docker()
     transport_failures = []
-    web_target = os.environ.get('MAX_COMPONENT_WEB_TARGET')
+    web_target = os.environ.get('ALPHA_COMPONENT_WEB_TARGET')
     if web_target:
         import re
         assert re.fullmatch('alpha-radius-web@sha256:[a-f0-9]{64}', web_target)
     def api(method, path, body=None, timeout=30):
         started = time.monotonic()
-        if method == 'POST' and path.startswith('/images/create?') and os.environ.get('MAX_COMPONENT_NATIVE_AUX') == '1':
+        if method == 'POST' and path.startswith('/images/create?') and os.environ.get('ALPHA_COMPONENT_NATIVE_AUX') == '1':
             # Exercise exact digest admission against locally cached originals.
             # Registry download is deliberately not part of this offline lab.
             import urllib.parse
@@ -70,12 +70,12 @@ def main():
     write_json(root/'PREEXISTING-BEFORE.private.json',before)
     owned, networks, volumes, results = set(), [], [], []
     complete = False
-    native = os.environ.get('MAX_COMPONENT_NATIVE_RADIUS') == '1'
-    native_aux = os.environ.get('MAX_COMPONENT_NATIVE_AUX') == '1'
-    load_rounds = int(os.environ.get('MAX_COMPONENT_LOAD_ROUNDS', '0'))
+    native = os.environ.get('ALPHA_COMPONENT_NATIVE_RADIUS') == '1'
+    native_aux = os.environ.get('ALPHA_COMPONENT_NATIVE_AUX') == '1'
+    load_rounds = int(os.environ.get('ALPHA_COMPONENT_LOAD_ROUNDS', '0'))
     assert 0 <= load_rounds <= 100
-    environments = os.environ.get('MAX_COMPONENT_ENVIRONMENTS', 'local,domain,shared').split(',')
-    profiles = os.environ.get('MAX_COMPONENT_PROFILES', 'success,rollback,lost_create').split(',')
+    environments = os.environ.get('ALPHA_COMPONENT_ENVIRONMENTS', 'local,domain,shared').split(',')
+    profiles = os.environ.get('ALPHA_COMPONENT_PROFILES', 'success,rollback,lost_create').split(',')
     assert environments and len(set(environments)) == len(environments) and set(environments) <= {'local', 'domain', 'shared'}
     extra_profiles = {'stop_reply_lost', 'rename_reply_lost', 'start_reply_lost',
                       'create_rejected', 'crash_before_stop', 'crash_after_db_start'}
@@ -111,7 +111,7 @@ def main():
             api('DELETE', '/volumes/'+volume); volumes.remove(volume)
     try:
         for environment in environments:
-            for profile in (['success'] if os.environ.get('MAX_COMPONENT_FINAL_MATRIX') == '1' and environment != 'shared' else profiles):
+            for profile in (['success'] if os.environ.get('ALPHA_COMPONENT_FINAL_MATRIX') == '1' and environment != 'shared' else profiles):
                 case = environment+'-'+profile
                 directory = root/case; directory.mkdir(mode=0o700)
                 project = owner+'-'+case
@@ -349,7 +349,7 @@ print(json.dumps({'advanced':True}))
                 trust = {'public_key': base64.b64encode(public).decode(), 'key_fingerprint': hashlib.sha256(public).hexdigest()}
                 envelope = {'bundle': bundle, 'signature': base64.b64encode(key.sign(engine.canonical(bundle))).decode()}
                 engine.verify_bundle(envelope, trust, registry)
-                if os.environ.get('MAX_COMPONENT_ENROLL') == '1':
+                if os.environ.get('ALPHA_COMPONENT_ENROLL') == '1':
                     from services.system_component_control import enroll
                     enrollment = enroll(directory, registry, trust, api)
                     write_json(directory/'ENROLLMENT.private.json', enrollment)
@@ -433,7 +433,7 @@ print(json.dumps({'advanced':True}))
                         'automatic_service_recovery': False, 'no_database_restore': True,
                         'participants': len(tenants), 'radius_packets': len(observed_packets),
                         'radius_receipt_scope': 'pre-interruption only; no final Stop acceptance'}
-                    if os.environ.get('MAX_COMPONENT_RECOVER') == '1':
+                    if os.environ.get('ALPHA_COMPONENT_RECOVER') == '1':
                         # New acceptance round: reconcile the original killed journal,
                         # never rerun its prepare/backup/switch and never restore SQL.
                         if native:
@@ -441,7 +441,7 @@ print(json.dumps({'advanced':True}))
                             radius_started.update(tenants)
                             for tenant in tenants:
                                 radius_index[tenant] = sum(p['tenant']==tenant and p['kind']=='Interim-Update' for p in observed_packets)
-                        daemon_recovery = os.environ.get('MAX_COMPONENT_DAEMON_RECOVER') == '1'
+                        daemon_recovery = os.environ.get('ALPHA_COMPONENT_DAEMON_RECOVER') == '1'
                         if daemon_recovery:
                             # Start the actual UNIX server under its singleton lock.
                             # Its startup reconciles the killed worker before serving.
@@ -464,7 +464,7 @@ print(json.dumps({'advanced':True}))
                                         self.sock=socket.socket(socket.AF_UNIX,socket.SOCK_STREAM)
                                         self.sock.settimeout(10);self.sock.connect(str(directory/'acceptance.sock'))
                                 connection=UnixHTTP('localhost')
-                                connection.request('GET','/_max_updates/v4/components/progress')
+                                connection.request('GET','/_alpha_updates/v4/components/progress')
                                 response=connection.getresponse();recovered=json.loads(response.read())
                                 assert response.status==200
                                 connection.close()
@@ -556,7 +556,7 @@ print(json.dumps({'rows':rows,'auth':auth['n'],'balance':balance['balance']},def
                         rejected = True
                     assert rejected, 'Alive DB must not pass a bad-credential probe'
                     assert engine.default_probe(api, dbid, 'db', {})['verified']
-                real_web_negative = os.environ.get('MAX_COMPONENT_REAL_WEB_NEGATIVE') == '1'
+                real_web_negative = os.environ.get('ALPHA_COMPONENT_REAL_WEB_NEGATIVE') == '1'
                 if real_web_negative:
                     # Do this AFTER the packet/accounting checks: the true guard
                     # must reject our deliberately unsigned synthetic license.

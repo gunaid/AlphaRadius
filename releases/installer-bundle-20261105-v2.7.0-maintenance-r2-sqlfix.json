@@ -2,7 +2,7 @@
   "release": "20261105-v2.7.0-maintenance-r2-sqlfix",
   "archive_sha256": "a5274ccf62feb7aa5ad82e2a425bd5377ad8e32795ce943c43220ad60158fe61",
   "members_lf_sha256": {
-    "docker-compose.production.yml": "b6f2ccaeb24ccef09e3e9d26f80e4f1609ba23541296d6656a34cba1cdcd3f45",
+    "docker-compose.production.yml": "0d4bf475f9cb44ade6d305bfdddaed8b3dfe27c9e429fe23b15f655e708a8f64",
     "database/schema_mysql.sql": "34bfbc12c7d63e4107a30fc2669d6b9925a1a8b2fdf7d698150742f16ca7bb23",
     "docker/l2tp/options.xl2tpd": "b52c69d2254f7648efd426958dd72de0704c96ba1f33d327f31a657e80922995",
     "storage/keys/master_public_key.pem": "db15592a0478a92330e0b977a10a3f48d9c811953c7d67ec6dcd6cc6ff94d704",

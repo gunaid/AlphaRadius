@@ -1,10 +1,10 @@
 {
   "web": {
-    "tag": "mohd777/alpha-radius-web:2.7.1",
-    "immutable_tag": "mohd777/alpha-radius-web:2.7.1-reports-20261111-r33",
+    "tag": "gunaid/alpha-radius-web:2.7.1",
+    "immutable_tag": "gunaid/alpha-radius-web:2.7.1-reports-20261111-r33",
     "registry_digest": "sha256:87e4983c1de4ba973287449c44f1c91cd6125aed04eac7697c1013688b3600a2",
-    "pinned_reference": "mohd777/alpha-radius-web@sha256:87e4983c1de4ba973287449c44f1c91cd6125aed04eac7697c1013688b3600a2",
-    "versioned_mirror_reference": "mohd777/alpha-radius-web@sha256:87e4983c1de4ba973287449c44f1c91cd6125aed04eac7697c1013688b3600a2",
+    "pinned_reference": "gunaid/alpha-radius-web@sha256:87e4983c1de4ba973287449c44f1c91cd6125aed04eac7697c1013688b3600a2",
+    "versioned_mirror_reference": "gunaid/alpha-radius-web@sha256:87e4983c1de4ba973287449c44f1c91cd6125aed04eac7697c1013688b3600a2",
     "amd64_manifest": "sha256:9c873661e31b36b60063dc6024b83fc0368ff806c3b6f104d7a059b6c9ab7b73",
     "config_digest": "sha256:e3e0870c750b02acf0933d6561a706ff9a670a23cd465d9dc74bbf1d80de0c8e",
     "layer_digests": [
@@ -188,10 +188,10 @@
     "base": "sha256:d1877af154ad20b3393f1239f9f79e1d3cd42c5dea0706b31daf422124b289a1"
   },
   "core": {
-    "tag": "mohd777/alpha-radius-core:2.7.1",
+    "tag": "gunaid/alpha-radius-core:2.7.1",
     "registry_digest": "sha256:6e71f1e291a90d8c45df79a3f88c5886193bb774054ec3d7e30e72d470b928af",
-    "pinned_reference": "mohd777/alpha-radius-core@sha256:6e71f1e291a90d8c45df79a3f88c5886193bb774054ec3d7e30e72d470b928af",
-    "versioned_mirror_reference": "mohd777/alpha-radius-core@sha256:6e71f1e291a90d8c45df79a3f88c5886193bb774054ec3d7e30e72d470b928af",
+    "pinned_reference": "gunaid/alpha-radius-core@sha256:6e71f1e291a90d8c45df79a3f88c5886193bb774054ec3d7e30e72d470b928af",
+    "versioned_mirror_reference": "gunaid/alpha-radius-core@sha256:6e71f1e291a90d8c45df79a3f88c5886193bb774054ec3d7e30e72d470b928af",
     "amd64_manifest": "sha256:0e34e466927677d2ec395d31141793960cb433767a23ebb2a2288b15e69342f9",
     "config_digest": "sha256:5391b78e7585952fb4a28cdd3717d23fcd63f9b44d07ec909f29a92ed20f2e97",
     "layer_digests": [
@@ -224,10 +224,10 @@
     "anonymous_pull_verified": true
   },
   "l2tp": {
-    "tag": "mohd777/alpha-radius-l2tp:2.7.1",
+    "tag": "gunaid/alpha-radius-l2tp:2.7.1",
     "registry_digest": "sha256:a7fa96b5a7a485ce47755e0379c5553d1a0490855fcfda950602d6c1d9affee7",
-    "pinned_reference": "mohd777/alpha-radius-l2tp@sha256:a7fa96b5a7a485ce47755e0379c5553d1a0490855fcfda950602d6c1d9affee7",
-    "versioned_mirror_reference": "mohd777/alpha-radius-l2tp@sha256:a7fa96b5a7a485ce47755e0379c5553d1a0490855fcfda950602d6c1d9affee7",
+    "pinned_reference": "gunaid/alpha-radius-l2tp@sha256:a7fa96b5a7a485ce47755e0379c5553d1a0490855fcfda950602d6c1d9affee7",
+    "versioned_mirror_reference": "gunaid/alpha-radius-l2tp@sha256:a7fa96b5a7a485ce47755e0379c5553d1a0490855fcfda950602d6c1d9affee7",
     "amd64_manifest": "sha256:981d83d0fd223d2c74d0160c56409624ebd3abd5916c8b57046d7907aa81b759",
     "config_digest": "sha256:4a87a14427bddcaa88a987a4ec4b5c435c5a3da269d04f91af040790cf71b49c",
     "layer_digests": [
@@ -244,10 +244,10 @@
     "anonymous_pull_verified": true
   },
   "database": {
-    "tag": "mohd777/alpha-radius-db:2.7.1",
+    "tag": "gunaid/alpha-radius-db:2.7.1",
     "registry_digest": "sha256:bb27bde261794d326398a9c998ddf9f35db45296d829123bff829cd076f68107",
     "pinned_reference": "mariadb@sha256:0d0945c57f75b3a3b9ebe71aedaaad005fa5305054e8fca3d2e42a8c92b43b5e",
-    "versioned_mirror_reference": "mohd777/alpha-radius-db@sha256:bb27bde261794d326398a9c998ddf9f35db45296d829123bff829cd076f68107",
+    "versioned_mirror_reference": "gunaid/alpha-radius-db@sha256:bb27bde261794d326398a9c998ddf9f35db45296d829123bff829cd076f68107",
     "source_platform_reference": "mariadb@sha256:bb27bde261794d326398a9c998ddf9f35db45296d829123bff829cd076f68107",
     "amd64_manifest": "sha256:bb27bde261794d326398a9c998ddf9f35db45296d829123bff829cd076f68107",
     "config_digest": "sha256:4e667183d5236dbbecf88167a0f1f49dc0c116aa46990309e920e663e2fdc348",
@@ -270,10 +270,10 @@
     "anonymous_pull_verified": true
   },
   "autoheal": {
-    "tag": "mohd777/alpha-radius-autoheal:2.7.1",
+    "tag": "gunaid/alpha-radius-autoheal:2.7.1",
     "registry_digest": "sha256:bc7ee40195302925cb0d43260ec56b194dc820215cd8694cb21d8234d48346e0",
     "pinned_reference": "willfarrell/autoheal@sha256:f8adb7a2343aaeaa2757561b52428ebf9d3bb8e304d0f7a77fd13de395610504",
-    "versioned_mirror_reference": "mohd777/alpha-radius-autoheal@sha256:bc7ee40195302925cb0d43260ec56b194dc820215cd8694cb21d8234d48346e0",
+    "versioned_mirror_reference": "gunaid/alpha-radius-autoheal@sha256:bc7ee40195302925cb0d43260ec56b194dc820215cd8694cb21d8234d48346e0",
     "source_platform_reference": "willfarrell/autoheal@sha256:bc7ee40195302925cb0d43260ec56b194dc820215cd8694cb21d8234d48346e0",
     "amd64_manifest": "sha256:bc7ee40195302925cb0d43260ec56b194dc820215cd8694cb21d8234d48346e0",
     "config_digest": "sha256:0524339e69b9e24588e035d2ef12b853f867912779ba286684706d79d80a899f",

@@ -4,7 +4,7 @@
 
 السيرفر الجديد173.212.233.5فقط. لم تُغيّر صور MAX أوالكيرنل/GRUB أو latest أوالسيرفرالقديم أوالتراخيص. الإصلاح تشغيلي على المضيف، وليس ميزة في2.7.0 أوتغييرًا فيصورة2.6.9.
 
-- أُضيف `force userspace = yes` في القسمglobalمن`/etc/xl2tpd/xl2tpd.conf`، مع حفظ الملف السابق. أُعيدت خدمةالأنفاقالمملوكة`max-r-l2tp.service`مرةلتطبيقه. السجليثبتNot looking for kernel support، وpppdبلاملحقpppol2tp.لمتُحظر/تُفرغوحداتالكيرنل،ولاتغييرلراوترالعميلأوأسرار/IPالنفق.
+- أُضيف `force userspace = yes` في القسمglobalمن`/etc/xl2tpd/xl2tpd.conf`، مع حفظ الملف السابق. أُعيدت خدمةالأنفاقالمملوكة`alpha-r-l2tp.service`مرةلتطبيقه. السجليثبتNot looking for kernel support، وpppdبلاملحقpppol2tp.لمتُحظر/تُفرغوحداتالكيرنل،ولاتغييرلراوترالعميلأوأسرار/IPالنفق.
 - أمرrestartالأوليلاسمxl2tpd.serviceرُفضلأنالوحدةmasked،فلميتأثرالديمون؛بعدإثباتExecStartعُينتالخدمةالمملوكةالصحيحة.
 - وحدة `backend/hosting_network_boot.py` تتحقق منهويةمحركDBوحالتهوربطNASومنافذهقبلمساسالتوجيه. تعيدالمحاولةفقطلأخطاءالاتصالالمؤقتة؛ترفضأخطاءالملكية/المخطط/الاعتماد. محاولاتمحدودة60بفاصلثانيتين،وTimeoutStartSec200فيsystemd.
 - drop-in`/etc/systemd/system/alpha-r-network.service.d/20-database-readiness.conf`يشغل الوحدةالجديدة ويضيفAfterلخدمةL2TP؛Restartonfailureمعحد3ب600ثانية،ولاretryلخطأإعدادexit78. الكودمحفوظفيمصدراللوحةوحزمةالمراجعةتتطلبوجوده؛قالبdrop-inفيمصدرMAXتحتdeploy/hosted-max/alpha-r-network-readiness.conf.
@@ -16,7 +16,7 @@
 
 بطلبصريحمنالإنسانأُرسلتإعادةتشغيلواحدةمجدولةبإيصالدائم؛منbootfd1f0إلى44beaeab. لاreplayلreboot-once.sh.
 
-بعدالإقلاعنجحL2TPuserspaceتلقائيًا،ونجحتاستعادةالتوجيهفيالمحاولةالثانيةبعدانتظارDB. max-host-r/max-control-r/max-r-l2tp/alpha-r-networkنشطة،وقواعد1812/1813لمطابقةmموجودة. WebmوmaxHTTP200،صورهاكماكانت،وترخيصكليهماvalidوفترةحديثة.لايعنيهذاإثباتNASأومصادقةلmaxالفارغة.
+بعدالإقلاعنجحL2TPuserspaceتلقائيًا،ونجحتاستعادةالتوجيهفيالمحاولةالثانيةبعدانتظارDB. alpha-host-r/alpha-control-r/alpha-r-l2tp/alpha-r-networkنشطة،وقواعد1812/1813لمطابقةmموجودة. WebmوmaxHTTP200،صورهاكماكانت،وترخيصكليهماvalidوفترةحديثة.لايعنيهذاإثباتNASأومصادقةلmaxالفارغة.
 
 أكّدهالإنساننجاحالدخولبعدالإقلاع؛ثبتAccess-Acceptطبيعيمنالراديوسوجدولpostauth،وبدأتجلساتمحاسبةجديدة (0قبلثم16ثم115). لوحظتأيضًا3Access-Rejectلمتصنّفأسبابهامنفردة،ولاتُسوّىكفشلتوصيل. عينة12ثانيةأوليةلمتظهرInterimبين100جلسةمشتركة؛تنتظرعينةأطوللإثباتتقدمالعدادات،ولايُعدثباتهاالقصيرفشلًا. الملفالنهائيaccounting-progress-45sيحفظالمجاميعبلاالأسماء.
 
@@ -24,7 +24,7 @@
 
 ## الرجوع والأدلة
 
-الأدلةالمحميةPRIVATE/l2tp-recovery-20261101-r1،وعلىالمضيف`/var/lib/max-host-r/change-evidence/l2tp-recovery-20261101-r1`. قبلتغييرخدمةالإقلاعوالconfحُفظتالنسخ. الرجوعالتشغيلييعيدملفconfويزيلdrop-inثمdaemon-reload،لكنإعادةمسارL2TPللكيرنلالمصابيُعيدالخطر؛لاتنفذهتلقائيًا.لاKernelupgradeأوDockerHubpushأوتعديلlatestبهذهالجولة.
+الأدلةالمحميةPRIVATE/l2tp-recovery-20261101-r1،وعلىالمضيف`/var/lib/alpha-host-r/change-evidence/l2tp-recovery-20261101-r1`. قبلتغييرخدمةالإقلاعوالconfحُفظتالنسخ. الرجوعالتشغيلييعيدملفconfويزيلdrop-inثمdaemon-reload،لكنإعادةمسارL2TPللكيرنلالمصابيُعيدالخطر؛لاتنفذهتلقائيًا.لاKernelupgradeأوDockerHubpushأوتعديلlatestبهذهالجولة.
 
 سياقالمشكلةودليلالكيرنل:HOST_L2TP_INCIDENT_20261101.mdفيمشروعMAX. المطابقةمعبلاغUbuntu2169477ترجحregressionL2TP؛لاتثبتسببالانقطاعالأولبمفردها. وضعuserspaceمعتمدمنxl2tpdومناسبلحجمالحركةالمرصود؛لمتُقاسسعةنقلالإنترنتالتجميعيةولاتُدّعى.
 

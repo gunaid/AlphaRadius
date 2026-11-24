@@ -10,7 +10,7 @@
 
 | الدومين | متحكم التحديث الفعلي |
 |---|---|
-| 4k | خدمة المضيف `max-panel-update@4k.service` فعالة؛ لا حاوية updates |
+| 4k | خدمة المضيف `alpha-panel-update@4k.service` فعالة؛ لا حاوية updates |
 | m | حاوية `update_controller` عاملة؛ خدمة المضيف غير فعالة |
 | max1 | حاوية `update_controller` عاملة؛ خدمة المضيف غير فعالة |
 | shn | حاوية `update_controller` عاملة؛ خدمة المضيف غير فعالة |

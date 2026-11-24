@@ -23,7 +23,7 @@ def retired_binding(root, name, identity):
     return {'deleted': False}
 
 
-def paths(row, root=Path('/var/lib/max-host-r'), system=Path('/etc')):
+def paths(row, root=Path('/var/lib/alpha-host-r'), system=Path('/etc')):
     if (not re.fullmatch('[a-f0-9]{32}', row.get('id', ''))
             or not re.fullmatch('[a-z][a-z0-9-]{0,30}', row.get('slug', ''))
             or row.get('domain') != row['slug'] + '.max-r.cc'):
@@ -33,7 +33,7 @@ def paths(row, root=Path('/var/lib/max-host-r'), system=Path('/etc')):
         raise ValueError('Host binding differs')
     name = 'max-tenant-control-' + row['id'] + '.service'
     return (binding, binding.parent / 'storage/.host-control/docker.sock',
-            system / 'max-host-r/tenant-control' / (row['id'] + '.json'),
+            system / 'alpha-host-r/tenant-control' / (row['id'] + '.json'),
             system / 'systemd/system' / name)
 
 
@@ -53,15 +53,15 @@ def write(path, content, mode=0o600):
     return True
 
 
-def ensure(row, root=Path('/var/lib/max-host-r'), system=Path('/etc'), run=subprocess.run):
+def ensure(row, root=Path('/var/lib/alpha-host-r'), system=Path('/etc'), run=subprocess.run):
     binding, sock, config, unit = paths(row, root, system)
     if sock.parent.is_symlink():
         raise ValueError('Invalid tenant socket directory')
     sock.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     config_changed = write(config, json.dumps({'binding': str(binding), 'socket': str(sock),
                                              'tenant_id': row['id'], 'slug': row['slug']}))
-    content = ('[Unit]\nDescription=MAX tenant scoped control\nAfter=docker.service max-host-r.service\nRequires=docker.service\n'
-               '[Service]\nType=simple\nExecStart=/usr/bin/python3 -B /opt/max-host-r/current/backend/tenant_docker_proxy.py ' + str(config) +
+    content = ('[Unit]\nDescription=MAX tenant scoped control\nAfter=docker.service alpha-host-r.service\nRequires=docker.service\n'
+               '[Service]\nType=simple\nExecStart=/usr/bin/python3 -B /opt/alpha-host-r/current/backend/tenant_docker_proxy.py ' + str(config) +
                '\nRestart=on-failure\nRestartSec=5\nMemoryMax=64M\nTasksMax=32\nCPUQuota=30%\nNoNewPrivileges=true\nProtectSystem=strict\nProtectHome=true\nPrivateTmp=true\nRestrictAddressFamilies=AF_UNIX\nReadWritePaths=' + str(sock.parent) +
                '\nUMask=0077\n[Install]\nWantedBy=multi-user.target\n')
     unit_changed = write(unit, content, 0o644)
@@ -76,7 +76,7 @@ def ensure(row, root=Path('/var/lib/max-host-r'), system=Path('/etc'), run=subpr
     return {'socket': '/app/storage/.host-control/docker.sock', 'tenant_id': row['id'], 'mode': 'hosted'}
 
 
-def remove(row, root=Path('/var/lib/max-host-r'), system=Path('/etc'), run=subprocess.run):
+def remove(row, root=Path('/var/lib/alpha-host-r'), system=Path('/etc'), run=subprocess.run):
     _, sock, config, unit = paths(row, root, system)
     if unit.exists():
         run(['systemctl', 'disable', '--now', unit.name], check=True, timeout=25)

@@ -1,4 +1,4 @@
-"""Run only against the disposable max-license-test-db container."""
+"""Run only against the disposable alpha-license-test-db container."""
 import os, json, hashlib, hmac, unittest, socket, struct, secrets, concurrent.futures, datetime
 import pymysql
 from unittest.mock import patch
@@ -11,9 +11,9 @@ from core import licensing
 
 
 def connect():
-    if os.environ.get('DB_HOST') != 'max-license-test-db':
+    if os.environ.get('DB_HOST') != 'alpha-license-test-db':
         raise RuntimeError('This suite requires the disposable test database')
-    c=pymysql.connect(host='max-license-test-db',user='radius',password='radpass',database='radius_wisp',autocommit=True,charset='utf8mb4',cursorclass=pymysql.cursors.DictCursor)
+    c=pymysql.connect(host='alpha-license-test-db',user='radius',password='radpass',database='radius_wisp',autocommit=True,charset='utf8mb4',cursorclass=pymysql.cursors.DictCursor)
     with c.cursor() as q:q.execute("SET time_zone='+03:00'")
     return c
 
@@ -31,7 +31,7 @@ def packet(code,user,auth=None,attrs=None,password='pass'):
     if code==1:body=body[:-16]+hmac.new(b'max123',head+auth+body,hashlib.md5).digest()
     raw=head+auth+body
     with socket.socket(socket.AF_INET,socket.SOCK_DGRAM) as sock:
-        sock.settimeout(4);sock.sendto(raw,(os.environ.get('RADIUS_TEST_HOST','max-license-test-core'),1812 if code==1 else 1813));reply=sock.recv(4096)
+        sock.settimeout(4);sock.sendto(raw,(os.environ.get('RADIUS_TEST_HOST','alpha-license-test-core'),1812 if code==1 else 1813));reply=sock.recv(4096)
     assert reply[4:20]==hashlib.md5(reply[:4]+auth+reply[20:]+b'max123').digest()
     return reply
 

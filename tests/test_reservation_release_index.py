@@ -12,7 +12,7 @@ import threading
 import time
 import unittest
 
-AUTHORIZED = (os.environ.get('DB_HOST') == 'max-license-test-db'
+AUTHORIZED = (os.environ.get('DB_HOST') == 'alpha-license-test-db'
               and os.environ.get('DB_NAME') == 'reservation_index_fixture'
               and sys.argv[1:] == ['--run'])
 if not AUTHORIZED:
@@ -23,7 +23,7 @@ from database.reservation_indexes import ensure_reservation_release_index, _stat
 
 
 def connect(autocommit=True, dictionary=True):
-    return pymysql.connect(host='max-license-test-db', user='radius', password='radpass',
+    return pymysql.connect(host='alpha-license-test-db', user='radius', password='radpass',
                            database='reservation_index_fixture', autocommit=autocommit,
                            cursorclass=pymysql.cursors.DictCursor if dictionary else pymysql.cursors.Cursor)
 

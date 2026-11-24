@@ -1,6 +1,6 @@
 """Explicit isolated MariaDB + Flask-route + signed UDP regression.
 
-Not part of discovery. Requires MAX_PORTAL_REGRESSION=1 and radius_max_final6 clone.
+Not part of discovery. Requires ALPHA_PORTAL_REGRESSION=1 and radius_max_final6 clone.
 Does not import web.app, start workers, use real NAS, or touch production accounts.
 """
 import ast
@@ -21,14 +21,14 @@ from unittest.mock import patch
 
 sys.path.insert(0, '/app')
 from core.config import DB_NAME
-assert os.environ.get('MAX_PORTAL_REGRESSION') == '1'
+assert os.environ.get('ALPHA_PORTAL_REGRESSION') == '1'
 assert DB_NAME == 'radius_max_final6', 'Isolated database only'
 from database.db import query_one, query_all, execute_write, db_session, adapt_query
 from services import user_portal_service as P
 from flask import Flask, request, session, jsonify, redirect, url_for, flash
 
 R = Path('/isolated-storage/reports')
-run_id = os.environ.get('MAX_PORTAL_REGRESSION_RUN', 'portal-fix')
+run_id = os.environ.get('ALPHA_PORTAL_REGRESSION_RUN', 'portal-fix')
 assert re.fullmatch(r'[a-z0-9-]{1,64}', run_id), 'Invalid isolated run identity'
 marker = R / (run_id + '-started.json')
 assert not marker.exists(), 'Do not replay a possibly executed financial regression'

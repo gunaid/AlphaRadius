@@ -149,7 +149,7 @@ def _collect_server_resources_internal():
     ram_used_gb = 0.0
     ram_total_gb = 8.0
     containers_info = {}
-    scoped_socket=os.environ.get('MAX_RESOURCE_METRICS_SOCKET')
+    scoped_socket=os.environ.get('ALPHA_RESOURCE_METRICS_SOCKET')
     cpu_available=False
 
     target_containers = ['alpha_radius_core', 'alpha_radius_db', 'alpha_radius_web']
@@ -217,7 +217,7 @@ def _collect_server_resources_internal():
         disk_used_gb = 25.0
 
     if scoped_socket:
-        cpu_reading=_fetch_scoped_cpu(scoped_socket,os.environ.get('MAX_RESOURCE_METRICS_TENANT',''))
+        cpu_reading=_fetch_scoped_cpu(scoped_socket,os.environ.get('ALPHA_RESOURCE_METRICS_TENANT',''))
         cpu_available=cpu_reading['cpu_available']
         cpu_percent=cpu_reading['cpu_percent']
     return {

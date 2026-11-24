@@ -190,12 +190,12 @@ class Controller:
         helper_image = old['web']['Image']
         if config.get('executor_image'):
             reference = config['executor_image']
-            if not re.fullmatch(r'mohd777/alpha-radius-web@sha256:[a-f0-9]{64}',reference):raise ValueError('Invalid prepared executor image')
+            if not re.fullmatch(r'gunaid/alpha-radius-web@sha256:[a-f0-9]{64}',reference):raise ValueError('Invalid prepared executor image')
             executor = self.api('GET','/images/'+urllib.parse.quote(reference,safe='')+'/json')
             if reference not in executor.get('RepoDigests',[]):raise ValueError('Prepared executor digest is missing')
             helper_image = executor['Id']
         helper = {'Image':helper_image,'Entrypoint':['python','-c'],
-                  'Cmd':['from services.system_update_host import '+('supervise' if config.get('executor_image') else 'worker')+';'+('supervise' if config.get('executor_image') else 'worker')+'("/max-update-private",'+repr(job)+')'],
+                  'Cmd':['from services.system_update_host import '+('supervise' if config.get('executor_image') else 'worker')+';'+('supervise' if config.get('executor_image') else 'worker')+'("/alpha-update-private",'+repr(job)+')'],
                   'Env':['PATH=/opt/venv/bin:/usr/local/bin:/usr/bin:/bin','PYTHONDONTWRITEBYTECODE=1'],
                   'Labels':{'max.update.controller':config['project'],'max.update.job':job},
                   'HostConfig':{'ReadonlyRootfs':True,'RestartPolicy':{'Name':'on-failure','MaximumRetryCount':1},
@@ -203,7 +203,7 @@ class Controller:
                       'Mounts':config['controller_mounts'], 'Tmpfs':{'/tmp':'rw,nosuid,size=33554432'},
                       'LogConfig':{'Type':'json-file','Config':{'max-size':'5m','max-file':'1'}}}}
         # A supervisor in the same helper survives loss of the worker process.
-        created = self.api('POST','/containers/create?name=max_update_'+job,helper)
+        created = self.api('POST','/containers/create?name=alpha_update_'+job,helper)
         write_json(folder/'helper.private.json',{'id':created['Id']})
         self.api('POST','/containers/'+created['Id']+'/start')
 
@@ -305,10 +305,10 @@ def serve(controller, path):
         def log_message(self,*args): pass
         def handle_request(self):
             try:
-                if self.path.startswith('/_max_updates/v4/components/'):
+                if self.path.startswith('/_alpha_updates/v4/components/'):
                     from services.system_component_control import ComponentController
                     component = controller if isinstance(controller,ComponentController) else controller.components()
-                    route = self.path.removeprefix('/_max_updates/v4/components/')
+                    route = self.path.removeprefix('/_alpha_updates/v4/components/')
                     if self.command=='GET' and route=='engine': data=component.engine()
                     elif self.command=='GET' and route=='progress': data=component.progress()
                     elif self.command=='POST' and route in ('apply','recover'):
@@ -318,10 +318,10 @@ def serve(controller, path):
                         data=component.submit(body) if route=='apply' else component.recover(body)
                     else:
                         self.send_error(403);return
-                elif self.command=='GET' and self.path=='/_max_updates/v1/check': data=controller.check()
-                elif self.command=='GET' and self.path=='/_max_updates/v1/engine': data=controller.engine()
-                elif self.command=='GET' and self.path=='/_max_updates/v1/progress': data=controller.progress()
-                elif self.command=='POST' and self.path=='/_max_updates/v1/apply':
+                elif self.command=='GET' and self.path=='/_alpha_updates/v1/check': data=controller.check()
+                elif self.command=='GET' and self.path=='/_alpha_updates/v1/engine': data=controller.engine()
+                elif self.command=='GET' and self.path=='/_alpha_updates/v1/progress': data=controller.progress()
+                elif self.command=='POST' and self.path=='/_alpha_updates/v1/apply':
                     size=int(self.headers.get('Content-Length','0'))
                     if not 0<size<=4096: raise ValueError('Invalid body size')
                     data=controller.submit(json.loads(self.rfile.read(size)))

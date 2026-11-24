@@ -8,7 +8,7 @@ import subprocess
 import tempfile
 import time
 
-if (os.environ.get('MAX_CLOCK_GUARD_FIXTURE')!='clock-boot-stability-20261017'
+if (os.environ.get('ALPHA_CLOCK_GUARD_FIXTURE')!='clock-boot-stability-20261017'
         or not Path('/.dockerenv').exists() or Path(__file__).resolve().parent!=Path('/fixture')):
     raise SystemExit('Refusing non-fixture environment')
 

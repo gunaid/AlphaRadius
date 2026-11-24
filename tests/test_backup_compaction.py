@@ -181,12 +181,12 @@ class PublicationTests(unittest.TestCase):
     def test_lock_contention_and_marked_orphan_cleanup_only(self):
         with tempfile.TemporaryDirectory() as work:
             root=Path(work)
-            orphan=root/'max-backup-sort-abcdefgh';orphan.mkdir()
-            (orphan/'.max-backup-owner').write_bytes(b'alpha-radius-backup-work-v1\n')
+            orphan=root/'alpha-backup-sort-abcdefgh';orphan.mkdir()
+            (orphan/'.alpha-backup-owner').write_bytes(b'alpha-radius-backup-work-v1\n')
             (orphan/'sort.sqlite').write_bytes(b'dead process work')
-            foreign=root/'max-backup-sort-ijklmnop';foreign.mkdir()
+            foreign=root/'alpha-backup-sort-ijklmnop';foreign.mkdir()
             (foreign/'keep').write_bytes(b'not ours')
-            partial=root/'.max-backup-abcdefgh.partial';partial.write_bytes(b'incomplete')
+            partial=root/'.alpha-backup-abcdefgh.partial';partial.write_bytes(b'incomplete')
             complete=root/'keep.tar.gz';complete.write_bytes(b'published')
             with b.backup_lock(work):
                 with self.assertRaises(ValueError):

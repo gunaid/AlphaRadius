@@ -127,7 +127,7 @@ class NetworkControlScopeTests(unittest.TestCase):
             ns['_ppp_peer_ip']('0.0.0.0')
 
     def test_credentials_are_data_arguments_not_shell_program(self):
-        with tempfile.TemporaryDirectory(prefix='max-owned-ppp-') as directory:
+        with tempfile.TemporaryDirectory(prefix='alpha-owned-ppp-') as directory:
             root = Path(directory).resolve()
             self.assertTrue(root.is_dir())
             execute = Mock(return_value=dict(success=True))

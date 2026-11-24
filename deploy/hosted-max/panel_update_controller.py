@@ -18,7 +18,7 @@ class Controller(host.Controller):
         from panel_updates import command
         # Fixed program and validated root/name; no image, command or env from HTTP.
         name=config['project']
-        command(['systemd-run','--quiet','--collect','--unit=max-panel-update-job-'+name+'-'+job,
+        command(['systemd-run','--quiet','--collect','--unit=alpha-panel-update-job-'+name+'-'+job,
                  '--property=Type=exec','--property=UMask=0077','--property=Restart=on-failure',
                  '--property=RestartSec=2s','--property=StartLimitBurst=2',
                  sys.executable,str(HERE/'panel_update_controller.py'),'work',name,job])

@@ -3,7 +3,7 @@
   "archive_sha256": "94bb59a0e5d8f791619e5e054d09db45d1a1fb3141fb56475dbdc3973d84e64b",
   "members_lf_sha256": {
     "database/schema_mysql.sql": "f465c1725d860220d474b4459eea0331b218b713044481eb858c69198def62a8",
-    "docker-compose.production.yml": "b6f2ccaeb24ccef09e3e9d26f80e4f1609ba23541296d6656a34cba1cdcd3f45",
+    "docker-compose.production.yml": "0d4bf475f9cb44ade6d305bfdddaed8b3dfe27c9e429fe23b15f655e708a8f64",
     "docker/l2tp/options.xl2tpd": "b52c69d2254f7648efd426958dd72de0704c96ba1f33d327f31a657e80922995",
     "host/clock-guard/99-alpha-radius-clock-ready.conf": "c18ee0f3e158a6db88c49c6c69f1c875eb7b5533104c278aa0398d118e4daf27",
     "host/clock-guard/active_files.py": "2c106b6bb00438d29169505d3ba6841ad9aa2c2b476e1ae0430e8890709ca7f8",

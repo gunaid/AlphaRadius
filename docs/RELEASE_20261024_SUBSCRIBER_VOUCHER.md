@@ -4,8 +4,8 @@
 
 | الخدمة | المستودع | بصمة Registry المطابقة للصورة المختبرة | حجم الطبقات المضغوطة |
 | --- | --- | --- | --- |
-| Web | `mohd777/alpha-radius-web` | `sha256:5eda6a3450ddef586478153082395fbeb73f661be0fcf73b47bffd1e02559d38` | 584403535 بايت |
-| Core | `mohd777/alpha-radius-core` | `sha256:7bf2baa71525ea79e866daeb063c35346f39054fbf81ae209107f632681c1a5e` | 67029586 بايت |
+| Web | `gunaid/alpha-radius-web` | `sha256:5eda6a3450ddef586478153082395fbeb73f661be0fcf73b47bffd1e02559d38` | 584403535 بايت |
+| Core | `gunaid/alpha-radius-core` | `sha256:7bf2baa71525ea79e866daeb063c35346f39054fbf81ae209107f632681c1a5e` | 67029586 بايت |
 
 كلتا الصورتين منشورتان تحت `latest` والوسم الثابت `20261024-v2.6.5-subscriber-voucher-r1`. جرى التحقق من manifest وconfig وطبقات RootFS في Registry لكل وسم، وطابقت الصور المحلية المختبرة. لا يعتمد إثبات النسخة على اسم latest وحده.
 

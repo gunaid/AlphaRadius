@@ -320,7 +320,7 @@ def _pdf_renderer(static_folder):
         from playwright.sync_api import sync_playwright
         root = Path(static_folder).resolve()
         with sync_playwright() as pw:
-            executable = os.environ.get('MAX_PDF_CHROMIUM')
+            executable = os.environ.get('ALPHA_PDF_CHROMIUM')
             if not executable and Path('/usr/bin/chromium').exists():
                 executable = '/usr/bin/chromium'
             browser = pw.chromium.launch(headless=True, executable_path=executable)

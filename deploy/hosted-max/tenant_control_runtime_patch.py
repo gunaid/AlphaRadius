@@ -7,7 +7,7 @@ import ast
 
 
 def patch_runtime(source):
-    marker = "MAX_CONTROL_TENANT_ID=row['id']"
+    marker = "ALPHA_CONTROL_TENANT_ID=row['id']"
     if marker in source:
         if 'from tenant_control_lifecycle import ensure' not in source or 'from tenant_control_lifecycle import remove' not in source:
             raise ValueError('Partial control integration requires review')
@@ -18,7 +18,7 @@ def patch_runtime(source):
         raise ValueError('Executor version differs; no changes applied')
     source = source.replace(anchors[0],
         "        if service == 'web' and self.config.get('tenant_control'):\n"
-        "            env.update(MAX_CONTROL_MODE='hosted', MAX_CONTROL_SOCKET='/app/storage/.host-control/docker.sock', MAX_CONTROL_TENANT_ID=row['id'])\n"
+        "            env.update(ALPHA_CONTROL_MODE='hosted', ALPHA_CONTROL_SOCKET='/app/storage/.host-control/docker.sock', ALPHA_CONTROL_TENANT_ID=row['id'])\n"
         + anchors[0], 1)
     source = source.replace(anchors[1], anchors[1] +
         "        if service == 'web' and self.config.get('tenant_control'):\n"

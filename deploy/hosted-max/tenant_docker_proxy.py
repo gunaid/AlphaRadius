@@ -127,7 +127,7 @@ class Scope:
             raise Denied('Tenant binding changed')
         rows = {}
         for role in ('web', 'core', 'db'):
-            name = b['containers'][role] if role != 'db' else 'max-db-' + b['pool']
+            name = b['containers'][role] if role != 'db' else 'alpha-db-' + b['pool']
             if not re.fullmatch(r'[a-zA-Z0-9_-]{1,100}', name):
                 raise Denied('Invalid owned service name')
             _, raw = self.api('GET', '/containers/' + name + '/json')

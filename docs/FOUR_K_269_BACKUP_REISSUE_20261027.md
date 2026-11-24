@@ -2,7 +2,7 @@
 
 بطلب الإنسان سُحب إعلان4kالسابق b34d4b5912e49d9be2199e8de2162de8وأُنشئ إعلان جديد بنفس الرقم2.6.9: **fe726d008e4ff89ca6e5689dfc45b730**. السجل السابق وتوقيعه محفوظان بحالةwithdrawnومراجعة3، والجديد إعادة إرسال صريحة مرتبطة به. لم يبدأ التثبيت ولم تُنشأ مهمة جديدة.
 
-الصورة المنشورة هي نفسها [المقبولة محليًا](BACKUP_269_BUILD_LOCAL_20261027.md) و[المطبقة علىmax1](MAX1_BACKUP_269_PATCH_20261027.md)، دون إعادة بناء: `mohd777/alpha-radius-web:2.6.9-reports-backup-r1`، بمرجع `mohd777/alpha-radius-web@sha256:c5ab9fe42359c867c6dedabaf607ff492b2652e8160fa5df987e34e645db098b`. طابقتConfigوRootFSالصورة المختبرة، وبقيlatestفيWeb/Coreوالمثبت ثابتين. لاGitpushأوتعديل كودcontrolأوقناة أوهوية أوترخيص أوNAS.
+الصورة المنشورة هي نفسها [المقبولة محليًا](BACKUP_269_BUILD_LOCAL_20261027.md) و[المطبقة علىmax1](MAX1_BACKUP_269_PATCH_20261027.md)، دون إعادة بناء: `gunaid/alpha-radius-web:2.6.9-reports-backup-r1`، بمرجع `gunaid/alpha-radius-web@sha256:c5ab9fe42359c867c6dedabaf607ff492b2652e8160fa5df987e34e645db098b`. طابقتConfigوRootFSالصورة المختبرة، وبقيlatestفيWeb/Coreوالمثبت ثابتين. لاGitpushأوتعديل كودcontrolأوقناة أوهوية أوترخيص أوNAS.
 
 القارئ القائم لـ4kهو21b2bc8b7bbdfec0f4e8e3f82b24550e. قبل الإتاحة وبعدها بقيتWeb2.6.8بصورتها0e21a8aecd74، والمهمة السابقةcompletedنفسها. ثبتتprotocol3وfeatures268وleaseحديثة، وأن موعد التنظيف الأسبوعي غير مستحق. الحد الأدنى2.6.8والمنصةlinux/amd64والنطاقWebفقط؛ المتحكم يتبعها عند تثبيت الإنسان بالمسار القائم.
 

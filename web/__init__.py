@@ -102,7 +102,7 @@ def create_app(config=None):
                 g.factory_operational_request = True
             except Exception:
                 return jsonify(success=False,message='تعذر التأكد من حالة إعادة المصنع.'),503
-        if os.environ.get('MAX_MAINTENANCE_MODE') != '1':
+        if os.environ.get('ALPHA_MAINTENANCE_MODE') != '1':
             return None
         if request.path.startswith(('/static/', '/api/tools/database-maintenance', '/tools/database-maintenance', '/backups', '/api/backups', '/login', '/logout', '/settings/license')):
             if request.method in ('POST','PUT','PATCH','DELETE'):

@@ -2,15 +2,15 @@
   "status": "published_and_new_creation_default_verified",
   "version": "2.6.9",
   "web": {
-    "reference": "mohd777/alpha-radius-web:2.6.9-restore-fix-20261101-r1",
+    "reference": "gunaid/alpha-radius-web:2.6.9-restore-fix-20261101-r1",
     "digest": "sha256:886f3786bb9a0415e724f2df41edc3a179606135364f7733a85be6e9469c055b",
-    "pinned": "mohd777/alpha-radius-web@sha256:886f3786bb9a0415e724f2df41edc3a179606135364f7733a85be6e9469c055b",
+    "pinned": "gunaid/alpha-radius-web@sha256:886f3786bb9a0415e724f2df41edc3a179606135364f7733a85be6e9469c055b",
     "rootfs_matches": true,
     "runtime_configuration_matches": true,
     "latest_web_unchanged": true,
     "latest_core_unchanged": true
   },
-  "core": "mohd777/alpha-radius-core@sha256:9786df38bb3ce725c7a1f87a52b2db34ee90a0a221df29dd0331d95684a0a067",
+  "core": "gunaid/alpha-radius-core@sha256:9786df38bb3ce725c7a1f87a52b2db34ee90a0a221df29dd0331d95684a0a067",
   "tests": {
     "compiled_unit_cases": 67,
     "source_sqlite_transaction_cases": 8,
@@ -148,8 +148,8 @@
   "new_creation": {
     "at_utc": "2026-11-01T08:43:21.481506+00:00",
     "default_release": "2.6.9",
-    "web": "mohd777/alpha-radius-web@sha256:886f3786bb9a0415e724f2df41edc3a179606135364f7733a85be6e9469c055b",
-    "core": "mohd777/alpha-radius-core@sha256:9786df38bb3ce725c7a1f87a52b2db34ee90a0a221df29dd0331d95684a0a067",
+    "web": "gunaid/alpha-radius-web@sha256:886f3786bb9a0415e724f2df41edc3a179606135364f7733a85be6e9469c055b",
+    "core": "gunaid/alpha-radius-core@sha256:9786df38bb3ce725c7a1f87a52b2db34ee90a0a221df29dd0331d95684a0a067",
     "image_pulled_and_rootfs_verified": true,
     "ui_inventory_verified": true,
     "creation_default_verified": true,

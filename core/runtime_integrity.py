@@ -15,7 +15,7 @@ _started = False
 _status = {'state': 'not_checked'}
 
 
-def check_runtime(root=Path('/app'), control=Path('/opt/max-protection')):
+def check_runtime(root=Path('/app'), control=Path('/opt/alpha-protection')):
     from cryptography.hazmat.primitives import serialization
     root, control = Path(root).resolve(), Path(control)
     try:

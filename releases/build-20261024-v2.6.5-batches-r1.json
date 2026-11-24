@@ -1,7 +1,7 @@
 {
   "version": "2.6.5",
-  "tag": "mohd777/alpha-radius-web:20261024-v2.6.5-batches-r1",
-  "image": "mohd777/alpha-radius-web@sha256:189c4aab255386987b59b02601383f831a845356cbb8938c91fe8d9e49a0970e",
+  "tag": "gunaid/alpha-radius-web:20261024-v2.6.5-batches-r1",
+  "image": "gunaid/alpha-radius-web@sha256:189c4aab255386987b59b02601383f831a845356cbb8938c91fe8d9e49a0970e",
   "full_source_build": true,
   "source_files": 248,
   "source_manifest_sha256": "57293d924e94349412427267135d0af878a37dba1392fd6c5f84104014102337",

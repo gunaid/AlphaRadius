@@ -40,7 +40,7 @@ services:
     build:
       context: ./docker/freeradius
       dockerfile: Dockerfile
-    image: mohd777/alpha-radius-core:latest
+    image: gunaid/alpha-radius-core:latest
     container_name: alpha_radius_core
     cap_add:
       - NET_ADMIN
@@ -81,7 +81,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: mohd777/alpha-radius-web:latest
+    image: gunaid/alpha-radius-web:latest
     container_name: alpha_radius_web
     restart: unless-stopped
     cap_add:
@@ -155,7 +155,7 @@ services:
     build:
       context: ./docker/l2tp
       dockerfile: Dockerfile
-    image: mohd777/alpha-radius-l2tp:latest
+    image: gunaid/alpha-radius-l2tp:latest
     container_name: alpha_radius_l2tp
     restart: unless-stopped
     labels:

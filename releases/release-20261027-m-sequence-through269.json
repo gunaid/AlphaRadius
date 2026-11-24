@@ -55,6 +55,6 @@
     "2.6.8": "4b455e781030492407e19c55ad7875a3",
     "2.6.9": "379507e9cefb64ba56b56f2d82ee498a"
   },
-  "corrected_269_reference": "mohd777/alpha-radius-web@sha256:c5ab9fe42359c867c6dedabaf607ff492b2652e8160fa5df987e34e645db098b",
+  "corrected_269_reference": "gunaid/alpha-radius-web@sha256:c5ab9fe42359c867c6dedabaf607ff492b2652e8160fa5df987e34e645db098b",
   "private_evidence": "PRIVATE/m-sequence-269-offer-20261027-r1"
 }

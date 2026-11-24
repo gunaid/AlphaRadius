@@ -4,7 +4,7 @@
 
 مراجعة مصدر واختبارات معزولة بطلب الإنسان، دون تعديل محرك أو لوحة أو قاعدة أعمال، ودون بناء/رفع صور أو تحديث عميل أو دومين أو نشر بيان. لا اتصال بخادم control أو جرد لتركيبات العملاء؛ استنتاجات الحالة الحية تظل خارج هذا التقرير.
 
-المصدر التشغيلي للنظام هو checkout الحالي `alpha_radius_local`. مصدر مركز الإصدارات الخادمي هو `max_saas_panel_v2_local/backend/release_center.py`، وواجهته `web/update-center.js`. المشروع `max_saas_panel_v2_preview` واجهة مرجعية تضم بيانات توضيحية؛ ليس منفذ تحديث يعتمد للإطلاق. لم تستورد تطبيقات التشغيل لاستخراج فهرس أو تفحص مفاتيح أو اعتماد إنتاجي.
+المصدر التشغيلي للنظام هو checkout الحالي `alpha_radius_local`. مصدر مركز الإصدارات الخادمي هو `alpha_saas_panel_v2_local/backend/release_center.py`، وواجهته `web/update-center.js`. المشروع `alpha_saas_panel_v2_preview` واجهة مرجعية تضم بيانات توضيحية؛ ليس منفذ تحديث يعتمد للإطلاق. لم تستورد تطبيقات التشغيل لاستخراج فهرس أو تفحص مفاتيح أو اعتماد إنتاجي.
 
 الحكم: أساس قناة التحديث ومحرك Web/Core موجود. إصدار 2.6.6 النهائي غير جاهز للإتاحة العامة؛ يحتاج استكمال التغليف، حسم ترحيل المخطط وترتيبه، واعتماد ترقية/رجوع للصورة النهائية في النموذجين.
 
@@ -76,7 +76,7 @@
 
 ## مواضع المصدر الأساسية
 
-[القناة](../services/system_update_channel.py)، [المحرك](../services/system_update_executor.py)، [مواصفات الحاوية والرجوع](../services/system_update_runtime.py)، [تجهيز المنفذ](../deploy/hosted-max/provision_update_controller.py)، [تهيئة القاعدة](../database/db.py)، [Core](../docker/freeradius/entrypoint.sh)، [البناء](../Dockerfile). مصدر اللوحة الشقيق: `max_saas_panel_v2_local/backend/release_center.py` و`web/update-center.js`؛ لم تعدل هذه الملفات.
+[القناة](../services/system_update_channel.py)، [المحرك](../services/system_update_executor.py)، [مواصفات الحاوية والرجوع](../services/system_update_runtime.py)، [تجهيز المنفذ](../deploy/hosted-max/provision_update_controller.py)، [تهيئة القاعدة](../database/db.py)، [Core](../docker/freeradius/entrypoint.sh)، [البناء](../Dockerfile). مصدر اللوحة الشقيق: `alpha_saas_panel_v2_local/backend/release_center.py` و`web/update-center.js`؛ لم تعدل هذه الملفات.
 
 ## استكمال الفحوص بطلب الإنسان — الجولة الثانية
 

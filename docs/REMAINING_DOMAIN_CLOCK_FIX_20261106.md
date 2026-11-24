@@ -30,6 +30,6 @@
 
 تعذر ختم استقبال stdout عبر جلسةSSH الأولى لـmax1 بعد أن كانstateالبعيد قد سجلACCEPTED. قُرئالقبول والأدلة عبرجلسة مستقلة، وتبعها فحص ختامي ناجح؛ لم يُعد مشغّل التطبيق أوrestart أوأي عملية مالية. هذه مهلة نقل نتيجة، وليست دليل فشل التطبيق.
 
-المراجع المحمية المحلية PRIVATE/remaining-domain-clockfix-20261106-r1. البعيد: `/var/lib/max-host-r/manual-operations/max1-clockfix-20261106-r1` و`/opt/saas-manager-state/manual-operations/shn-clockfix-20261106-r1`. الحالةFINAL_ACCEPTED لكليهما؛ لاreplay لملفاتapply أوAPPLY.intent. ملفاتnormal_launch.py وnative-kit/control-new تظل تبعيات تشغيل حية؛ لا تحذفها.
+المراجع المحمية المحلية PRIVATE/remaining-domain-clockfix-20261106-r1. البعيد: `/var/lib/alpha-host-r/manual-operations/max1-clockfix-20261106-r1` و`/opt/saas-manager-state/manual-operations/shn-clockfix-20261106-r1`. الحالةFINAL_ACCEPTED لكليهما؛ لاreplay لملفاتapply أوAPPLY.intent. ملفاتnormal_launch.py وnative-kit/control-new تظل تبعيات تشغيل حية؛ لا تحذفها.
 
 لم يلزم الرجوع. لا تستعدDB للرجوع عن هذا التعديل؛ أي رجوع لغلاف قديم قد يعيد عيب التوقيت. أصل الخلل وتدقيق أثره لدى العميل في [تقرير m](M_R_RENEWAL_TIMEZONE_FIX_20261106.md).

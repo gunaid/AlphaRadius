@@ -12,7 +12,7 @@ from unittest.mock import patch
 from werkzeug.datastructures import FileStorage
 
 ROOT = Path(__file__).resolve().parents[1]
-if os.environ.get('MAX_COMPILED_SETTINGS_FIXTURE') == 'synthetic-owned':
+if os.environ.get('ALPHA_COMPILED_SETTINGS_FIXTURE') == 'synthetic-owned':
     ROOT = Path('/fixture')
 
 
@@ -23,7 +23,7 @@ def load(module, path):
     return value
 
 
-if os.environ.get('MAX_COMPILED_SETTINGS_FIXTURE') == 'synthetic-owned':
+if os.environ.get('ALPHA_COMPILED_SETTINGS_FIXTURE') == 'synthetic-owned':
     from services import system_settings_service as settings
     from services import migration_upload_service as migration
     from core import license_feature_policy as policy

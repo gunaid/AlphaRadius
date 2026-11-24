@@ -101,7 +101,7 @@ def extend_cases(h,base,radius):
             try:
                 image=subprocess.check_output(['docker','image','inspect','--format','{{.Id}}','alpha-radius-web:20261017-batch-export-filenames-lab'],text=True).strip()
                 helper=subprocess.check_output(['docker','run','-d','--name','max-clock-operator-'+uuid.uuid4().hex[:10],
-                    '--label','max-owned-task=clock-record-operator-lab','--network',radius.network,'--restart=no',
+                    '--label','alpha-owned-task=clock-record-operator-lab','--network',radius.network,'--restart=no',
                     '--entrypoint','sleep',image,'infinity'],text=True).strip()
                 b=self.binding();b.update(web_id=helper,db_id=h.container,core_id=radius.container,web_image=image,core_image=radius.image,db_host='fixture-db',db_port=3306)
                 b['containers']=[]

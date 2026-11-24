@@ -146,7 +146,7 @@ def main():
                    'CREATE DATABASE ' + schema + ' CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci')
         runner = owner + '-runner'
         docker('create', '--name', runner, '--network', owner, '--label', 'max.acctid.owner=' + owner,
-               '--memory', '256m', '-e', 'MAX_ACCTID_FIXTURE=' + owner, '-e', 'DB_HOST=' + db_name,
+               '--memory', '256m', '-e', 'ALPHA_ACCTID_FIXTURE=' + owner, '-e', 'DB_HOST=' + db_name,
                '-e', 'DB_NAME=identity_candidate', '--entrypoint', 'sleep', runner_image, 'infinity')
         owned.append(runner)
         docker('cp', str(stage), runner + ':/fixture')

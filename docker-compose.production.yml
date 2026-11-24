@@ -6,7 +6,7 @@ services:
   # 1. MariaDB Database
   # ============================================================
   mariadb:
-    image: ${MAX_DB_IMAGE:-mariadb:10.11}
+    image: ${ALPHA_DB_IMAGE:-mariadb:10.11}
     container_name: alpha_radius_db
     restart: unless-stopped
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --innodb-buffer-pool-size=512M --innodb-flush-log-at-trx-commit=2 --innodb-log-file-size=64M
@@ -37,7 +37,7 @@ services:
   # 2. FreeRADIUS Core
   # ============================================================
   freeradius:
-    image: ${MAX_CORE_IMAGE:-mohd777/alpha-radius-core:latest}
+    image: ${ALPHA_CORE_IMAGE:-gunaid/alpha-radius-core:latest}
     container_name: alpha_radius_core
     cap_add:
       - NET_ADMIN
@@ -72,7 +72,7 @@ services:
   # 3. WISP Web Dashboard
   # ============================================================
   wisp-web:
-    image: ${MAX_WEB_IMAGE:-mohd777/alpha-radius-web:latest}
+    image: ${ALPHA_WEB_IMAGE:-gunaid/alpha-radius-web:latest}
     container_name: alpha_radius_web
     restart: unless-stopped
     cap_add:
@@ -120,7 +120,7 @@ services:
   # 4. Autoheal
   # ============================================================
   autoheal:
-    image: ${MAX_AUTOHEAL_IMAGE:-willfarrell/autoheal:latest}
+    image: ${ALPHA_AUTOHEAL_IMAGE:-willfarrell/autoheal:latest}
     pull_policy: always
     container_name: alpha_radius_autoheal
     restart: unless-stopped
@@ -140,7 +140,7 @@ services:
   # 5. L2TP / VPN Server
   # ============================================================
   l2tp:
-    image: ${MAX_L2TP_IMAGE:-mohd777/alpha-radius-l2tp:latest}
+    image: ${ALPHA_L2TP_IMAGE:-gunaid/alpha-radius-l2tp:latest}
     container_name: alpha_radius_l2tp
     restart: unless-stopped
     labels:

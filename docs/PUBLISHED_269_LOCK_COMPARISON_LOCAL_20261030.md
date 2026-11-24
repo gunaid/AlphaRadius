@@ -12,7 +12,7 @@
 
 ## هوية النسخ والمقارنة
 
-- تحقق Registry حي للوسم `mohd777/alpha-radius-web:2.6.9-reports-backup-r1`: OCI index `sha256:c5ab9fe42359c867c6dedabaf607ff492b2652e8160fa5df987e34e645db098b`، وLinux/amd64 manifest `sha256:6ec79491d96748e7f4d2662897b383459472952438680807d2c1d46f5bf75d66`. شُغّل المحتوى المثبت بالبصمة المتاح محليًا؛ لم يستخدم latest أو يبنَ من المصدر الجاري.
+- تحقق Registry حي للوسم `gunaid/alpha-radius-web:2.6.9-reports-backup-r1`: OCI index `sha256:c5ab9fe42359c867c6dedabaf607ff492b2652e8160fa5df987e34e645db098b`، وLinux/amd64 manifest `sha256:6ec79491d96748e7f4d2662897b383459472952438680807d2c1d46f5bf75d66`. شُغّل المحتوى المثبت بالبصمة المتاح محليًا؛ لم يستخدم latest أو يبنَ من المصدر الجاري.
 - المرشح المحلي: `sha256:3f2b7ddb285e333d40460049de59c8bdf7fe019fb43e4a01411a816728cfede8`.
 - استُدعيت الدالة المجمعة `rows_for` في الصورتين عبر اتصال تسجيل معزول بلا شبكة، وأنتجتا `SELECT * FROM radacct_owned WHERE username=%s AND acctstoptime IS NULL FOR UPDATE` نفسه. تصحيح تسمية: اسم الدالة الفعلي في هاتين الصورتين `rows_for`؛ تقرير الضغط أشار إليها سابقًا باسم open_sessions، بينما نص SQL المحفوظ صحيح.
 - وحدات `renewal_settlement_service` و`database.db` و`cycle_safety` و`schema_healer` متطابقة بايتًا بين الصورتين. وحدة `online_policy_service` مختلفة البصمة، لذلك لا يُدعى تطابقها كاملة، لكن قراءة القفل المقصودة متطابقة بالفعل.

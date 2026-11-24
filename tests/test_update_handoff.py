@@ -25,14 +25,14 @@ class HandoffTests(unittest.TestCase):
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory();self.folder=Path(self.temp.name)
         mounts=[dict(Type='bind',Source='/audit/'+str(i),Destination=d,RW=True) for i,d in enumerate(
-            ('/max-update-private','/max-update-socket','/max-update-compose','/var/run/docker.sock'))]
+            ('/alpha-update-private','/alpha-update-socket','/alpha-update-compose','/var/run/docker.sock'))]
         self.old=dict(Id='a'*64,Name='/owned_controller',Image='old',Config={'Labels':{'com.docker.compose.project':'owned','com.docker.compose.service':'update_controller'},'Env':['FIXTURE=1']},
             HostConfig={'RestartPolicy':{'Name':'unless-stopped'},'NetworkMode':'none'},Mounts=mounts,
             State={'Running':True,'StartedAt':'original'},NetworkSettings={'Networks':{}})
         self.web=dict(Id='c'*64,Name='/owned_web',Image='candidate',State={'Running':True})
         self.api=API(self.old,self.web);self.probes=[]
         self.compose=self.folder/'compose.json';self.compose.write_text(json.dumps({'services':{'web':{'image':'candidate'},'update_controller':{'image':'old'}}}))
-        self.plan={'job':'d'*32,'images':{'web':'candidate'},'references':{'web':'mohd777/alpha-radius-web@sha256:'+'e'*64},'project':'owned','publisher_key':'fixture',
+        self.plan={'job':'d'*32,'images':{'web':'candidate'},'references':{'web':'gunaid/alpha-radius-web@sha256:'+'e'*64},'project':'owned','publisher_key':'fixture',
             'compose_path':str(self.compose),'controller':{'service':'update_controller','old':self.old}}
         h.write_json(self.folder/'plan.private.json',self.plan)
         h.write_json(self.folder/'state.json',{'status':'handoff_pending','services':{'web':{'new_id':self.web['Id']}}})
@@ -93,9 +93,9 @@ class HandoffTests(unittest.TestCase):
     def test_legacy_socket_is_recovered_only_from_owned_read_only_web_mount(self):
         web=self.api.rows[self.web['Id']]
         web['Config']={'Labels':{'com.docker.compose.project':'owned','com.docker.compose.service':'web'}}
-        web['Mounts']=[dict(Type='bind',Source='/audit/1',Destination='/max-update-socket',RW=False)]
+        web['Mounts']=[dict(Type='bind',Source='/audit/1',Destination='/alpha-update-socket',RW=False)]
         config={'project':'owned','services':{'web':'web'},'controller_mounts':[
-            dict(Target=m['Destination'],Source=m['Source']) for m in self.old['Mounts'] if m['Destination']!='/max-update-socket']}
+            dict(Target=m['Destination'],Source=m['Source']) for m in self.old['Mounts'] if m['Destination']!='/alpha-update-socket']}
         result=h.freeze(self.api,config,{'services':{'update_controller':{}}})
         self.assertEqual(result['legacy_socket_mount']['Source'],'/audit/1')
         web['Mounts'][0]['Source']='/foreign'

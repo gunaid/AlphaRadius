@@ -2,7 +2,7 @@
   "version": "2.7.1",
   "build": "20261110-history-only-r29",
   "image_digest": "sha256:a4312891aa7c06d1cfed0fc5c463632d6f35d14a16430e5f81feb24f4a81231e",
-  "tag": "mohd777/alpha-radius-web:2.7.1-history-only-20261110-r29",
+  "tag": "gunaid/alpha-radius-web:2.7.1-history-only-20261110-r29",
   "application_ui_base": "sha256:c1c7b17eafe3b83dee41795f786665d9cd7928bf297d8e3789e03c14b10c1dc6",
   "ui_equivalent_to_full_browser_tested_r28": true,
   "runtime_delta_from_r28": [

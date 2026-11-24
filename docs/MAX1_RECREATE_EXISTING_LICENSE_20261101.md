@@ -26,4 +26,4 @@
 - إعادة مقارنة بقية التراخيص والحاويات/الروابط/الأنفاق، والتحقق من النفق الفعلي إن كان الراوتر متصلًا؛ لا ادعاء مصادقة عميل بلا دليل.
 - نقطة أخرى اكتشفت قراءة فقط: issuer-api للمضيف يعيد RuntimeError، والforced adapter يرفض API بينما issue/read متاحان. لا تغيير عام للبوابة أو خادم الترخيص ضمن هذه الجولة؛ ربط max1 أُنجز عبر الجهة الأصلية بحساب root الموثوق ضمن النطاق المحدد.
 
-الأدلة المحلية PRIVATE/max1-native-resume-20261101-r1. دليل المضيف الجديد /var/lib/max-host-r/change-evidence/max1-native-resume-20261101-r1. دليل جهة الترخيص /opt/max-license-server/storage/change-evidence/max1-resume-20261101-r1. لا أسرار في هذا الملف. لا نشر Registry/latest ولا تعديل270 ولا استئناف المراقبة أو مختبر النسخ المتوقف.
+الأدلة المحلية PRIVATE/max1-native-resume-20261101-r1. دليل المضيف الجديد /var/lib/alpha-host-r/change-evidence/max1-native-resume-20261101-r1. دليل جهة الترخيص /opt/alpha-license-server/storage/change-evidence/max1-resume-20261101-r1. لا أسرار في هذا الملف. لا نشر Registry/latest ولا تعديل270 ولا استئناف المراقبة أو مختبر النسخ المتوقف.

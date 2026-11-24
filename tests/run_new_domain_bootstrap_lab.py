@@ -47,12 +47,12 @@ def main():
          'publisher_key_sha256':'060168f73961b3c4c7e47144285f92bb902b78802a6ae64b4fe15f2d9c2fca84',
          'key_fingerprint':hook.PUBLIC_TRUST}
     settings=root/'settings.json';settings.write_text(json.dumps(cfg));hook.SETTINGS=settings
-    reference='mohd777/alpha-radius-web@sha256:7a9dacdc402a1a01c7481740a1f41a0ecfef8be4fa92948d1ecb1de9a0a1490b'
+    reference='gunaid/alpha-radius-web@sha256:7a9dacdc402a1a01c7481740a1f41a0ecfef8be4fa92948d1ecb1de9a0a1490b'
     image=json.loads(hook.run(['docker','image','inspect',reference]))[0]
     (tenant/'tenant.json').write_text(json.dumps({'subdomain':name,'instance_uuid':'INST-'+uuid.uuid4().hex[:10].upper(),'tunnel_mode':'central'}))
     (tenant/'creation-release.json').write_text(json.dumps({'web':{'reference':reference,'image_id':image['Id']}}))
     document={'services':{'web':{'image':reference,'environment':{},'volumes':['./storage:/app/storage']},
-                          'radius_core':{'image':'mohd777/alpha-radius-core@sha256:b0e1b2e1f4a9fd35845800013fe59b95536efaaa71548e1a34ed6e1556da3a00'},
+                          'radius_core':{'image':'gunaid/alpha-radius-core@sha256:b0e1b2e1f4a9fd35845800013fe59b95536efaaa71548e1a34ed6e1556da3a00'},
                           'db':{'image':'mariadb:10.11'}},'networks':{'tenant_net':{'name':name+'_tenant_net'}}}
     (tenant/'docker-compose.yml').write_text(json.dumps(document))
     # Same official registration transaction is idempotent before any generator runs.

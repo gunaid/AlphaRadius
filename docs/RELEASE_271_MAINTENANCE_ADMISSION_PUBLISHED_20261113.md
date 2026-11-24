@@ -4,7 +4,7 @@
 
 ## المحتوى والهوية
 
-الصورة المنشورة `mohd777/alpha-radius-web@sha256:cfbb38203bc94a770242040e48a398f2a2c4594829a486b00303986ef795c30d`، والأوسمة `2.7.1` و`2.7.1-update-safety-20261107-r7` و`2.7.1-maintenance-admission-20261113-r37` تشير إليها. البيان الافتراضي `20261113-v2.7.1-maintenance-admission-r37`؛343مدخلة مصدر LF مثبتة. بقية صور Core/DB/L2TP/Autoheal ووسم latest ثابتة.
+الصورة المنشورة `gunaid/alpha-radius-web@sha256:cfbb38203bc94a770242040e48a398f2a2c4594829a486b00303986ef795c30d`، والأوسمة `2.7.1` و`2.7.1-update-safety-20261107-r7` و`2.7.1-maintenance-admission-20261113-r37` تشير إليها. البيان الافتراضي `20261113-v2.7.1-maintenance-admission-r37`؛343مدخلة مصدر LF مثبتة. بقية صور Core/DB/L2TP/Autoheal ووسم latest ثابتة.
 
 البناء دلتا موقعة فوق r36/e4984159، فيحتفظ بضمان فهرس حجوزات radacctid في الإنشاء والترقية. خمس وحدات الأتمتة والصيانة مجمعة: maintenance_admission وautomation_task_actions وautomation_task_service وdb_maintenance_service وaccounting_archiver_service.251ملف تشغيل موروثًا و80قالبًا مطابقة؛ توقيع runtime وناشره صحيحان، ولا مصدر محمي أو مفاتيح خاصة أو اعتمادات في الصورة. لا ادعاء بناء كامل للتبعيات الموروثة. معاينة GIS2.7.2 وأعمال الحارس غير المنشورة خارج دلتا المصدر.
 

@@ -20,7 +20,7 @@ Working memory at second read: Core1.219MiB,Web416KiB,DB19.2MiB, total~20.8MiB. 
 
 Read-only dormancy/dependency evidence: no published ports in the three containers; no Nginx references to their names/IPs; no current TCPconnections involving their IPs; no environment references from other running containers; no shared critical production storage/database mounts found. DB last session update11October14:57:53 and last auth11October05:55:16 in its stored timezone. Web/Core log tail had no24hactivity. Configured2NASentries are historical configuration, not live traffic. No synthetic test was run. Inspection cannot prove every possible external/unrecorded dependency absent, but evidence supports a dormant-lab shutdown candidate.
 
-Recommended first cleanup, if separately requested: stop the three exact pinned lab containers only, preserving images, volumes and data for reversible restart. Expected RAMsaving only~21MiB plus~197MiBswap: useful tidying, not a multi-GiB memory cure. Do not delete this database/volumes or replay financial fixtures. max_panel_l2tp is essential shared production transport and is excluded despite missing Compose labels.
+Recommended first cleanup, if separately requested: stop the three exact pinned lab containers only, preserving images, volumes and data for reversible restart. Expected RAMsaving only~21MiB plus~197MiBswap: useful tidying, not a multi-GiB memory cure. Do not delete this database/volumes or replay financial fixtures. alpha_panel_l2tp is essential shared production transport and is excluded despite missing Compose labels.
 
 ## Conclusion
 

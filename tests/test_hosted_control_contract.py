@@ -29,8 +29,8 @@ lifecycle = load('hosted_lifecycle', ROOT / 'deploy/hosted-max/tenant_control_li
 class ContractTests(unittest.TestCase):
     def setUp(self):
         self.tenant = 'a' * 32
-        self.env = {'MAX_CONTROL_MODE': 'hosted', 'MAX_CONTROL_SOCKET': '/private/control.sock',
-                    'MAX_CONTROL_TENANT_ID': self.tenant, 'INSTANCE_UUID': 'INST-ABCDEF012345',
+        self.env = {'ALPHA_CONTROL_MODE': 'hosted', 'ALPHA_CONTROL_SOCKET': '/private/control.sock',
+                    'ALPHA_CONTROL_TENANT_ID': self.tenant, 'INSTANCE_UUID': 'INST-ABCDEF012345',
                     'CLIENT_SUBDOMAIN': 'm'}
         self.patcher = patch.dict(os.environ, self.env, clear=True)
         self.patcher.start()
@@ -64,11 +64,11 @@ class ContractTests(unittest.TestCase):
     def test_local_default_and_explicit_local_preserve_legacy_selection(self):
         with patch.dict(os.environ, {}, clear=True):
             self.assertFalse(h.configured())
-        with patch.dict(os.environ, {'MAX_CONTROL_MODE': 'local'}, clear=True):
+        with patch.dict(os.environ, {'ALPHA_CONTROL_MODE': 'local'}, clear=True):
             self.assertFalse(h.configured())
 
     def test_partial_hosted_configuration_never_falls_back(self):
-        with patch.dict(os.environ, {'MAX_CONTROL_SOCKET': '/x'}, clear=True):
+        with patch.dict(os.environ, {'ALPHA_CONTROL_SOCKET': '/x'}, clear=True):
             self.assertTrue(h.configured())
 
     def test_hosted_core_identity_and_verified_status(self):

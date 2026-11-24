@@ -265,7 +265,7 @@ def reconcile_container_alerts():
 def run_watchdog_cycle():
     """Execute one full watchdog cycle with auto-healing and auto-resolution."""
     from services.factory_reset_service import factory_reset_active
-    if os.environ.get('MAX_MAINTENANCE_MODE') == '1':
+    if os.environ.get('ALPHA_MAINTENANCE_MODE') == '1':
         return {'status':'maintenance'}
     try:
         if factory_reset_active():

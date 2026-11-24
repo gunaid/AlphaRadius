@@ -13,11 +13,11 @@
 
 ## الصورة والتوزيع
 
-الصورة الثابتة `mohd777/alpha-radius-web:2.7.1-point-october-20261111-r34`، وبصمتها:
+الصورة الثابتة `gunaid/alpha-radius-web:2.7.1-point-october-20261111-r34`، وبصمتها:
 
 `sha256:89ce5cd11959ac2acda0c41aeff82bb71fe083c9685fd2fb3f113001dc02a951`
 
-الوسمان `mohd777/alpha-radius-web:2.7.1` و`2.7.1-update-safety-20261107-r7` يشيران إلى البصمة نفسها. وسم r33 الثابت وبقية الوسوم التاريخية محفوظة. لم يتغير `latest` أو صور Core وMariaDB وL2TP وAutoheal. [إيصال Registry](../releases/2.7.1/registry-20261111-r34.json) و[بيان النشر](../releases/point-october-20261111-v2.7.1-r34.json) مستقلان عن إيصالات r33 السابقة.
+الوسمان `gunaid/alpha-radius-web:2.7.1` و`2.7.1-update-safety-20261107-r7` يشيران إلى البصمة نفسها. وسم r33 الثابت وبقية الوسوم التاريخية محفوظة. لم يتغير `latest` أو صور Core وMariaDB وL2TP وAutoheal. [إيصال Registry](../releases/2.7.1/registry-20261111-r34.json) و[بيان النشر](../releases/point-october-20261111-v2.7.1-r34.json) مستقلان عن إيصالات r33 السابقة.
 
 [release.json](../release.json) يختار `20261111-v2.7.1-point-october-r34` ويثبت Web الجديدة بالبصمة. [حزمة المثبت](../releases/runtime-20261111-v2.7.1-point-october-r34.tar.gz) تتضمن الملفات العشرة المعتمدة نفسها؛ تغيّر مرجع Web في `runtime-release.env` فقط عن حزمة r33. المخطط ومراجع بقية المكونات لم تتغير. [بيان أعضاء الحزمة](../releases/installer-bundle-20261111-v2.7.1-point-october-r34.json) يحفظ البصمات.
 

@@ -177,8 +177,8 @@ def compact_dump(stream, snapshot_at, work_parent=None, session_days=90, auth_da
                    financial_records='complete', session_sort='disk_username_start')
     cutoff = snapshot_at - dt.timedelta(days=session_days)
     auth_cutoff = snapshot_at - dt.timedelta(days=auth_days)
-    with tempfile.TemporaryDirectory(prefix='max-backup-sort-', dir=work_parent) as work:
-        (Path(work) / '.max-backup-owner').write_bytes(b'alpha-radius-backup-work-v1\n')
+    with tempfile.TemporaryDirectory(prefix='alpha-backup-sort-', dir=work_parent) as work:
+        (Path(work) / '.alpha-backup-owner').write_bytes(b'alpha-radius-backup-work-v1\n')
         db = sqlite3.connect(str(Path(work) / 'sort.sqlite'))
         try:
             db.executescript('''PRAGMA cache_size=-4096; PRAGMA temp_store=FILE;
@@ -301,7 +301,7 @@ def backup_lock(directory, work_directory=None):
     """Backup-specific cross-process lock, independent of the 2.7 heavy job system."""
     # Storage is shared by every worker even if the configured export destination
     # changes. Never let two destination locks clean each other's active sort.
-    with open(Path(work_directory or directory) / '.max-backup.lock', 'a+b') as lock:
+    with open(Path(work_directory or directory) / '.alpha-backup.lock', 'a+b') as lock:
         try:
             import fcntl
         except ImportError:
@@ -327,10 +327,10 @@ def backup_lock(directory, work_directory=None):
                 for old in root.iterdir():
                     if old.is_symlink() or old.resolve().parent != root:
                         continue
-                    if re.fullmatch(r'\.max-backup-[a-z0-9_]{8}\.partial', old.name) and old.is_file():
+                    if re.fullmatch(r'\.alpha-backup-[a-z0-9_]{8}\.partial', old.name) and old.is_file():
                         old.unlink()
-                    elif re.fullmatch(r'max-backup-sort-[a-z0-9_]{8}', old.name) and old.is_dir():
-                        marker = old / '.max-backup-owner'
+                    elif re.fullmatch(r'alpha-backup-sort-[a-z0-9_]{8}', old.name) and old.is_dir():
+                        marker = old / '.alpha-backup-owner'
                         if marker.is_file() and not marker.is_symlink() and marker.read_bytes() == b'alpha-radius-backup-work-v1\n':
                             shutil.rmtree(old)
             yield
@@ -346,7 +346,7 @@ def backup_lock(directory, work_directory=None):
 def atomic_tarfile(filepath):
     """Only a complete fsynced archive becomes discoverable as .tar.gz."""
     filepath = Path(filepath)
-    descriptor, partial = tempfile.mkstemp(prefix='.max-backup-', suffix='.partial', dir=filepath.parent)
+    descriptor, partial = tempfile.mkstemp(prefix='.alpha-backup-', suffix='.partial', dir=filepath.parent)
     try:
         with os.fdopen(descriptor, 'wb') as target:
             compressed = _FilteredGzip(target)

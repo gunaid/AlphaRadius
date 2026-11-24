@@ -30,7 +30,7 @@ def render_parts(parts, static_folder, timeout=180, memory_mb=768, cancelled=Non
     if cancelled is None:
         from services.heavy_operation_service import export_cancelled
         cancelled=export_cancelled
-    with operation_slot(), tempfile.TemporaryDirectory(prefix='max-pdf-') as directory:
+    with operation_slot(), tempfile.TemporaryDirectory(prefix='alpha-pdf-') as directory:
         root = Path(directory)
         started = time.monotonic()
         try:

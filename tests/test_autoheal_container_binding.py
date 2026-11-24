@@ -32,7 +32,7 @@ def item(i,name,role,project='fixture',state='running'):
 class Binding(unittest.TestCase):
     def setUp(self):
         self.ns=load_functions();self.items=[item(i+1,n,r) for i,(n,r) in enumerate(zip(NAMES,ROLES))]
-        self.old=item(255,'max_web_previous_fixture','wisp-web',state='exited');self.items.insert(0,self.old)
+        self.old=item(255,'alpha_web_previous_fixture','wisp-web',state='exited');self.items.insert(0,self.old)
         self.calls=[];self.events=[];self.inspect_hook=None
         self.ns['_runtime_container_ids']=lambda:set()
         self.ns['docker_api_request']=self.api
@@ -87,7 +87,7 @@ class Binding(unittest.TestCase):
     def test_archived_id_denied(self):
         self.assertFalse(self.ns['restart_system_container'](self.old['Id'])[0]);self.no_mutation()
     def test_archived_name_denied(self):
-        self.assertFalse(self.ns['restart_system_container']('max_web_previous_fixture')[0]);self.no_mutation()
+        self.assertFalse(self.ns['restart_system_container']('alpha_web_previous_fixture')[0]);self.no_mutation()
     def test_restart_requires_full_id(self):
         for bad in ['alpha_radius_web','%012x'%3,'../containers/web','',None]:
             self.assertFalse(self.ns['restart_system_container'](bad)[0])

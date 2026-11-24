@@ -4,8 +4,8 @@
 
 ## المراجع والحزمة
 
-- Web: `mohd777/alpha-radius-web@sha256:5455db7ca85a1d5f6c5c205fca0e171cefb28dc9f008dc56d25d4ecd090fa2ca`
-- Core: `mohd777/alpha-radius-core@sha256:10cc88946c5ed6310a36c4c11b7e991277137da87eb019958f2eb45c8d2eabf5`
+- Web: `gunaid/alpha-radius-web@sha256:5455db7ca85a1d5f6c5c205fca0e171cefb28dc9f008dc56d25d4ecd090fa2ca`
+- Core: `gunaid/alpha-radius-core@sha256:10cc88946c5ed6310a36c4c11b7e991277137da87eb019958f2eb45c8d2eabf5`
 - صور MariaDB وL2TP وAutoheal ثابتة كما كانت في المثبت السابق؛ لا تحديث لصورة DB ضمن هذه الخطوة.
 - [أرشيف التشغيل](../releases/runtime-20261102-v2.7.0-r1.tar.gz):20,412بايت، SHA256 `9fe5c1e51406ddd5d2bfa35c5e142163477abee000d250e08906d54ede2531a7`، عشرة ملفات عادية فقط. يشمل Composeالإنتاج ومخططSQLالحالي وPPPوالمفتاحالعام وبيانالصور وخمسةملفاتclock-guard الاختيارية. لا مفاتيح خاصة أوبياناتعميل أو مصدرWeb/Core.
 - [سجل أعضاء الحزمة](../releases/installer-bundle-20261102-v2.7.0-r1.json) و[بيان المصدر](../releases/source-20261102-v2.7.0-repository-r1.json) مستقلان؛ مصدرGitلايدّعيإعادةبناءالصورةالمترجمة.

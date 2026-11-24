@@ -138,7 +138,7 @@ class ComponentControlTests(_Fixture):
             def request(method,route,body=b''):
                 with socket.socket(socket.AF_UNIX,socket.SOCK_STREAM) as client:
                     client.settimeout(5);client.connect(str(path))
-                    client.sendall((method+' /_max_updates/v4/components/'+route+' HTTP/1.0\r\nHost: local\r\nContent-Length: '+str(len(body))+'\r\n\r\n').encode()+body)
+                    client.sendall((method+' /_alpha_updates/v4/components/'+route+' HTTP/1.0\r\nHost: local\r\nContent-Length: '+str(len(body))+'\r\n\r\n').encode()+body)
                     result=b''
                     while True:
                         chunk=client.recv(65536)

@@ -19,25 +19,25 @@
             const fields = label.parentElement.querySelectorAll('input:not([type=hidden]),select,textarea');
             if (fields.length !== 1) return;
             const field = fields[0];
-            if (!field.id) field.id = `max-ui-field-${++sequence}`;
+            if (!field.id) field.id = `alpha-ui-field-${++sequence}`;
             label.htmlFor = field.id;
         });
         root.querySelectorAll('div.fixed.inset-0').forEach(modal => {
             const close = [...modal.querySelectorAll('button[onclick]')].find(button => /(?:close|hide)\w*\(/i.test(button.getAttribute('onclick')));
             // Backdrops, job overlays and the sidebar are not editable dialogs.
             if (!close || !modal.querySelector('h2,h3,h4')) return;
-            modal.classList.add('max-ui-modal');
+            modal.classList.add('alpha-ui-modal');
             modal.setAttribute('role', 'dialog');
             modal.setAttribute('aria-modal', 'true');
             modal.tabIndex = -1;
             const heading = modal.querySelector('h2,h3,h4');
-            if (!heading.id) heading.id = `max-ui-dialog-title-${++sequence}`;
+            if (!heading.id) heading.id = `alpha-ui-dialog-title-${++sequence}`;
             modal.setAttribute('aria-labelledby', heading.id);
             if (!close.textContent.trim() || close.querySelector('.fa-xmark,.fa-times')) close.setAttribute('aria-label', 'إغلاق النافذة');
         });
     }
     function sync() {
-        document.querySelectorAll('.max-ui-modal').forEach(modal => {
+        document.querySelectorAll('.alpha-ui-modal').forEach(modal => {
             if (visible(modal) && !open.has(modal)) {
                 if (!open.size) {
                     previousOverflow = document.body.style.overflow;
@@ -82,7 +82,7 @@
             records.filter(record => record.type === 'childList').forEach(record => {
                 record.addedNodes.forEach(node => { if (node.nodeType === 1) enhance(node); });
             });
-            if (records.some(record => record.type === 'childList' || record.target.classList?.contains('max-ui-modal'))) sync();
+            if (records.some(record => record.type === 'childList' || record.target.classList?.contains('alpha-ui-modal'))) sync();
         });
         observer.observe(document.body, {subtree: true, childList: true, attributes: true, attributeFilter: ['class','style','title']});
     });

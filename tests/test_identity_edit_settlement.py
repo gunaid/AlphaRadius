@@ -21,7 +21,7 @@ NOW = datetime.datetime(2026, 11, 2, 16)
 
 def load(name, path):
     target = ROOT / path
-    if os.environ.get('MAX_TEST_COMPILED_IDENTITY') == '1':
+    if os.environ.get('ALPHA_TEST_COMPILED_IDENTITY') == '1':
         name = '.'.join(Path(path).with_suffix('').parts)
         target = next(Path('/app').glob(str(Path(path).with_suffix('')) + '*.so'))
     spec = importlib.util.spec_from_file_location(name, target)
@@ -146,7 +146,7 @@ class IdentityEditTests(unittest.TestCase):
             def close(self): pass
         api = types.ModuleType('core.mikrotik_api'); api.RouterOSApiProtocol = NAS
         lock = types.ModuleType('services.account_lock_service'); lock.account_lock_name = lambda *a: 'fixture-lock'
-        if os.environ.get('MAX_TEST_COMPILED_IDENTITY') == '1':
+        if os.environ.get('ALPHA_TEST_COMPILED_IDENTITY') == '1':
             self.policy = load('_identity_policy_test', 'services/online_policy_service.py')
             bind_database(self.policy, self.dbmod)
         else:

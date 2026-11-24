@@ -13,8 +13,8 @@
 ## الصورتان
 
 ```text
-mohd777/alpha-radius-web:2.7.0-maintenance-20261105-r2
-mohd777/alpha-radius-core:2.7.0-maintenance-20261105-r2
+gunaid/alpha-radius-web:2.7.0-maintenance-20261105-r2
+gunaid/alpha-radius-core:2.7.0-maintenance-20261105-r2
 ```
 
 البصمات والأحجام في [release-candidate.json](release-candidate.json). رُفعت الصورتان وتحقق digestالمستودع وسُحبتا به وطابقت طبقاتهما وإعداداتهما الصور المختبرة؛ [إيصالRegistry](registry.json). حجم الصورة المحلي غير المضغوط ليس حجم الرفع؛ Dockerيرفع الطبقات غير الموجودة في المستودع فقط.

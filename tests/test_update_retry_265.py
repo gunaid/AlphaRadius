@@ -22,7 +22,7 @@ def load_file(name, path):
 
 class RetryTests(unittest.TestCase):
     def setUp(self):
-        if os.environ.get('MAX_RETRY_COMPILED') == '1':
+        if os.environ.get('ALPHA_RETRY_COMPILED') == '1':
             from services import system_update_host
             self.module = system_update_host
         else:
@@ -192,10 +192,10 @@ class RetryTests(unittest.TestCase):
             with self.assertRaises(BlockingIOError):self.submit()
         self.assertFalse(any(m=='POST' for m,p in self.calls))
 
-    @unittest.skipUnless(os.environ.get('MAX_RETRY_REAL_HELPER')=='1','explicit isolated Docker fixture')
+    @unittest.skipUnless(os.environ.get('ALPHA_RETRY_REAL_HELPER')=='1','explicit isolated Docker fixture')
     def test_actual_docker_worker_must_exit_before_retry(self):
         from services.system_update_runtime import Docker
-        docker=Docker();image=os.environ['MAX_RETRY_FIXTURE_IMAGE']
+        docker=Docker();image=os.environ['ALPHA_RETRY_FIXTURE_IMAGE']
         made=docker('POST','/containers/create',{'Image':image,'Entrypoint':['python','-B','-c'],
                     'Cmd':['import time;time.sleep(1)'],'Labels':{'max.update.controller':'owned','max.update.job':self.job},
                     'HostConfig':{'NetworkMode':'none','ReadonlyRootfs':True,'RestartPolicy':{'Name':'no'}}})

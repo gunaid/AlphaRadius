@@ -28,9 +28,9 @@
 
 الحاويات الأقدم ذات مجموع طبقات الكتابة 463.66MiB:
 
-- `max_web_prev_limit45_20261022`
-- `max_web_prev_backup_media_20261018`
-- `max_core_prev_acctid_20261021t045717z`؛ وحدها نحو 462.36MiB.
+- `alpha_web_prev_limit45_20261022`
+- `alpha_web_prev_backup_media_20261018`
+- `alpha_core_prev_acctid_20261021t045717z`؛ وحدها نحو 462.36MiB.
 
 زوج الخطة المحفوظ:
 

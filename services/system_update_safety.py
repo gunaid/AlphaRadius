@@ -16,7 +16,7 @@ y=query_one("""SELECT r.is_valid,
  r.package_hash=SHA2(i.raw_package_json,256) AND r.license_row_id=i.id bound
  FROM wisp_license_runtime_state r JOIN wisp_license_info i ON i.id=r.license_row_id
  WHERE r.id=1 AND i.id=(SELECT MAX(id) FROM wisp_license_info)""")
-v=subprocess.run(['python','/opt/max-protection/verify.py'],capture_output=True,timeout=8)
+v=subprocess.run(['python','/opt/alpha-protection/verify.py'],capture_output=True,timeout=8)
 try:
  with urllib.request.urlopen('http://127.0.0.1:'+os.environ.get('APP_PORT','5090')+'/login',timeout=2) as response:http=response.status==200
 except Exception:http=False
@@ -25,7 +25,7 @@ print(json.dumps(dict(version=APP_VERSION,http=http,verified=v.returncode==0,lic
  lease=bool(y and y['is_valid'] and y['bound'] and float(y['remaining'])>0),
  lease_remaining=float(y['remaining']) if y else 0,
  lease_deadline=y['lease_deadline'] if y else None,
- publisher_key=hashlib.sha256(pathlib.Path('/opt/max-protection/runtime-public.pem').read_bytes()).hexdigest(),rows=rows),default=str))
+ publisher_key=hashlib.sha256(pathlib.Path('/opt/alpha-protection/runtime-public.pem').read_bytes()).hexdigest(),rows=rows),default=str))
 '''
 
 
@@ -39,15 +39,15 @@ MIN_SWITCH_LEASE = 85
 
 
 def contract_program(old, contracts, native=False):
-    custom = any(m.get('Destination')=='/run/max-rollout-kit' for m in old.get('Mounts',[]))
-    required_paths={'/run/max-rollout-kit/web-gate.sh','/run/max-rollout-kit/normal_launch.py'}
+    custom = any(m.get('Destination')=='/run/alpha-rollout-kit' for m in old.get('Mounts',[]))
+    required_paths={'/run/alpha-rollout-kit/web-gate.sh','/run/alpha-rollout-kit/normal_launch.py'}
     if custom and set(contracts or {})!=required_paths:
         raise SafetyError('Pinned native startup contract is required')
     if not contracts:return None
     if set(contracts)!=required_paths or any(not re.fullmatch('[a-f0-9]{64}',v) for v in contracts.values()):
         raise SafetyError('Invalid native startup contract')
     code='import json,pathlib,hashlib\nvalues=json.loads('+repr(json.dumps(contracts))+')\ngood=all(pathlib.Path(p).is_file() and not pathlib.Path(p).is_symlink() and hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()==h for p,h in values.items())\n'
-    return code+("print('MAX_CONTROL_RESULT='+json.dumps({'verified':good}))" if native else "print(json.dumps({'verified':good}))")
+    return code+("print('ALPHA_CONTROL_RESULT='+json.dumps({'verified':good}))" if native else "print(json.dumps({'verified':good}))")
 
 
 def required(version):

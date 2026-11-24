@@ -117,7 +117,7 @@ def main():
             raw=json.dumps(data,ensure_ascii=False).encode();self.send_response(status);self.send_header('Content-Type','application/json');self.send_header('Content-Length',str(len(raw)));self.end_headers();self.wfile.write(raw)
         do_GET=do_POST=do_PUT=do_DELETE=do_PATCH=do_HEAD=handle_request
     if int(os.environ.get('LISTEN_PID','0'))!=os.getpid() or os.environ.get('LISTEN_FDS')!='1':raise SystemExit('One systemd socket required')
-    server=legacy.Server('/run/max-panel-fleet/4k/docker.sock',Handler,bind_and_activate=False);server.socket.close();server.socket=socket.fromfd(3,socket.AF_UNIX,socket.SOCK_STREAM);server.tenant='4k';server.serve_forever()
+    server=legacy.Server('/run/alpha-panel-fleet/4k/docker.sock',Handler,bind_and_activate=False);server.socket.close();server.socket=socket.fromfd(3,socket.AF_UNIX,socket.SOCK_STREAM);server.tenant='4k';server.serve_forever()
 
 
 if __name__=='__main__':main()

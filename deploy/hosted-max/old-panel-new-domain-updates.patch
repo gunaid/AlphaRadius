@@ -21,7 +21,7 @@
          control.command(base+['config','--quiet'])
          schema_file = prepare_creation_images(path)
 +        prepare_new_domain_updates(path, name)
-         control.command(['systemctl','enable','--now',f'max-panel-fleet@{name}.socket'])
+         control.command(['systemctl','enable','--now',f'alpha-panel-fleet@{name}.socket'])
          control.command(base+['up','-d','db'],timeout=180)
          deadline=time.monotonic()+100
 @@ -139,6 +142,7 @@

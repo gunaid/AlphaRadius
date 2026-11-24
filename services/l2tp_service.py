@@ -247,7 +247,7 @@ mv -f "$pap" /etc/ppp/pap-secrets
 if [ -f /etc/ppp/options.xl2tpd ]; then cp /etc/ppp/options.xl2tpd /etc/ppp/options; fi
 iptables -t nat -C POSTROUTING -o ppp+ -j MASQUERADE 2>/dev/null || iptables -t nat -A POSTROUTING -o ppp+ -j MASQUERADE
 '''
-    res = _docker_exec_run(L2TP_CONTAINER_NAME, ['bash', '-c', script, 'max-owned-ppp-secrets', encoded], timeout=3.0)
+    res = _docker_exec_run(L2TP_CONTAINER_NAME, ['bash', '-c', script, 'alpha-owned-ppp-secrets', encoded], timeout=3.0)
     logger.info('L2TP credential synchronization completed=%s for %d configured tunnels', bool(res.get('success')), len(tunnels or []))
     return bool(res.get('success'))
 
@@ -636,7 +636,7 @@ read -r current < "$pidfile"
 [[ "$current" == "$pid" ]] || exit 26
 kill -TERM "$pid"
 '''
-    outcome = _docker_exec_run(L2TP_CONTAINER_NAME, ['bash', '-c', script, 'max-owned-ppp-stop', matches[0], peer_ip], timeout=4.0)
+    outcome = _docker_exec_run(L2TP_CONTAINER_NAME, ['bash', '-c', script, 'alpha-owned-ppp-stop', matches[0], peer_ip], timeout=4.0)
     if not outcome.get('success'):
         return False
     deadline = time.monotonic() + 3

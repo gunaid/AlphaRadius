@@ -115,7 +115,7 @@
 **الوسم المحلي:**
 
 ```text
-mohd777/alpha-radius-web:2.7.1-final-acceptance-20261107-r25
+gunaid/alpha-radius-web:2.7.1-final-acceptance-20261107-r25
 ```
 
 **هوية فهرس OCI المحلي:**

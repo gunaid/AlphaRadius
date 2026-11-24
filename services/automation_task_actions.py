@@ -59,10 +59,10 @@ def clean_temporary(age, progress, cancelled):
     # Do not scan storage, uploads, backups, arbitrary paths or Chromium profiles.
     root = Path(tempfile.gettempdir()).resolve()
     removed = size = skipped = 0
-    for folder in root.glob('max-pdf-*'):
+    for folder in root.glob('alpha-pdf-*'):
         if cancelled():
             return dict(success=False, cancelled=True, processed=removed, bytes_freed=size)
-        if not re.fullmatch(r'max-pdf-[a-z0-9_]{8}', folder.name) or folder.is_symlink() or not folder.is_dir():
+        if not re.fullmatch(r'alpha-pdf-[a-z0-9_]{8}', folder.name) or folder.is_symlink() or not folder.is_dir():
             continue
         files = list(folder.iterdir())
         if (len(files) > 5000 or time.time() - folder.stat().st_mtime < age * 86400 or

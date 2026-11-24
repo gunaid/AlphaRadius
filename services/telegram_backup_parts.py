@@ -17,7 +17,7 @@ _BUNDLE_SLOT = threading.BoundedSemaphore(1)
 
 # Public, dependency-free utility sent with large backups. No server credentials,
 # network, application imports, database access, or automatic restore operations.
-JOIN_TOOL_SOURCE = r'''"""Usage: python join_max_backup.py <filename.parts.json>"""
+JOIN_TOOL_SOURCE = r'''"""Usage: python join_alpha_backup.py <filename.parts.json>"""
 from pathlib import Path
 import hashlib, json, os, sys, tempfile
 
@@ -72,7 +72,7 @@ def join_backup(manifest_path):
 if __name__ == '__main__':
     try:
         if len(sys.argv) != 2:
-            raise ValueError('Usage: python join_max_backup.py <filename.parts.json>')
+            raise ValueError('Usage: python join_alpha_backup.py <filename.parts.json>')
         output = join_backup(sys.argv[1])
         print('Verified backup ready: ' + output.name)
     except Exception as error:
@@ -201,8 +201,8 @@ def send_backup_document(token, chat_id, filepath, caption, *, _part_bytes=PART_
             offset += part['size_bytes']
         tool = JOIN_TOOL_SOURCE.encode('utf-8')
         with io.BytesIO(tool) as data:
-            response, progress = send(data, 'join_max_backup.py',
-                'ضع الأجزاء وملف التحقق في مجلد واحد ثم شغّل: python join_max_backup.py "'+manifest_name+'". لا تستعد أي جزء منفرد.',
+            response, progress = send(data, 'join_alpha_backup.py',
+                'ضع الأجزاء وملف التحقق في مجلد واحد ثم شغّل: python join_alpha_backup.py "'+manifest_name+'". لا تستعد أي جزء منفرد.',
                 len(tool))
         return dict(response, _bundle={'filename': manifest['filename'], 'size_bytes': size,
             'sha256': manifest['sha256'], 'part_count': len(manifest['parts']),

@@ -32,16 +32,16 @@ def provision(directory, project, private_root, socket_root, enrollment=None, ki
     roles={'web':'web','core':'radius_core','db':'db'} if kind=='domain' else {'web':'wisp-web','core':'freeradius','db':'mariadb'}
     if not set(roles.values()) <= set(services): raise ValueError('Unsupported Compose service layout')
     web=services[roles['web']];image=web['image']
-    if not re.fullmatch(r'mohd777/alpha-radius-web@sha256:[0-9a-f]{64}',image):
+    if not re.fullmatch(r'gunaid/alpha-radius-web@sha256:[0-9a-f]{64}',image):
         raise ValueError('Pin the Web Registry digest before provisioning')
     if root.exists() and any(root.iterdir()): raise ValueError('Private controller root already initialized')
     root.mkdir(mode=0o700,parents=True,exist_ok=True);sockets.mkdir(mode=0o750,parents=True,exist_ok=True)
-    mounts=[{'Type':'bind','Source':str(root),'Target':'/max-update-private','ReadOnly':False},
+    mounts=[{'Type':'bind','Source':str(root),'Target':'/alpha-update-private','ReadOnly':False},
             {'Type':'bind','Source':'/var/run/docker.sock','Target':'/var/run/docker.sock','ReadOnly':False},
-            {'Type':'bind','Source':str(path),'Target':'/max-update-compose','ReadOnly':False},
-            {'Type':'bind','Source':str(sockets),'Target':'/max-update-socket','ReadOnly':False}]
+            {'Type':'bind','Source':str(path),'Target':'/alpha-update-compose','ReadOnly':False},
+            {'Type':'bind','Source':str(sockets),'Target':'/alpha-update-socket','ReadOnly':False}]
     config=dict(TRUST,channel='https://control.alpha.amtik.online',kind='public',executor='host' if kind=='domain' else 'local',
-                project=project,services=roles,compose_path='/max-update-compose/'+compose_name,controller_mounts=mounts)
+                project=project,services=roles,compose_path='/alpha-update-compose/'+compose_name,controller_mounts=mounts)
     if enrollment:
         allowed={'kind','identity','reader_id','token'}
         if set(enrollment) != allowed or enrollment['kind'] != kind or not all(enrollment.values()):
@@ -51,19 +51,19 @@ def provision(directory, project, private_root, socket_root, enrollment=None, ki
     services['update_controller']={
         'image':image,'restart':'unless-stopped','read_only':True,
         'entrypoint':['python','-c'],
-        'command':['import sys;from services.system_update_host import main;sys.argv=["controller","/max-update-private","/max-update-socket/controller.sock"];main()'],
+        'command':['import sys;from services.system_update_host import main;sys.argv=["controller","/alpha-update-private","/alpha-update-socket/controller.sock"];main()'],
         'environment':{'PYTHONDONTWRITEBYTECODE':'1'},'tmpfs':['/tmp:rw,nosuid,size=32m'],
-        'volumes':[str(root)+':/max-update-private', '/var/run/docker.sock:/var/run/docker.sock',
-                   str(path)+':/max-update-compose',str(sockets)+':/max-update-socket'],
-        'healthcheck':{'test':['CMD','python','-c','import socket;s=socket.socket(socket.AF_UNIX);s.settimeout(2);s.connect("/max-update-socket/controller.sock");s.close()'],
+        'volumes':[str(root)+':/alpha-update-private', '/var/run/docker.sock:/var/run/docker.sock',
+                   str(path)+':/alpha-update-compose',str(sockets)+':/alpha-update-socket'],
+        'healthcheck':{'test':['CMD','python','-c','import socket;s=socket.socket(socket.AF_UNIX);s.settimeout(2);s.connect("/alpha-update-socket/controller.sock");s.close()'],
                        'interval':'10s','timeout':'3s','retries':3}}
-    web.setdefault('volumes',[]).append(str(sockets)+':/max-update-socket:ro')
+    web.setdefault('volumes',[]).append(str(sockets)+':/alpha-update-socket:ro')
     env=web.setdefault('environment',{})
     if isinstance(env,list):
         if any(not isinstance(v,str) or '=' not in v for v in env): raise ValueError('Resolve the Web environment before enrollment')
         env=dict(v.split('=',1) for v in env);web['environment']=env
     if not isinstance(env,dict): raise ValueError('Use a mapping for Web environment')
-    env['MAX_UPDATE_SOCKET']='/max-update-socket/controller.sock'
+    env['ALPHA_UPDATE_SOCKET']='/alpha-update-socket/controller.sock'
     dependencies=web.setdefault('depends_on',{})
     if isinstance(dependencies,list):
         dependencies={v:{'condition':'service_started'} for v in dependencies};web['depends_on']=dependencies

@@ -32,7 +32,7 @@ docker compose build
 
 # تصدير صور الدوكر إلى ملفات tar
 echo "  💾 جاري تصدير صورة Web Dashboard..."
-docker save alpha-radius-wisp-web:latest | gzip > "${BUNDLE_DIR}/images/max_web.tar.gz"
+docker save alpha-radius-wisp-web:latest | gzip > "${BUNDLE_DIR}/images/alpha_web.tar.gz"
 
 echo "  💾 جاري تصدير صورة FreeRADIUS Engine..."
 docker save alpha-radius-freeradius:latest | gzip > "${BUNDLE_DIR}/images/alpha_radius.tar.gz"
@@ -71,7 +71,7 @@ cp -r "${SCRIPT_DIR}/project/"* "${INSTALL_DIR}/"
 
 # 2. استيراد صور الدوكر المحفوظة مسبقاً
 echo -e "${YELLOW}🐳 جاري استيراد صور الدوكر المحفوظة محلياً...${NC}"
-docker load < "${SCRIPT_DIR}/images/max_web.tar.gz"
+docker load < "${SCRIPT_DIR}/images/alpha_web.tar.gz"
 docker load < "${SCRIPT_DIR}/images/alpha_radius.tar.gz"
 docker load < "${SCRIPT_DIR}/images/mariadb.tar.gz"
 

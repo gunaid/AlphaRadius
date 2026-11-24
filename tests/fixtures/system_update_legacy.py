@@ -133,7 +133,7 @@ def _execute_update_worker(target_version, release, folder, operator):
             raise UpdateError('Pulled digest did not verify')
         if target['Id'] == old['Image']:
             raise UpdateError('Target image is already running')
-        key_hash = hashlib.sha256(Path('/opt/max-protection/runtime-public.pem').read_bytes()).hexdigest()
+        key_hash = hashlib.sha256(Path('/opt/alpha-protection/runtime-public.pem').read_bytes()).hexdigest()
         plan = {'job': folder.name, 'old': old, 'target_id': target['Id'], 'target_digest': image,
                 'endpoints': endpoints, 'key_hash': key_hash, 'version': target_version}
         write_json(folder/'plan.private.json', plan)
@@ -147,7 +147,7 @@ def _execute_update_worker(target_version, release, folder, operator):
                                  'Mounts': [mount, {'Type':'bind','Source':'/var/run/docker.sock','Target':'/var/run/docker.sock','ReadOnly':False}],
                                  'Tmpfs': {'/tmp':'rw,nosuid,size=33554432'},
                                  'LogConfig': {'Type':'json-file','Config':{'max-size':'5m','max-file':'1'}}}}
-        created = api('POST', '/containers/create?name=max_web_update_helper_' + folder.name, helper)
+        created = api('POST', '/containers/create?name=alpha_web_update_helper_' + folder.name, helper)
         write_json(folder/'helper.private.json', {'id': created['Id']})
         state = json.loads(state_path.read_text())
         state['helper_start_attempted'] = True

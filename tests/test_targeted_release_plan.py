@@ -30,7 +30,7 @@ class TargetedReleasePlanTests(unittest.TestCase):
                 m.prepare(domain, self.rows, self.images, self.migration, self.now)
 
     def test_shared_components_and_latest_denied(self):
-        for images in ({**self.images, 'db':'sha256:'+'d'*64}, {**self.images, 'l2tp':'sha256:'+'e'*64}, {**self.images, 'web':'mohd777/alpha-radius-web:latest'}):
+        for images in ({**self.images, 'db':'sha256:'+'d'*64}, {**self.images, 'l2tp':'sha256:'+'e'*64}, {**self.images, 'web':'gunaid/alpha-radius-web:latest'}):
             with self.assertRaises(m.Rejected):m.prepare(m.DOMAIN, self.rows, images, self.migration, self.now)
 
     def test_duplicate_live_core_denied(self):

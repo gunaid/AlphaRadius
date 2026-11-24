@@ -1,7 +1,7 @@
 services:
   mock-routeros:
     image: vaerhme/routeros:latest
-    container_name: max_mock_routeros
+    container_name: alpha_mock_routeros
     restart: unless-stopped
     privileged: true
     cap_add:
@@ -23,7 +23,7 @@ services:
 
   client1:
     image: alpine:latest
-    container_name: max_client1
+    container_name: alpha_client1
     restart: unless-stopped
     cap_add:
       - NET_ADMIN
@@ -42,7 +42,7 @@ services:
 
   client2:
     image: alpine:latest
-    container_name: max_client2
+    container_name: alpha_client2
     restart: unless-stopped
     cap_add:
       - NET_ADMIN
@@ -61,7 +61,7 @@ services:
 
   client3:
     image: alpine:latest
-    container_name: max_client3
+    container_name: alpha_client3
     restart: unless-stopped
     cap_add:
       - NET_ADMIN
