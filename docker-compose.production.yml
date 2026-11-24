@@ -86,7 +86,7 @@ services:
       - RADIUS_HOST=freeradius
       - RADIUS_HEALTH_SECRET=${RADIUS_HEALTH_SECRET:-max123}
       - APP_NAME=ALPHA_RADIUS
-      - MASTER_LICENSE_SERVER_URL=https://license.alpha.amtik.online
+      - MASTER_LICENSE_SERVER_URL=https://ls.amtik.online
       - DB_TYPE=mysql
       - DB_HOST=mariadb
       - DB_PORT=3306

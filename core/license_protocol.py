@@ -88,7 +88,8 @@ def verify_response(envelope, request_payload, public_pem):
     if response['issued_epoch'] > now + 30 or response['expires_epoch'] <= now or not 0 < response['expires_epoch'] - response['issued_epoch'] <= 120:
         raise ValueError('Expired license response')
     if type(response.get('valid')) is not bool or response.get('status') not in (
-        'active','over_quota','revoked','suspended','blacklisted','hwid_mismatch','unlicensed','expired','instance_limit'):
+        'active','over_quota','revoked','suspended','blacklisted','hwid_mismatch','unlicensed','expired',
+        'instance_limit','error'):
         raise ValueError('Invalid license response status')
     if response['valid'] != (response['status'] in ('active','over_quota')):
         raise ValueError('Inconsistent license response status')

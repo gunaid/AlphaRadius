@@ -18,13 +18,19 @@ from pathlib import Path
 from database.db import query_all, query_one, execute_write, get_connection, is_mysql_conn
 from core.config import APP_VERSION, APP_EDITION
 from core.hardware_fingerprint import get_machine_id, get_instance_uuid, get_combined_binding_code
-from core.licensing import decode_license_string, verify_license_package, get_master_public_key_pem
+from core.licensing import (
+    AMAN_LICENSE_AUTHORITY,
+    LEGACY_LICENSE_AUTHORITY,
+    decode_license_string,
+    verify_license_package,
+    get_master_public_key_pem,
+)
 from core.license_protocol import exchange as authenticated_license_exchange
 from core.config import STORAGE_DIR
 
 logger = logging.getLogger('license_guard_service')
 
-DEFAULT_MASTER_SERVER_URL = os.environ.get("MASTER_LICENSE_SERVER_URL", "https://license.alpha.amtik.online")
+DEFAULT_MASTER_SERVER_URL = os.environ.get("MASTER_LICENSE_SERVER_URL", "https://ls.amtik.online")
 
 _LICENSE_CACHE = {
     'data': None,
@@ -434,7 +440,9 @@ def _build_default_license_dict(status="unlicensed", status_text="", message="",
         "grace_hours_left": 0,
         "last_verified_at": "",
         "last_heartbeat_at": "",
-        "master_server_url": DEFAULT_MASTER_SERVER_URL
+        "master_server_url": DEFAULT_MASTER_SERVER_URL,
+        "license_authority": "none",
+        "requires_heartbeat": False,
     }
 
 def get_active_license_status(force_refresh=False):
@@ -496,6 +504,9 @@ def get_active_license_status(force_refresh=False):
         
         features = info.get('features', {})
 
+        authority = info.get('license_authority', AMAN_LICENSE_AUTHORITY)
+        requires_heartbeat = info.get('requires_heartbeat', True)
+
         # Check database status override (e.g. if revoked by heartbeat or grace expired)
         db_status = row.get('status', 'active')
         grace_period_active = False
@@ -512,10 +523,13 @@ def get_active_license_status(force_refresh=False):
         elif db_status == 'suspended':
             valid = False
             msg = "تم تعليق هذا الترخيص مؤقتاً من قِبل إدارة المطور ⏸️"
-        elif db_status == 'grace_expired':
+        elif db_status in ('expired', 'unlicensed', 'error', 'instance_limit'):
+            valid = False
+            msg = "رفض خادم التراخيص الحالي اعتماد هذا الترخيص أو انتهت صلاحيته."
+        elif db_status == 'grace_expired' and requires_heartbeat:
             valid = False
             msg = "انتهت فترة السماح (24 ساعة) دون التمكن من مزامنة الترخيص مع السيرفر المركزي. يرجى التأكد من اتصال الإنترنت."
-        else:
+        elif requires_heartbeat:
             # Calculate offline duration
             try:
                 last_sync = row.get('last_heartbeat_at') or row.get('last_verified_at') or row.get('created_at')
@@ -537,6 +551,12 @@ def get_active_license_status(force_refresh=False):
                 valid = False
                 db_status = 'grace_expired'
                 msg = 'تعذر التحقق من وقت آخر مزامنة للترخيص.'
+        else:
+            # A legacy package remains governed by its embedded expiry, binding,
+            # quotas and local revocation records.  It must not be disabled just
+            # because the retired legacy heartbeat service is unavailable.
+            if db_status == 'grace_expired':
+                db_status = 'active'
             
         # Determine license mode ('active_sessions' vs 'legacy_subscribers')
         lic_mode = info.get('license_mode', 'active_sessions')
@@ -651,7 +671,9 @@ def get_active_license_status(force_refresh=False):
             "grace_hours_left": grace_hours_left,
             "last_verified_at": str(row.get('last_verified_at', '')),
             "last_heartbeat_at": str(row.get('last_heartbeat_at', '')),
-            "master_server_url": row.get('master_server_url', DEFAULT_MASTER_SERVER_URL)
+            "master_server_url": row.get('master_server_url', DEFAULT_MASTER_SERVER_URL),
+            "license_authority": authority,
+            "requires_heartbeat": requires_heartbeat,
         }
         _LICENSE_CACHE = {'data': res, 'timestamp': now_t}
         return res
@@ -763,7 +785,8 @@ def check_manager_quota(additional_count=1):
 def install_and_activate_license(license_str, master_server_url=DEFAULT_MASTER_SERVER_URL):
     """
     Installs, validates and activates a new license string or JSON payload into DB.
-    Performs mandatory synchronous live verification with Master Server.
+    Aman packages require synchronous verification with the current server.
+    Legacy packages retain their original signed offline contract.
     """
     ensure_license_tables()
     clear_license_cache()
@@ -795,7 +818,11 @@ def install_and_activate_license(license_str, master_server_url=DEFAULT_MASTER_S
     features = payload.get('features', {})
     current_machine_id = get_machine_id()
     
-    # 1. Live Synchronous Verification with Master License Server
+    authority = info.get('license_authority', AMAN_LICENSE_AUTHORITY)
+
+    # 1. Live Synchronous Verification with the current Aman License Server.
+    # Legacy files are already authenticated by their retained immutable key;
+    # sending them to the new authority would incorrectly report them unlicensed.
     endpoint = f"{master_server_url.rstrip('/')}/api/v1/heartbeat/ping"
     verify_payload = {
         "license_id": lic_id,
@@ -814,25 +841,45 @@ def install_and_activate_license(license_str, master_server_url=DEFAULT_MASTER_S
         verify_payload['enrollment_token'] = pkg_dict['enrollment_token']
     
     try:
-        res_json = authenticated_license_exchange(master_server_url, verify_payload, STORAGE_DIR, get_master_public_key_pem())
-        if res_json.get('status') == 'instance_limit':
+        res_json = ({'valid': True, 'status': 'active'} if authority == LEGACY_LICENSE_AUTHORITY else
+                    authenticated_license_exchange(master_server_url, verify_payload, STORAGE_DIR,
+                                                   get_master_public_key_pem(AMAN_LICENSE_AUTHORITY)))
+        server_status = res_json.get('status')
+        remote_action = res_json.get('remote_action')
+        if server_status == 'instance_limit':
             return False, 'تم بلوغ الحد الأقصى للنسخ المسموح بها في هذا الترخيص.'
         
-        # If server explicitly revoked or invalidated -> reject immediately & blacklist
-        if res_json.get('status') in ('revoked', 'suspended', 'blacklisted', 'hwid_mismatch', 'unlicensed') or res_json.get('valid') is False:
-            record_license_revocation(lic_id, "Revoked on master license server during activation")
+        # Reject signed denial responses immediately.  Only an explicit revoke
+        # becomes a persistent local blacklist entry; expiry/binding/unlicensed
+        # responses must remain recoverable after the server record is fixed.
+        if (server_status in ('revoked', 'suspended', 'blacklisted', 'hwid_mismatch',
+                              'unlicensed', 'expired', 'error')
+                or remote_action in ('suspend', 'revoke', 'unlicensed')
+                or res_json.get('valid') is False):
+            if server_status in ('revoked', 'blacklisted') or remote_action == 'revoke':
+                record_license_revocation(lic_id, "Revoked on master license server during activation")
+                local_status = 'revoked'
+            elif server_status == 'suspended' or remote_action == 'suspend':
+                local_status = 'suspended'
+            elif server_status == 'expired':
+                local_status = 'expired'
+            else:
+                local_status = 'unlicensed'
             try:
                 conn = get_connection()
                 is_mysql = is_mysql_conn(conn)
                 conn.close()
-                execute_write("UPDATE wisp_license_info SET status = 'revoked' WHERE license_id = %s" if is_mysql else "UPDATE wisp_license_info SET status = 'revoked' WHERE license_id = ?", (lic_id,))
+                execute_write("UPDATE wisp_license_info SET status = %s WHERE license_id = %s" if is_mysql else
+                              "UPDATE wisp_license_info SET status = ? WHERE license_id = ?",
+                              (local_status, lic_id))
             except Exception:
                 pass
             clear_license_cache()
-            return False, "فشل التفعيل: هذا الترخيص محظور وملغى من قِبل إدارة المطور في السيرفر المركزي 🔴"
+            return False, "فشل التفعيل: رفض خادم الترخيص اعتماد هذا الترخيص أو أوقفه 🔴"
         else:
             # Master server approved (Active) -> remove from blacklist if previously revoked
-            remove_license_revocation(lic_id)
+            if authority == AMAN_LICENSE_AUTHORITY:
+                remove_license_revocation(lic_id)
     except Exception as ex:
         logger.warning(f"[License Guard] Live activation ping notice: {ex}")
         messages = {
@@ -846,7 +893,7 @@ def install_and_activate_license(license_str, master_server_url=DEFAULT_MASTER_S
             'enrollment_key_mismatch': 'مفتاح النسخة لا يطابق المفتاح المعتمد. استعد مجلد storage الأصلي أو اطلب إعادة اعتماد المفتاح؛ لن يُستبدل تلقائيًا.'
         }
         if 'requires HTTPS' in str(ex):
-            return False, 'عنوان خادم التراخيص غير آمن. استخدم https://license.alpha.amtik.online بدل عنوان HTTP القديم.'
+            return False, 'عنوان خادم التراخيص غير آمن. استخدم https://ls.amtik.online بدل عنوان HTTP القديم.'
         return False, messages.get(getattr(ex, 'code', None), 'تعذر الاتصال الآمن بخادم التراخيص أو التحقق من رده؛ راجع الاتصال وHTTPS وتوقيت الجهاز.')
 
     try:
@@ -982,11 +1029,34 @@ def sync_license_heartbeat_with_server(max_retries=3):
     conn = get_connection()
     is_mysql = is_mysql_conn(conn)
     conn.close()
+
+    if lic:
+        try:
+            installed_package = json.loads(lic['raw_package_json'])
+            package_valid, package_message, package_info = verify_license_package(
+                installed_package,
+                current_active_sessions=max(0, active_sess_count),
+                current_nas=nas_count,
+                current_subscribers=subs_count,
+            )
+        except (TypeError, ValueError, KeyError) as exc:
+            return False, f"تعذر قراءة حزمة الترخيص المثبتة: {exc}"
+        if not package_valid:
+            return False, package_message
+        if package_info.get('license_authority') == LEGACY_LICENSE_AUTHORITY:
+            # Preserve explicit local revocation/suspension, but recover the old
+            # network-only grace state after upgrading from a retired endpoint.
+            if lic.get('status') == 'grace_expired' and not is_license_blacklisted(lic['license_id']):
+                execute_write("UPDATE wisp_license_info SET status = 'active' WHERE id = %s" if is_mysql else
+                              "UPDATE wisp_license_info SET status = 'active' WHERE id = ?", (lic['id'],))
+            clear_license_cache()
+            return True, "تم التحقق محلياً من الترخيص القديم دون تغيير بياناته"
     
     last_error = ""
     for attempt in range(1, max_retries + 1):
         try:
-            res_json = authenticated_license_exchange(server_url, payload, STORAGE_DIR, get_master_public_key_pem())
+            res_json = authenticated_license_exchange(
+                server_url, payload, STORAGE_DIR, get_master_public_key_pem(AMAN_LICENSE_AUTHORITY))
             
             # If fresh instance with no license, check if master assigned one
             if not lic:
@@ -1018,22 +1088,32 @@ def sync_license_heartbeat_with_server(max_retries=3):
             is_srv_valid = res_json.get('valid')
 
             if srv_status == 'instance_limit':
-                execute_write("UPDATE wisp_license_info SET status = 'suspended' WHERE id = ?", (lic['id'],))
+                execute_write("UPDATE wisp_license_info SET status = 'instance_limit' WHERE id = %s" if is_mysql else
+                              "UPDATE wisp_license_info SET status = 'instance_limit' WHERE id = ?", (lic['id'],))
                 clear_license_cache()
                 return False, 'تم بلوغ سعة النسخ المرخصة؛ يلزم مراجعة إدارة الترخيص.'
 
-            if srv_status in ('revoked', 'suspended', 'blacklisted', 'hwid_mismatch', 'unlicensed') or remote_act in ('suspend', 'revoke', 'unlicensed') or (is_srv_valid is False and srv_status != 'over_quota'):
+            if srv_status in ('revoked', 'suspended', 'blacklisted', 'hwid_mismatch',
+                              'unlicensed', 'expired', 'error') or remote_act in (
+                              'suspend', 'revoke', 'unlicensed') or (
+                              is_srv_valid is False and srv_status != 'over_quota'):
                 if remote_act == 'suspend' or srv_status == 'suspended':
                     execute_write("UPDATE wisp_license_info SET status = 'suspended' WHERE id = %s" if is_mysql else "UPDATE wisp_license_info SET status = 'suspended' WHERE id = ?", (lic['id'],))
                     clear_license_cache()
                     logger.warning(f"[License Guard] License {lic['license_id']} explicitly suspended by Master Server.")
                     return False, "تم تعليق هذا الترخيص مؤقتاً من قِبل إدارة المطور"
-                else:
+                if remote_act == 'revoke' or srv_status in ('revoked', 'blacklisted'):
                     record_license_revocation(lic['license_id'], "Revoked or deleted by master license server")
                     execute_write("UPDATE wisp_license_info SET status = 'revoked' WHERE id = %s" if is_mysql else "UPDATE wisp_license_info SET status = 'revoked' WHERE id = ?", (lic['id'],))
                     clear_license_cache()
                     logger.warning(f"[License Guard] License {lic['license_id']} explicitly revoked/deleted by Master Server.")
                     return False, "تم إشعار النظام بحظر أو حذف الترخيص من قِبل المطور"
+                local_status = 'expired' if srv_status == 'expired' else 'unlicensed'
+                execute_write("UPDATE wisp_license_info SET status = %s WHERE id = %s" if is_mysql else
+                              "UPDATE wisp_license_info SET status = ? WHERE id = ?",
+                              (local_status, lic['id']))
+                clear_license_cache()
+                return False, "رفض خادم التراخيص اعتماد الترخيص الحالي أو انتهت صلاحيته"
             
             # 2. Server confirmed active license -> Update heartbeat and clear grace
             _recover_clock_after_verified_heartbeat(res_json, lic['license_id'])
