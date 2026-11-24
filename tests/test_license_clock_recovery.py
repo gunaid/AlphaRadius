@@ -38,7 +38,7 @@ class ClockRecovery(unittest.TestCase):
   n,s,w,p=self.fixture(race=True);old=s['value'];self.assertFalse(n['_recover_clock_after_verified_heartbeat'](p,'fixture'));self.assertEqual(s['value'],old)
  def heartbeat(self,error=None,response=None):
   n,s,w,p=self.fixture(response);lic={'id':1,'license_id':'fixture','raw_package_json':'{"payload":{"limits":{}}}'}
-  oldquery=n['query_one'];n.update(DEFAULT_MASTER_SERVER_URL='https://license.invalid',get_current_system_counts=lambda:(0,0,0),get_machine_id=lambda:'hw',get_instance_uuid=lambda:'instance',APP_VERSION='test',APP_EDITION='test',get_connection=MagicMock,is_mysql_conn=lambda _:True,STORAGE_DIR='fixture',get_master_public_key_pem=lambda:'fixture',remove_license_revocation=lambda _:None,record_license_revocation=lambda *a:None)
+  oldquery=n['query_one'];n.update(DEFAULT_MASTER_SERVER_URL='https://license.invalid',AMAN_LICENSE_AUTHORITY='aman-alpha',LEGACY_LICENSE_AUTHORITY='legacy-alpha',get_current_system_counts=lambda:(0,0,0),get_machine_id=lambda:'hw',get_instance_uuid=lambda:'instance',APP_VERSION='test',APP_EDITION='test',get_connection=MagicMock,is_mysql_conn=lambda _:True,STORAGE_DIR='fixture',get_master_public_key_pem=lambda *a:'fixture',verify_license_package=lambda *a,**k:(True,'',{'license_authority':'aman-alpha'}),is_license_blacklisted=lambda _:False,remove_license_revocation=lambda _:None,record_license_revocation=lambda *a:None)
   n['query_one']=lambda q:lic if 'FROM wisp_license_info' in q else oldquery(q)
   def exchange(*a):
    if error:raise error

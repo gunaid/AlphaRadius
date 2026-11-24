@@ -116,13 +116,14 @@ class ActivationFailureResponseTests(unittest.TestCase):
         package = {'payload': {'license_id': 'local-response-proof'}}
         persist = Mock(side_effect=RuntimeError('injected storage failure'))
         namespace = dict(DEFAULT_MASTER_SERVER_URL='https://local.invalid',
+                         AMAN_LICENSE_AUTHORITY='aman-alpha', LEGACY_LICENSE_AUTHORITY='legacy-alpha',
                          ensure_license_tables=Mock(), clear_license_cache=Mock(),
                          decode_license_string=lambda _: (package, None),
                          get_current_system_counts=lambda: (2, 1, 2),
-                         verify_license_package=lambda *a, **k: (True, '', {}),
+                         verify_license_package=lambda *a, **k: (True, '', {'license_authority': 'aman-alpha'}),
                          get_machine_id=lambda: 'local', get_instance_uuid=lambda: 'local',
                          APP_VERSION='2.7.1', APP_EDITION='Enterprise', STORAGE_DIR='/unused',
-                         get_master_public_key_pem=lambda: 'local-public-key',
+                         get_master_public_key_pem=lambda *a: 'local-public-key',
                          authenticated_license_exchange=Mock(return_value={'valid': True, 'status': 'active'}),
                          remove_license_revocation=Mock(), logger=Mock(), _persist_verified_package=persist)
         exec(compile(selected, str(SOURCE), 'exec'), namespace)
