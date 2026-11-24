@@ -160,7 +160,7 @@ def new_accounting_sale_and_reservation_each_block():
         if event=='accounting':
             c=get_connection()
             with c.cursor() as q:
-                q.execute('SET @max_radius_import=1')
+                q.execute('SET @alpha_radius_import=1')
                 q.execute("INSERT INTO radacct(acctsessionid,acctuniqueid,username,nasipaddress,acctstarttime,acctupdatetime,acctstoptime,acctinputoctets,acctoutputoctets,acctsessiontime) VALUES('actual-fixture',%s,%s,'192.0.2.1',NOW(),NOW(),NOW(),12,20,60)",(uuid.uuid4().hex,u))
             c.commit();c.close()
         elif event=='sale':
@@ -210,7 +210,7 @@ def rollback_response_loss_resumes_from_receipt():
 def exact_shared_session_no_double_count():
     p=payload(1,True);u=p['users'][0];s=u['source_sessions'][0];c=get_connection()
     with c.cursor() as q:
-        q.execute('SET @max_radius_import=1')
+        q.execute('SET @alpha_radius_import=1')
         q.execute('''INSERT INTO radacct(acctsessionid,acctuniqueid,username,nasipaddress,callingstationid,framedipaddress,
                     acctstarttime,acctupdatetime,acctstoptime,acctinputoctets,acctoutputoctets,acctsessiontime)
                     VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,150,250,120)''',
@@ -230,7 +230,7 @@ def exact_shared_session_no_double_count():
 def forty_cycle_cases_keep_original_dates_and_enforcement():
     p=payload(40,True);c=get_connection()
     with c.cursor() as q:
-        q.execute('SET @max_radius_import=1')
+        q.execute('SET @alpha_radius_import=1')
         for i,u in enumerate(p['users']):
             if i>=31:
                 u['download_used_bytes']=100*1048576

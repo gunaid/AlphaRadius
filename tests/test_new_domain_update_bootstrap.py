@@ -40,7 +40,7 @@ class BootstrapTests(unittest.TestCase):
         self.path=self.root/'tenants'/'fresh';self.path.mkdir(parents=True)
         self.meta={'subdomain':'fresh','tunnel_mode':'central','instance_uuid':'INST-ABCDEF1234'}
         (self.path/'tenant.json').write_text(json.dumps(self.meta))
-        self.reference='mohd777/max-radius-web@sha256:'+'a'*64;self.image='sha256:'+'b'*64
+        self.reference='mohd777/alpha-radius-web@sha256:'+'a'*64;self.image='sha256:'+'b'*64
         (self.path/'creation-release.json').write_text(json.dumps({'web':{'reference':self.reference,'image_id':self.image}}))
         self.compose={'services':{'web':{'image':self.reference,'environment':{},'volumes':['./storage:/app/storage','/metadata.sock:/var/run/docker.sock:ro']},
                                   'radius_core':{'image':'core-original'},'db':{'image':'db-original'}}}
@@ -91,14 +91,14 @@ class BootstrapTests(unittest.TestCase):
             with self.assertRaises(hook.BootstrapError):hook.prepare_new_domain_updates(self.path,'fresh')
         self.assertFalse((self.root/'private').exists())
     def test_unpinned_creation_image_rejected(self):
-        (self.path/'creation-release.json').write_text(json.dumps({'web':{'reference':'mohd777/max-radius-web:latest','image_id':self.image}}))
+        (self.path/'creation-release.json').write_text(json.dumps({'web':{'reference':'mohd777/alpha-radius-web:latest','image_id':self.image}}))
         with self.assertRaises(hook.BootstrapError):self.prepare()
         self.assertEqual(self.calls,[])
     def test_new_creation_provisions_target_controller_without_changing_db_or_core(self):
         self.prepare();document=self.document
         self.assertEqual(document['services']['db'],self.compose['services']['db'])
         self.assertEqual(document['services']['radius_core'],self.compose['services']['radius_core'])
-        agent=document['services']['update_controller'];self.assertEqual(agent['container_name'],'max_radius_fresh_updates');self.assertEqual(agent['network_mode'],'bridge')
+        agent=document['services']['update_controller'];self.assertEqual(agent['container_name'],'alpha_radius_fresh_updates');self.assertEqual(agent['network_mode'],'bridge')
         config=json.loads((self.root/'private/fresh/update-channel.private.json').read_text())
         self.assertEqual(config['reader_id'],self.enrollment['reader_id']);self.assertEqual(config['identity'],'fresh.example.test')
         self.assertNotIn(self.enrollment['token'],(self.path/'docker-compose.yml').read_text())

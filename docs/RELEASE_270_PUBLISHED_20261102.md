@@ -4,8 +4,8 @@
 
 | الصورة | المرجع المثبت |
 |---|---|
-| Web | `mohd777/max-radius-web@sha256:5455db7ca85a1d5f6c5c205fca0e171cefb28dc9f008dc56d25d4ecd090fa2ca` |
-| Core | `mohd777/max-radius-core@sha256:10cc88946c5ed6310a36c4c11b7e991277137da87eb019958f2eb45c8d2eabf5` |
+| Web | `mohd777/alpha-radius-web@sha256:5455db7ca85a1d5f6c5c205fca0e171cefb28dc9f008dc56d25d4ecd090fa2ca` |
+| Core | `mohd777/alpha-radius-core@sha256:10cc88946c5ed6310a36c4c11b7e991277137da87eb019958f2eb45c8d2eabf5` |
 
 ## أساس البناء وحفظ العمل السابق
 

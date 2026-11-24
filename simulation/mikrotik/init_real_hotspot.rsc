@@ -29,7 +29,7 @@ add name=hs-ether2 interface=ether2 profile=hsprof-ether2 address-pool=hs-dhcp-p
 
 # 6. RADIUS Client pointing to FreeRADIUS container (172.21.0.4)
 /radius
-add address=172.21.0.4 secret="testing123" service=hotspot authentication-port=1812 accounting-port=1813 timeout=3000ms require-message-auth=no comment="MAX RADIUS Server"
+add address=172.21.0.4 secret="testing123" service=hotspot authentication-port=1812 accounting-port=1813 timeout=3000ms require-message-auth=no comment="ALPHA RADIUS Server"
 
 # 7. Incoming CoA
 /radius incoming

@@ -653,7 +653,7 @@
 {% block scripts %}
 <script>
     // =========================================================================
-    // VOUCHER CARD DESIGNER - FULL INTERACTIVE CONTROLLER (MAX RADIUS 2026)
+    // VOUCHER CARD DESIGNER - FULL INTERACTIVE CONTROLLER (ALPHA RADIUS 2026)
     // =========================================================================
 
     const DEFAULT_VOUCHER_CONFIG = {
@@ -856,7 +856,7 @@
             }
         }
         // Priority 2: LocalStorage
-        const local = localStorage.getItem('max_radius_voucher_design_config');
+        const local = localStorage.getItem('alpha_radius_voucher_design_config');
         if (local) {
             try {
                 cardConfig = deepMerge(DEFAULT_VOUCHER_CONFIG, JSON.parse(local));
@@ -1563,7 +1563,7 @@
     // -------------------------------------------------------------
     function saveToLocalStorage() {
         try {
-            localStorage.setItem('max_radius_voucher_design_config', JSON.stringify(cardConfig));
+            localStorage.setItem('alpha_radius_voucher_design_config', JSON.stringify(cardConfig));
         } catch (e) {}
     }
 
@@ -1657,7 +1657,7 @@
             }).then(result => {
                 if (result.isConfirmed) {
                     cardConfig = JSON.parse(JSON.stringify(DEFAULT_VOUCHER_CONFIG));
-                    localStorage.removeItem('max_radius_voucher_design_config');
+                    localStorage.removeItem('alpha_radius_voucher_design_config');
                     populateFormControls();
                     renderVariableAccordions();
                     onConfigChange();

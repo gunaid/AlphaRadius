@@ -1,9 +1,9 @@
 {
   "version": "2.7.0",
-  "target": "m.max-net.net",
+  "target": "m.alpha.amtik.online",
   "scope": "Web plus additive tenant history index",
   "web_image": {
-    "tag": "max-radius-web:2.7.0-backup-delete-perf-local-20261103-r1",
+    "tag": "alpha-radius-web:2.7.0-backup-delete-perf-local-20261103-r1",
     "id": "sha256:103978a3009cda4d952e5b0c7901143acf4a8fd2df2e64eaacce718c09d19df0",
     "size": 2877740337,
     "base": "sha256:a5ea9b6448cb8c9307158a9ae9644d8b5f19fffead89f1ea259edb7661dfdc0b",

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-MAX RADIUS - Subscriber Portal Management Service.
+ALPHA RADIUS - Subscriber Portal Management Service.
 Handles settings and administration for the Subscriber Self-Service Portal.
 """
 

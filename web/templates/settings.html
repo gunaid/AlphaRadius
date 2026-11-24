@@ -161,7 +161,7 @@
                                     <i class="fa-solid fa-tower-broadcast"></i>
                                 </span>
                                 <input type="text" name="network_name" id="networkNameInput" value="{{ network_name }}" required {% if not has_feature('white_label') %}disabled{% endif %}
-                                       oninput="document.getElementById('liveBrandPreview').innerText = this.value || 'MAX RADIUS'"
+                                       oninput="document.getElementById('liveBrandPreview').innerText = this.value || 'ALPHA RADIUS'"
                                        placeholder="مثال: شبكة الأفق الذكية WISP" 
                                        class="w-full bg-[#070b14] border border-slate-700 rounded-xl pr-10 pl-3.5 py-2.5 text-sm text-white font-bold focus:border-blue-500 transition">
                             </div>
@@ -178,7 +178,7 @@
                                         <i class="fa-solid fa-window-maximize"></i>
                                     </span>
                                     <input type="text" name="system_title" value="{{ system_title }}" {% if not has_feature('white_label') %}disabled{% endif %}
-                                           placeholder="MAX RADIUS - نظام إدارة الشبكات"
+                                           placeholder="ALPHA RADIUS - نظام إدارة الشبكات"
                                            class="w-full bg-[#070b14] border border-slate-700 rounded-xl pr-10 pl-3.5 py-2.5 text-xs text-white focus:border-blue-500 transition">
                                 </div>
                                 <p class="text-[10px] text-slate-500 mt-1">يظهر في شريط علامة تبويب المتصفح</p>
@@ -193,7 +193,7 @@
                                         <i class="fa-solid fa-globe"></i>
                                     </span>
                                     <input type="text" name="hotspot_domain" value="{{ hotspot_domain }}" 
-                                           placeholder="wifi.maxradius.net" 
+                                           placeholder="wifi.alpharadius.net" 
                                            class="w-full bg-[#070b14] border border-slate-700 rounded-xl pr-10 pl-3.5 py-2.5 text-xs text-white font-mono focus:border-blue-500 transition">
                                 </div>
                                 <p class="text-[10px] text-slate-500 mt-1">النطاق المستخدم لإعادة توجيه المشتركين في الراوتر</p>

@@ -1,11 +1,11 @@
 {
   "date": "2026-10-31",
-  "domain": "m.max-net.net",
+  "domain": "m.alpha.amtik.online",
   "scope": "read-only comparison of four existing backup files, daily noon snapshots",
   "current_web_image": "sha256:c5ab9fe42359c867c6dedabaf607ff492b2652e8160fa5df987e34e645db098b",
   "files": [
     {
-      "name": "max_radius_backup_20261028_120000_833.tar.gz",
+      "name": "alpha_radius_backup_20261028_120000_833.tar.gz",
       "bytes": 27464650,
       "metadata": {
         "created_at": "2026-10-28 12:00:00",
@@ -440,7 +440,7 @@
       "sha256": "f19486ed5d24c4d3e51a0e4f6a3695cd24249287d3acc160513c1a1eb3257bfd"
     },
     {
-      "name": "max_radius_backup_20261029_120000_756.tar.gz",
+      "name": "alpha_radius_backup_20261029_120000_756.tar.gz",
       "bytes": 28147122,
       "metadata": {
         "created_at": "2026-10-29 12:00:00",
@@ -875,7 +875,7 @@
       "sha256": "06df7268f1cb21a7d408bf9074797e4e8f8b6146cafa8ca51ed61302780ee5ef"
     },
     {
-      "name": "max_radius_backup_20261030_120000_293.tar.gz",
+      "name": "alpha_radius_backup_20261030_120000_293.tar.gz",
       "bytes": 30058712,
       "metadata": {
         "created_at": "2026-10-30 12:00:00",
@@ -1310,7 +1310,7 @@
       "sha256": "8a184b154f615095f93d22fe0ddef6ada09c3cd091607894f192ac04de97bc6b"
     },
     {
-      "name": "max_radius_backup_20261031_120000_738.tar.gz",
+      "name": "alpha_radius_backup_20261031_120000_738.tar.gz",
       "bytes": 30877048,
       "metadata": {
         "created_at": "2026-10-31 12:00:00",
@@ -1748,7 +1748,7 @@
   "cohort": {
     "snapshots": [
       {
-        "name": "max_radius_backup_20261028_120000_833.tar.gz",
+        "name": "alpha_radius_backup_20261028_120000_833.tar.gz",
         "unique_sessions_by_table": {
           "radacct": 53140,
           "radacct_archive": 0,
@@ -1764,7 +1764,7 @@
         "history_capture_hours": {}
       },
       {
-        "name": "max_radius_backup_20261029_120000_756.tar.gz",
+        "name": "alpha_radius_backup_20261029_120000_756.tar.gz",
         "unique_sessions_by_table": {
           "radacct": 56748,
           "radacct_archive": 0,
@@ -1785,7 +1785,7 @@
         }
       },
       {
-        "name": "max_radius_backup_20261030_120000_293.tar.gz",
+        "name": "alpha_radius_backup_20261030_120000_293.tar.gz",
         "unique_sessions_by_table": {
           "radacct": 32894,
           "radacct_archive": 0,
@@ -1807,7 +1807,7 @@
         }
       },
       {
-        "name": "max_radius_backup_20261031_120000_738.tar.gz",
+        "name": "alpha_radius_backup_20261031_120000_738.tar.gz",
         "unique_sessions_by_table": {
           "radacct": 37019,
           "radacct_archive": 0,
@@ -1832,24 +1832,24 @@
     ],
     "transitions": [
       {
-        "from": "max_radius_backup_20261028_120000_833.tar.gz",
-        "to": "max_radius_backup_20261029_120000_756.tar.gz",
+        "from": "alpha_radius_backup_20261028_120000_833.tar.gz",
+        "to": "alpha_radius_backup_20261029_120000_756.tar.gz",
         "new_unique_sessions": 3613,
         "no_longer_retained_unique": 0,
         "retained_unique_before": 339004,
         "retained_unique_after": 342617
       },
       {
-        "from": "max_radius_backup_20261029_120000_756.tar.gz",
-        "to": "max_radius_backup_20261030_120000_293.tar.gz",
+        "from": "alpha_radius_backup_20261029_120000_756.tar.gz",
+        "to": "alpha_radius_backup_20261030_120000_293.tar.gz",
         "new_unique_sessions": 3767,
         "no_longer_retained_unique": 0,
         "retained_unique_before": 342617,
         "retained_unique_after": 346384
       },
       {
-        "from": "max_radius_backup_20261030_120000_293.tar.gz",
-        "to": "max_radius_backup_20261031_120000_738.tar.gz",
+        "from": "alpha_radius_backup_20261030_120000_293.tar.gz",
+        "to": "alpha_radius_backup_20261031_120000_738.tar.gz",
         "new_unique_sessions": 4126,
         "no_longer_retained_unique": 0,
         "retained_unique_before": 346384,
@@ -1877,22 +1877,22 @@
   "verification": {
     "archives": [
       {
-        "name": "max_radius_backup_20261028_120000_833.tar.gz",
+        "name": "alpha_radius_backup_20261028_120000_833.tar.gz",
         "gzip_CRC_valid": true,
         "original_size_mtime_unchanged": true
       },
       {
-        "name": "max_radius_backup_20261029_120000_756.tar.gz",
+        "name": "alpha_radius_backup_20261029_120000_756.tar.gz",
         "gzip_CRC_valid": true,
         "original_size_mtime_unchanged": true
       },
       {
-        "name": "max_radius_backup_20261030_120000_293.tar.gz",
+        "name": "alpha_radius_backup_20261030_120000_293.tar.gz",
         "gzip_CRC_valid": true,
         "original_size_mtime_unchanged": true
       },
       {
-        "name": "max_radius_backup_20261031_120000_738.tar.gz",
+        "name": "alpha_radius_backup_20261031_120000_738.tar.gz",
         "gzip_CRC_valid": true,
         "original_size_mtime_unchanged": true
       }

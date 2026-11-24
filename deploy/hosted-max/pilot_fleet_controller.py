@@ -28,7 +28,7 @@ class Channel:
 
     def configuration(self):
         config=json.loads((self.root/'configuration.private.json').read_text())
-        if config.get('domain')!='4k.max-net.net' or config.get('project')!='4k':raise ValueError('Wrong scope')
+        if config.get('domain')!='4k.alpha.amtik.online' or config.get('project')!='4k':raise ValueError('Wrong scope')
         return config
 
     def release(self):
@@ -41,7 +41,7 @@ class Channel:
         import base64
         key=serialization.load_pem_public_key((self.root/'release-public.pem').read_bytes())
         key.verify(base64.b64decode(release['signature']),json.dumps(signed,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode())
-        if (release.get('domain')!='4k.max-net.net' or release.get('instance')!=config['instance']
+        if (release.get('domain')!='4k.alpha.amtik.online' or release.get('instance')!=config['instance']
             or release.get('version')!='2.6.3' or release.get('release')!=config['release']
             or release.get('images')!=config['images'] or release.get('components')!=['web','core']
             or release.get('plan_sha256')!=config['plan_sha256'] or release.get('automatic_install') is not False):
@@ -58,9 +58,9 @@ class Channel:
 
     def check(self):
         config,release=self.release()
-        atomic(self.root/'delivery-receipt.json',{'release':release['release'],'domain':'4k.max-net.net','instance':config['instance'],'checked_at':dt.datetime.now(dt.timezone.utc).isoformat(),'available':True,'installed':False})
+        atomic(self.root/'delivery-receipt.json',{'release':release['release'],'domain':'4k.alpha.amtik.online','instance':config['instance'],'checked_at':dt.datetime.now(dt.timezone.utc).isoformat(),'available':True,'installed':False})
         os.chmod(self.root/'delivery-receipt.json',0o644)
-        return {'success':True,'has_update':True,'latest_version':'2.6.3','target_domain':'4k.max-net.net','components':['web','core'],'title':'تحديث 2.6.3 — Web وCore لـ4k فقط','changelog':release['changelog'],'release_date':release['release_date'],'checked_at':dt.datetime.now(dt.timezone.utc).isoformat(),'automatic_install':False}
+        return {'success':True,'has_update':True,'latest_version':'2.6.3','target_domain':'4k.alpha.amtik.online','components':['web','core'],'title':'تحديث 2.6.3 — Web وCore لـ4k فقط','changelog':release['changelog'],'release_date':release['release_date'],'checked_at':dt.datetime.now(dt.timezone.utc).isoformat(),'automatic_install':False}
 
     def submit(self,body):
         if body!={'version':'2.6.3','backup_first':True}:raise ValueError('Unsupported request')

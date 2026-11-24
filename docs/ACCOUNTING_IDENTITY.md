@@ -10,7 +10,7 @@
 
 ## المرشح
 
-الملف [max-accounting-identity.conf](../docker/freeradius/max-accounting-identity.conf) يعرّف max_acct_unique. تنسخه صورة Core ويضيف entrypoint استدعاءً واحدًا بعد acct_unique في default، مع إنهاء preacct عند الفشل. لا يتغير Class أو حجز السعة أو استعلامات تسوية المحاسبة.
+الملف [alpha-accounting-identity.conf](../docker/freeradius/alpha-accounting-identity.conf) يعرّف max_acct_unique. تنسخه صورة Core ويضيف entrypoint استدعاءً واحدًا بعد acct_unique في default، مع إنهاء preacct عند الفشل. لا يتغير Class أو حجز السعة أو استعلامات تسوية المحاسبة.
 
 - يطبق الفرع الجديد على Class واحدة بالضبط وبصيغة maxcap مع32 محرف hex صغيرة، وحساب ومعرّف جلسة وNAS IPv4 غير فارغة.
 - يبحث باستعلام SELECT عن سجلين مرشحين كحد أقصى ضمن الحساب وNAS ومعرّف الجلسة وClass المطابقة بايتًا. فهارس username/session الحالية مسار الوصول؛ لا تغيير مخطط أو ترحيل بيانات.

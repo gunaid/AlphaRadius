@@ -139,7 +139,7 @@ def ensure_controller(name):
                 or reader['identity']!=name+'.'+cfg['base_domain'] or not reader['reader_id'] or not reader['token']):
             raise ValueError('Invalid enrollment')
         value=dict(public_key=PUBLIC_KEY,key_fingerprint=bootstrap.PUBLIC_TRUST,**reader,
-                   channel='https://control.max-net.net',executor='host',project=name,
+                   channel='https://control.alpha.amtik.online',executor='host',project=name,
                    services=roles,compose_path=str(path/'docker-compose.yml'),enrollment_socket=str(sockets))
         bootstrap.atomic(config_path,value)
         bootstrap.atomic(marker,{'status':'ready','instance':instance})

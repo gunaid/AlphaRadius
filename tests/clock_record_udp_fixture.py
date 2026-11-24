@@ -29,7 +29,7 @@ class RadiusFixture:
     def start(self):
         h=self.h;folder=h.REPORT/'radius-config';folder.mkdir()
         # Pin the actual local binary identity; do not assume tag equality with the customer.
-        self.image=self.command(['docker','image','inspect','--format','{{.Id}}','max-radius-core:first-use-local-20261013'])
+        self.image=self.command(['docker','image','inspect','--format','{{.Id}}','alpha-radius-core:first-use-local-20261013'])
         sql=(h.ROOT/'docker/freeradius/mods-available/sql').read_text()
         sql=sql.replace('server = "mariadb"','server = "fixture-db"').replace('login = "radius"','login = "root"')
         sql=sql.replace('password = "radpass"','password = "'+h.password+'"').replace('radius_db = "radius_wisp"','radius_db = "'+h.schema+'"')
@@ -106,7 +106,7 @@ class RadiusFixture:
         # No host UDP publication. One persistent Python relay runs on the same internal network.
         self.client=self.command(['docker','run','-d','--name','max-clock-udp-client-'+uuid.uuid4().hex[:10],
             '--label','max-owned-task=clock-record-priority-lab','--network',self.network,'--restart=no',
-            '--entrypoint','sleep','max-radius-clock-guard-lab:20261017','infinity'])
+            '--entrypoint','sleep','alpha-radius-clock-guard-lab:20261017','infinity'])
         relay_code='''import json,socket,sys
 for line in sys.stdin:
  try:

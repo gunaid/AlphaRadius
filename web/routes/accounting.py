@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-MAX RADIUS Web - Radius Accounting, Live Sessions, and CoA Disconnects Routes Module.
+ALPHA RADIUS Web - Radius Accounting, Live Sessions, and CoA Disconnects Routes Module.
 """
 
 import os

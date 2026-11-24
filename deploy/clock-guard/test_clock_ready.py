@@ -175,8 +175,8 @@ class MarkerTests(unittest.TestCase):
 
 class ConfigurationTests(unittest.TestCase):
     def test_dropin_appends_preflight_without_overriding_runtime(self):
-        s=(ROOT/'99-max-radius-clock-ready.conf').read_text()
-        self.assertIn('ExecStartPre=/usr/bin/python3 /usr/local/libexec/max-radius-clock-ready.py',s)
+        s=(ROOT/'99-alpha-radius-clock-ready.conf').read_text()
+        self.assertIn('ExecStartPre=/usr/bin/python3 /usr/local/libexec/alpha-radius-clock-ready.py',s)
         self.assertNotIn('\nExecStart=',s);self.assertNotIn('\nExecStop=',s)
         self.assertNotIn('\nRestart=',s);self.assertNotIn('\nExecStartPre=\n',s)
     def test_gate_cannot_mutate_customer_or_clock(self):

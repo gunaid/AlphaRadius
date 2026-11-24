@@ -33,8 +33,8 @@ def main():
         has_permission=lambda *a, **kw: True, can_access_endpoint=lambda *a, **kw: True,
         is_reseller_scope=lambda: False, get_flashed_messages=lambda **kw: [])
     now = dt.datetime.now(dt.timezone.utc)
-    context = dict(app_version='2.7.1', app_edition='Enterprise', system_title='MAX RADIUS',
-        product_identity={'name':'MAX RADIUS','website':''}, current_manager={'id':1,'username':'fixture','full_name':'اختبار الواجهة','role_code':'superadmin'},
+    context = dict(app_version='2.7.1', app_edition='Enterprise', system_title='ALPHA RADIUS',
+        product_identity={'name':'ALPHA RADIUS','website':''}, current_manager={'id':1,'username':'fixture','full_name':'اختبار الواجهة','role_code':'superadmin'},
         license_info={'valid':True,'has_license':True,'status':'active','features':{}}, session={'admin_id':1},
         request=types.SimpleNamespace(endpoint='system.automation_rules',path='/automation-rules',args={}),
         system_timezone='Asia/Aden', server_timestamp_ms=int(now.timestamp()*1000),

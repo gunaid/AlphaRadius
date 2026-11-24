@@ -5,7 +5,7 @@
   "Core": {
     "base": "sha256:7ffa03b73990e25f8e10b72eb8e29dd446e2ffb2942ec8df2599e539f37cb7c5",
     "image": "sha256:9786df38bb3ce725c7a1f87a52b2db34ee90a0a221df29dd0331d95684a0a067",
-    "tag": "max-radius-core:2.6.9-detail-local-20261031-r6",
+    "tag": "alpha-radius-core:2.6.9-detail-local-20261031-r6",
     "changed_runtime": [
       "/entrypoint.sh",
       "/etc/freeradius/3.0/mods-available/detail",

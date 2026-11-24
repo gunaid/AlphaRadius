@@ -25,12 +25,12 @@ class TargetedReleasePlanTests(unittest.TestCase):
         self.assertFalse(m.public_status(self.plan, {})['published_to_clients'])
 
     def test_other_domains_denied(self):
-        for domain in ('max.max-net.net', 'as.max-net.net', '4k.max-net.net.evil', '', '*'):
+        for domain in ('max.alpha.amtik.online', 'as.alpha.amtik.online', '4k.alpha.amtik.online.evil', '', '*'):
             with self.subTest(domain=domain), self.assertRaises(m.Rejected):
                 m.prepare(domain, self.rows, self.images, self.migration, self.now)
 
     def test_shared_components_and_latest_denied(self):
-        for images in ({**self.images, 'db':'sha256:'+'d'*64}, {**self.images, 'l2tp':'sha256:'+'e'*64}, {**self.images, 'web':'mohd777/max-radius-web:latest'}):
+        for images in ({**self.images, 'db':'sha256:'+'d'*64}, {**self.images, 'l2tp':'sha256:'+'e'*64}, {**self.images, 'web':'mohd777/alpha-radius-web:latest'}):
             with self.assertRaises(m.Rejected):m.prepare(m.DOMAIN, self.rows, images, self.migration, self.now)
 
     def test_duplicate_live_core_denied(self):
@@ -50,7 +50,7 @@ class TargetedReleasePlanTests(unittest.TestCase):
             with self.subTest(key=key),self.assertRaises(m.Rejected):m.validate_current(self.plan,m.DOMAIN,rows,self.now)
 
     def test_tampered_plan_denied(self):
-        self.plan['domain']='max.max-net.net'
+        self.plan['domain']='max.alpha.amtik.online'
         with self.assertRaises(m.Rejected):m.validate_current(self.plan,m.DOMAIN,self.rows,self.now)
 
     def test_network_and_storage_change_without_restart_denied(self):

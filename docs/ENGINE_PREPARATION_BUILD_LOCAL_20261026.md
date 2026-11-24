@@ -19,8 +19,8 @@
 
 الصورتان المحليتان المحتفظ بهما:
 
-- `max-radius-web:engine-bridge-lab-20261026-r1` — Image ID `sha256:b394b21bc3710eb373587ede64564f8a5fa4797ea7f2ac524d2a75d72a80c10b`.
-- `max-radius-web:engine-handoff-lab-20261026-r1` — Image ID `sha256:330f4a57f524d895aaae5954be7df13183b4665830597475a5be82c754a402bb`.
+- `alpha-radius-web:engine-bridge-lab-20261026-r1` — Image ID `sha256:b394b21bc3710eb373587ede64564f8a5fa4797ea7f2ac524d2a75d72a80c10b`.
+- `alpha-radius-web:engine-handoff-lab-20261026-r1` — Image ID `sha256:330f4a57f524d895aaae5954be7df13183b4665830597475a5be82c754a402bb`.
 
 هذه Image IDs محلية؛ لا تُعرض باعتبارها digests رفع Registry. لم تتغير وسوم latest أو الصور المرجعية القائمة.
 

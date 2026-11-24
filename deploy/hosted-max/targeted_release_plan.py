@@ -8,7 +8,7 @@ import hashlib
 import json
 import re
 
-DOMAIN = '4k.max-net.net'
+DOMAIN = '4k.alpha.amtik.online'
 PROJECT = '4k'
 ROLES = {'web': 'web', 'core': 'radius_core'}
 CERTIFICATES = frozenset({

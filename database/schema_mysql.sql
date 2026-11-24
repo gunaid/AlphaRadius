@@ -1,5 +1,5 @@
 -- ============================================================
--- MAX RADIUS 2.0 - Master Complete Database Schema & Seed Data
+-- ALPHA RADIUS 2.0 - Master Complete Database Schema & Seed Data
 -- ============================================================
 SET FOREIGN_KEY_CHECKS=0;
 
@@ -147,7 +147,7 @@ BEGIN
         s.first_used_at = IFNULL(s.first_used_at, NEW.acctstarttime),
         s.last_renewed_at = IFNULL(s.last_renewed_at, NEW.acctstarttime)
     WHERE s.username = NEW.username AND s.status IN ('active', 'inactive')
-      AND COALESCE(@max_radius_import, 0) = 0;
+      AND COALESCE(@alpha_radius_import, 0) = 0;
 END
 */;;
 DELIMITER ;
@@ -189,14 +189,14 @@ BEGIN
     DECLARE v_mgroup VARCHAR(100) DEFAULT NULL;
     DECLARE v_assigned_seq BIGINT DEFAULT NULL;
     DECLARE v_policy_result INT;
-    IF COALESCE(@max_radius_import,0)=0 THEN
+    IF COALESCE(@alpha_radius_import,0)=0 THEN
         SET v_policy_result=fn_freeze_voucher_policy(NEW.username);
         IF v_policy_result=0 THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Voucher policy unavailable'; END IF;
     END IF;
 
     -- Resolve username first, then legacy PIN, using their indexes.
     -- Read the current contract under a primary-key lock, not a metadata join.
-    IF COALESCE(@max_radius_import, 0) = 0 THEN
+    IF COALESCE(@alpha_radius_import, 0) = 0 THEN
         SELECT id INTO v_lookup_id FROM wisp_vouchers
         WHERE username = NEW.username LIMIT 1;
         IF v_lookup_id IS NULL THEN
@@ -1035,14 +1035,14 @@ CREATE TABLE `wisp_whatsapp_settings` (
   `gateway_provider` varchar(40) DEFAULT 'simulator',
   `api_endpoint` varchar(255) DEFAULT 'http://localhost:8080',
   `api_key` varchar(255) DEFAULT '',
-  `instance_name` varchar(80) DEFAULT 'max_radius_bot',
+  `instance_name` varchar(80) DEFAULT 'alpha_radius_bot',
   `phone_number` varchar(40) DEFAULT '',
   `is_bot_enabled` tinyint(1) DEFAULT 1,
   `is_notifications_enabled` tinyint(1) DEFAULT 1,
   `meta_app_id` varchar(80) DEFAULT '',
   `meta_phone_number_id` varchar(80) DEFAULT '',
   `meta_access_token` text DEFAULT NULL,
-  `meta_webhook_verify_token` varchar(120) DEFAULT 'max_radius_whatsapp_token_2026',
+  `meta_webhook_verify_token` varchar(120) DEFAULT 'alpha_radius_whatsapp_token_2026',
   `status` varchar(30) DEFAULT 'disconnected',
   `qr_code_raw` mediumtext DEFAULT NULL,
   `last_connected_at` datetime DEFAULT NULL,
@@ -1097,22 +1097,22 @@ INSERT INTO `wisp_roles` VALUES
 INSERT INTO `wisp_system_settings` VALUES
 ('address','المركز الرئيسي لخدمات الإنترنت','العنوان والمقر'),
 ('allow_data_loan','0','تفعيل أو تعطيل ميزة سلفة البيانات للمشتركين'),
-('company_name','ماكس راديوس | MAX RADIUS','اسم الشركة'),
+('company_name','آلفا راديوس | ALPHA RADIUS','اسم الشركة'),
 ('currency','YER','رمز كود العملة'),
 ('currency_symbol','ر.ي','رمز العملة المعروض'),
 ('default_coa_port','3799','إعداد نظام'),
 ('enable_user_portal','1',''),
-('hotspot_domain','wifi.maxradius.net','نطاق صفحة تسجيل الدخول'),
-('hotspot_folder_name','max-radius',''),
+('hotspot_domain','wifi.alpharadius.net','نطاق صفحة تسجيل الدخول'),
+('hotspot_folder_name','alpha-radius',''),
 ('hotspot_server_host','199.247.3.47',''),
 ('hotspot_total_download','150M',''),
 ('hotspot_total_upload','75M',''),
-('isp_name','ماكس راديوس | MAX RADIUS','اسم مزود الخدمة'),
+('isp_name','آلفا راديوس | ALPHA RADIUS','اسم مزود الخدمة'),
 ('license_monotonic_timestamp','1790376518.9039583',''),
 ('loan_amount_mb','1024','حجم سلفة البيانات بالميجابايت الافتراضية'),
 ('loan_threshold_mb','100','حد الرصيد المتبقي بالميجابايت الذي يسمح بطلب السلفة عنده'),
 ('network_logo','logo_20260924_214947.png','مسار شعار الشبكة'),
-('network_name','ماكس راديوس | MAX RADIUS','اسم الشبكة أو مزود الخدمة'),
+('network_name','آلفا راديوس | ALPHA RADIUS','اسم الشبكة أو مزود الخدمة'),
 ('portal_about_text','نبذة عن شبكة ماكس نت','إعداد نظام'),
 ('portal_allow_package_change','1','إعداد نظام'),
 ('portal_allow_password_change','0','إعداد نظام'),
@@ -1135,15 +1135,15 @@ INSERT INTO `wisp_system_settings` VALUES
 ('portal_whatsapp','967773570053','إعداد نظام'),
 ('sms_api_key','','إعداد نظام'),
 ('sms_gateway_url','','إعداد نظام'),
-('sms_sender_id','MAX-RADIUS','اسم مرسل الرسائل'),
-('support_email','support@max-radius.net','البريد الإلكتروني للدعم الفني'),
+('sms_sender_id','ALPHA-RADIUS','اسم مرسل الرسائل'),
+('support_email','support@alpha-radius.net','البريد الإلكتروني للدعم الفني'),
 ('support_phone','777366226','رقم هاتف الدعم الفني'),
-('system_title','MAX RADIUS - نظام إدارة الشبكات والفوترة و FreeRADIUS','عنوان النظام'),
+('system_title','ALPHA RADIUS - نظام إدارة الشبكات والفوترة و FreeRADIUS','عنوان النظام'),
 ('timezone','Asia/Aden','المنطقة الزمنية للنظام');
 
 -- Initial Default Super Admin Seed
 INSERT INTO `wisp_managers` (`id`, `username`, `password_hash`, `full_name`, `phone`, `email`, `role_id`, `wallet_balance`, `credit_limit`, `commission_percent`, `allowed_packages`, `is_active`, `is_deleted`, `notes`, `created_at`)
-VALUES (1, 'admin', 'admin', 'مدير النظام الرئيسي', '+967 770 000 000', 'admin@max-net.net', 1, 0.00, 0.00, 0.00, NULL, 1, 0, 'حساب المدير العام الأساسي للمنظومة', NOW())
+VALUES (1, 'admin', 'admin', 'مدير النظام الرئيسي', '+967 770 000 000', 'admin@alpha.amtik.online', 1, 0.00, 0.00, 0.00, NULL, 1, 0, 'حساب المدير العام الأساسي للمنظومة', NOW())
 ON DUPLICATE KEY UPDATE `is_active` = 1;
 
 
@@ -1247,7 +1247,7 @@ SET NEW.snap_rate_upload=COALESCE(NEW.snap_rate_upload,(SELECT rate_upload FROM 
           END IF; END;;
 CREATE OR REPLACE TRIGGER trg_voucher_first_policy_update
           BEFORE UPDATE ON wisp_vouchers FOR EACH ROW BEGIN
-          IF OLD.policy_frozen_at IS NOT NULL AND COALESCE(@max_radius_import,0)=1 THEN
+          IF OLD.policy_frozen_at IS NOT NULL AND COALESCE(@alpha_radius_import,0)=1 THEN
           SET NEW.snap_price=OLD.snap_price;
 SET NEW.snap_cost=OLD.snap_cost;
 SET NEW.snap_volume_quota_mb=OLD.snap_volume_quota_mb;

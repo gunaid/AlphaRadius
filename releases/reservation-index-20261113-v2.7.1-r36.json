@@ -1,12 +1,12 @@
 {
   "version": "2.7.1",
   "release": "20261113-v2.7.1-reservation-index-r36",
-  "tag": "mohd777/max-radius-web:2.7.1-reservation-index-20261113-r36",
+  "tag": "mohd777/alpha-radius-web:2.7.1-reservation-index-20261113-r36",
   "image_digest": "sha256:e4984159c23786ebc59c2b410130fb951a751e1cc8d14405d713fcd46a53b173",
   "updated_tags": [
-    "mohd777/max-radius-web:2.7.1-reservation-index-20261113-r36",
-    "mohd777/max-radius-web:2.7.1",
-    "mohd777/max-radius-web:2.7.1-update-safety-20261107-r7"
+    "mohd777/alpha-radius-web:2.7.1-reservation-index-20261113-r36",
+    "mohd777/alpha-radius-web:2.7.1",
+    "mohd777/alpha-radius-web:2.7.1-update-safety-20261107-r7"
   ],
   "previous_web_digest": "sha256:9b4aac08a65b4f911357538f71c279aa85a1aa1d0aad29cb3fc863b44313ca6c",
   "runtime_delta": {
@@ -35,17 +35,17 @@
   "runtime_contracts_checked_on_source_and_compiled": true,
   "acceptance_report": "docs/RELEASE_271_RESERVATION_INDEX_PUBLISHED_20261113.md",
   "runtime_bundle": {
-    "url": "https://raw.githubusercontent.com/mohd-1992/MAX-RADIUS/main/releases/runtime-20261113-v2.7.1-reservation-index-r36.tar.gz",
+    "url": "https://raw.githubusercontent.com/gunaid/AlphaRadius/main/releases/runtime-20261113-v2.7.1-reservation-index-r36.tar.gz",
     "sha256": "80606a194eb0bb761abd1e3c2df91aa1604f421fef30003a7ce7343f12181644"
   },
   "source_manifest": "releases/source-20261113-v2.7.1-reservation-index-r36.json",
   "core_and_other_images_unchanged": true,
   "production_domains_index_only": [
-    "4k.max-net.net",
-    "as.max-net.net",
-    "m.max-net.net",
-    "max1.max-net.net",
-    "shn.max-net.net",
+    "4k.alpha.amtik.online",
+    "as.alpha.amtik.online",
+    "m.alpha.amtik.online",
+    "max1.alpha.amtik.online",
+    "shn.alpha.amtik.online",
     "m.max-r.cc",
     "max1.max-r.cc"
   ],

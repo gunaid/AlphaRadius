@@ -1,7 +1,7 @@
 {
   "version": "2.7.1",
-  "tag": "mohd777/max-radius-web:2.7.1-native-progress-20261110-r30",
-  "image": "mohd777/max-radius-web@sha256:808eac47daaf59802da7e4da8918364c7a683d949abccc87fa00f90394a9869e",
+  "tag": "mohd777/alpha-radius-web:2.7.1-native-progress-20261110-r30",
+  "image": "mohd777/alpha-radius-web@sha256:808eac47daaf59802da7e4da8918364c7a683d949abccc87fa00f90394a9869e",
   "scope": "m.max-r.cc",
   "changes": [
     "Native update progress from completed operations",

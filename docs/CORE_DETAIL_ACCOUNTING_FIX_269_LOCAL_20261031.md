@@ -6,7 +6,7 @@
 
 - Web ثابتة من قبول الأقفال: `sha256:ddce804366a6d14de6519a47bc456597fe145404a451fdfe10a3ca286ae7a06c`.
 - Core الأساس: `sha256:7ffa03b73990e25f8e10b72eb8e29dd446e2ffb2942ec8df2599e539f37cb7c5`.
-- Core النهائية المحلية: `max-radius-core:2.6.9-detail-local-20261031-r6`؛ `sha256:9786df38bb3ce725c7a1f87a52b2db34ee90a0a221df29dd0331d95684a0a067`.
+- Core النهائية المحلية: `alpha-radius-core:2.6.9-detail-local-20261031-r6`؛ `sha256:9786df38bb3ce725c7a1f87a52b2db34ee90a0a221df29dd0331d95684a0a067`.
 
 التعديل الجديد يخص **Core**. الحزمة المحلية الكاملة أصبحت Web المذكورة وCore النهائية، مع بقاء DB وL2TP وautoheal دون صورة جديدة. Core الجديدة تحفظ إصلاح Accounting-On/Off السابق؛ SQL المحاسبة نفسه وملف daemon متطابقان مع الأساس. صور r1–r5 تمهيدية مستبعدة من التسليم، ولا تستخدم كبديل للهوية النهائية.
 

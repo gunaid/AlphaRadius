@@ -2,7 +2,7 @@
 
 ## النتيجة الحالية
 
-اكتمل نقل **max1 فقط** من `max1.max-net.net` على `199.247.3.47` إلى **https://max1.max-r.cc** على `2.31.161.122`، بالإصدار 2.7.0. هذه الحالة تحل محل العبارات المؤرخة السابقة بأن max1 الجديدة فارغة أو أن الأنفاق لم تجهز. بقيت m على مصدرها `173.212.233.5`؛ m الموجودة في Hetzner لم تستقبل بياناتها أو حركة عملائها بعد.
+اكتمل نقل **max1 فقط** من `max1.alpha.amtik.online` على `199.247.3.47` إلى **https://max1.max-r.cc** على `2.31.161.122`، بالإصدار 2.7.0. هذه الحالة تحل محل العبارات المؤرخة السابقة بأن max1 الجديدة فارغة أو أن الأنفاق لم تجهز. بقيت m على مصدرها `173.212.233.5`؛ m الموجودة في Hetzner لم تستقبل بياناتها أو حركة عملائها بعد.
 
 التنفيذ مفوض بطلب المستخدم نقل البيانات بعد التحقق، وإغلاق الجلسات فعليًا قبل تحويل المستخدمين. لم تُنقل أي منظومة أخرى، ولم تتغير صور المصدر أو latest أو المستودع البعيد.
 
@@ -41,8 +41,8 @@
 
 صور الوجهة المثبتة بالبصمة:
 
-- Web: `mohd777/max-radius-web@sha256:5455db7ca85a1d5f6c5c205fca0e171cefb28dc9f008dc56d25d4ecd090fa2ca`.
-- Core: `mohd777/max-radius-core@sha256:10cc88946c5ed6310a36c4c11b7e991277137da87eb019958f2eb45c8d2eabf5`.
+- Web: `mohd777/alpha-radius-web@sha256:5455db7ca85a1d5f6c5c205fca0e171cefb28dc9f008dc56d25d4ecd090fa2ca`.
+- Core: `mohd777/alpha-radius-core@sha256:10cc88946c5ed6310a36c4c11b7e991277137da87eb019958f2eb45c8d2eabf5`.
 - DB المشترك b: `mariadb@sha256:d769e37960821dfdcf096954f6e7ac89f747e116c1bba98e48edd265dfc7deae`؛ ضبط الموارد موثق في تقرير تجهيز Hetzner، وليس صورة DB مخصصة جديدة.
 
 أضيف إلى اللوحة الجديدة فقط عرض منفذ ومستخدم API الفعليين وربط الراوتر بنفقه، وفحص اتصال صريح محدود دون مصادقة RADIUS. نجحت9 اختبارات مرتبطة وفحص JavaScript. جسر الإدارة التمهيدي كان للقراءة فقط، ثم تقاعد بعد تحقق المسار المباشر. المصدر المحلي للوحة `max_saas_panel_v2_local`؛ التغييرات منشورة كطبقة فوق الحزمة المجمدة، وليست ضمن صورة MAX. لا تعاد حزمة نشر قديمة فوقها دون حفظ هذه الطبقة.
@@ -53,7 +53,7 @@
 
 ## الأدلة والاستئناف والحدود
 
-المرجع المحلي المحمي: `C:/Users/lenovo/Documents/Codex/private/max-radius/hetzner-provision270-20261102-r1`.
+المرجع المحلي المحمي: `C:/Users/lenovo/Documents/Codex/private/alpha-radius/hetzner-provision270-20261102-r1`.
 على كل مضيف ذي صلة تحفظ أدلته في `/var/lib/max-max1-hetzner-stage-20261102-r1`؛ تطابق المسار لا يعني تطابق المضيف.
 
 الإيصالات الرئيسية: `FINAL-SESSIONS-CLOSED.private.json`، `STOPS-CAPTURED.private.json`، `AUDIT-FINAL.private.json`، `TRAFFIC-CUTOVER-COMPLETE.private.json`، `ACCOUNTING-PROGRESS-VERIFIED.private.json`، `SESSION-RECONCILIATION.private.json`، `FINANCE-POST-CUTOVER.private.json`، وأدلة ثبات التراخيص. لا تدخل الأسرار أو الأرشيفات أو الصفوف الخام Git.

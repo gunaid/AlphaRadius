@@ -1,12 +1,12 @@
 {
   "version": "2.7.1",
   "release": "20261111-v2.7.1-point-october-r34",
-  "tag": "mohd777/max-radius-web:2.7.1-point-october-20261111-r34",
+  "tag": "mohd777/alpha-radius-web:2.7.1-point-october-20261111-r34",
   "image_digest": "sha256:89ce5cd11959ac2acda0c41aeff82bb71fe083c9685fd2fb3f113001dc02a951",
   "updated_tags": [
-    "mohd777/max-radius-web:2.7.1-point-october-20261111-r34",
-    "mohd777/max-radius-web:2.7.1",
-    "mohd777/max-radius-web:2.7.1-update-safety-20261107-r7"
+    "mohd777/alpha-radius-web:2.7.1-point-october-20261111-r34",
+    "mohd777/alpha-radius-web:2.7.1",
+    "mohd777/alpha-radius-web:2.7.1-update-safety-20261107-r7"
   ],
   "previous_web_digest": "sha256:87e4983c1de4ba973287449c44f1c91cd6125aed04eac7697c1013688b3600a2",
   "runtime_delta": {
@@ -35,7 +35,7 @@
   },
   "acceptance_report": "docs/MAX1_R_271_POINT_AND_OCTOBER_R34_20261111.md",
   "runtime_bundle": {
-    "url": "https://raw.githubusercontent.com/mohd-1992/MAX-RADIUS/main/releases/runtime-20261111-v2.7.1-point-october-r34.tar.gz",
+    "url": "https://raw.githubusercontent.com/gunaid/AlphaRadius/main/releases/runtime-20261111-v2.7.1-point-october-r34.tar.gz",
     "sha256": "7ba5ddfd1dfbe6a8838e628782be53523d083fff96a981f98868a3e2c7906be7"
   },
   "source_manifest": "releases/source-20261111-v2.7.1-point-october-r34.json",

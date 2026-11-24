@@ -49,7 +49,7 @@ class ReadOnlyDB:
         statement = ("SET SESSION max_statement_time=3;SET SESSION lock_wait_timeout=1;"
             "SET SESSION innodb_lock_wait_timeout=1;SET time_zone='+03:00';"
             'START TRANSACTION READ ONLY;'+sql+';ROLLBACK;')
-        p = subprocess.run(['docker','exec','max_radius_'+self.tenant+'_db','sh','-c',
+        p = subprocess.run(['docker','exec','alpha_radius_'+self.tenant+'_db','sh','-c',
                             DB_COMMAND,'sh',statement],capture_output=True,text=True,timeout=12)
         if p.returncode or len(p.stdout.encode()) > 12_000_000:
             self.errors.append({'query_sha256':hashlib.sha256(sql.encode()).hexdigest(),
@@ -214,7 +214,7 @@ def binding(config):
     storage=Path('/opt/clients')/tenant/'storage'
     if (storage/'instance_id').read_text().strip()!=config['instance']:
         raise ValueError('Installation identity changed')
-    p=subprocess.run(['docker','inspect','max_radius_'+tenant+'_web','max_radius_'+tenant+'_db'],capture_output=True,text=True,timeout=10,check=True)
+    p=subprocess.run(['docker','inspect','alpha_radius_'+tenant+'_web','alpha_radius_'+tenant+'_db'],capture_output=True,text=True,timeout=10,check=True)
     for item in json.loads(p.stdout):
         if item['Config'].get('Labels',{}).get('com.docker.compose.project')!=config['project']:
             raise ValueError('Container project mismatch')
@@ -332,7 +332,7 @@ def collect(config, hints=None, deep=False):
             definitions='\n\n'.join(ast.get_source_segment(own,n) for n in tree.body
                 if isinstance(n,(ast.FunctionDef,ast.ClassDef)) and n.name in ('RouterReadOnly','duration','nas_observation'))
             inner='import socket,struct,time,re,ipaddress,json,sys\nROW_LIMIT=2000\n'+definitions+'\nv=json.load(sys.stdin)\nprint(json.dumps(nas_observation(v["config"],v["credentials"])))\n'
-            p=subprocess.run(['docker','exec','-i','-e','PYTHONDONTWRITEBYTECODE=1','max_radius_'+config['tenant']+'_web','python','-B','-c',inner],input=json.dumps({'config':config,'credentials':nas}),capture_output=True,text=True,timeout=45)
+            p=subprocess.run(['docker','exec','-i','-e','PYTHONDONTWRITEBYTECODE=1','alpha_radius_'+config['tenant']+'_web','python','-B','-c',inner],input=json.dumps({'config':config,'credentials':nas}),capture_output=True,text=True,timeout=45)
             if p.returncode:raise RuntimeError('NAS reader failed')
             observed=json.loads(p.stdout);snap['nas_sessions']=observed['sessions']
             if observed.get('interval_seconds'):snap['interim_seconds']=observed['interval_seconds']

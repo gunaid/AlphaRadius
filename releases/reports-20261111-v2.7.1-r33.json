@@ -1,12 +1,12 @@
 {
   "version": "2.7.1",
   "release": "20261111-v2.7.1-reports-r33",
-  "tag": "mohd777/max-radius-web:2.7.1-reports-20261111-r33",
+  "tag": "mohd777/alpha-radius-web:2.7.1-reports-20261111-r33",
   "image_digest": "sha256:87e4983c1de4ba973287449c44f1c91cd6125aed04eac7697c1013688b3600a2",
   "updated_tags": [
-    "mohd777/max-radius-web:2.7.1-reports-20261111-r33",
-    "mohd777/max-radius-web:2.7.1",
-    "mohd777/max-radius-web:2.7.1-update-safety-20261107-r7"
+    "mohd777/alpha-radius-web:2.7.1-reports-20261111-r33",
+    "mohd777/alpha-radius-web:2.7.1",
+    "mohd777/alpha-radius-web:2.7.1-update-safety-20261107-r7"
   ],
   "previous_web_digest": "sha256:a4312891aa7c06d1cfed0fc5c463632d6f35d14a16430e5f81feb24f4a81231e",
   "runtime_delta": {
@@ -69,7 +69,7 @@
     "repeated_schema_install": true
   },
   "runtime_bundle": {
-    "url": "https://raw.githubusercontent.com/mohd-1992/MAX-RADIUS/main/releases/runtime-20261111-v2.7.1-reports-r33.tar.gz",
+    "url": "https://raw.githubusercontent.com/gunaid/AlphaRadius/main/releases/runtime-20261111-v2.7.1-reports-r33.tar.gz",
     "sha256": "e02a1109e9f70107762678291f464f56c5c9e71c97d0d7db63c5fa12c8e8f6ed"
   },
   "source_manifest": "releases/source-20261111-v2.7.1-reports-r33.json",

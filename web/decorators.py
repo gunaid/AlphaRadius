@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Authentication & Role-Based Access Control (RBAC) Decorators for MAX RADIUS Web Application.
+Authentication & Role-Based Access Control (RBAC) Decorators for ALPHA RADIUS Web Application.
 """
 
 from functools import wraps

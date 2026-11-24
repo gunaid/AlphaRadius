@@ -20,7 +20,7 @@
 
 ## الصورة والمصدر
 
-- الوسم المحلي: `max-radius-web:2.6.9-renewal-engine-local-20261030-r2`.
+- الوسم المحلي: `alpha-radius-web:2.6.9-renewal-engine-local-20261030-r2`.
 - Image ID: `sha256:3f2b7ddb285e333d40460049de59c8bdf7fe019fb43e4a01411a816728cfede8`، منصةLinux/amd64. هذه بصمة صورة محلية وليست Registry manifest digest.
 - الأساس المثبت: صورة التجديد السابقة `sha256:87620a4bc1504cbec669f7183e57d5c9a00542eb895bf6c1714900e854261191`؛ [مرجع إصلاحات التجديد](RENEWAL_RATE_FIX_269_LOCAL_20261029.md).
 - أُعيد تجميع `system_update_components` و`system_update_host` فقط، وأضيفت `system_component_control` و`system_component_host`. بقيت **212 من ملفات التشغيل السابقة مطابقة بايتًا**، بما فيها إصلاحات التجديد والسرعة والاستيراد وSQL والواجهة والترخيص والهوية والنسخ الاحتياطي.
@@ -65,4 +65,4 @@
 
 لم يُرفع شيء ولم يتغير`latest` أو أي دومين أوGit البعيد. لا تشغيل على خادم الترخيص أو لوحة الإنتاج أو العميل192.168.33.33. لا تستأنف المشغلات المغلقة أو تعيدها؛ جولات جديدة فقط عند وجود سبب اختبار جديد.
 
-الأدلة الخاصة: `PRIVATE/complete269-20261030-r2`، حيثPRIVATE=`C:/Users/lenovo/Documents/Codex/private/max-radius`. تحفظ الصورة وإيصالاتها محليًا؛ ملفات الاعتماد وأدلةSQL التفصيلية لا تدخلGit أو الصورة. [إيصال البناء العام](../releases/build-20261030-v2.6.9-renewal-engine-local-r2.json).
+الأدلة الخاصة: `PRIVATE/complete269-20261030-r2`، حيثPRIVATE=`C:/Users/lenovo/Documents/Codex/private/alpha-radius`. تحفظ الصورة وإيصالاتها محليًا؛ ملفات الاعتماد وأدلةSQL التفصيلية لا تدخلGit أو الصورة. [إيصال البناء العام](../releases/build-20261030-v2.6.9-renewal-engine-local-r2.json).

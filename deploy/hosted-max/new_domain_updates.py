@@ -19,7 +19,7 @@ import time
 SETTINGS = Path('/opt/saas-manager-state/new-domain-updates.json')
 NAME = re.compile(r'[a-z0-9]{1,40}')
 INSTANCE = re.compile(r'INST-[A-F0-9]{10}')
-PIN = re.compile(r'mohd777/max-radius-web@sha256:[0-9a-f]{64}')
+PIN = re.compile(r'mohd777/alpha-radius-web@sha256:[0-9a-f]{64}')
 PUBLIC_TRUST = 'c780e786051edc07e9c309793c3bcd1fd3ba7881f645a7ccdd647f535bbdf5a4'
 
 
@@ -179,7 +179,7 @@ def prepare_new_domain_updates(directory, name):
         import yaml
         document = yaml.safe_load((path/'docker-compose.yml').read_text(encoding='utf-8'))
         controller = document['services']['update_controller']
-        controller['container_name'] = 'max_radius_'+name+'_updates'
+        controller['container_name'] = 'alpha_radius_'+name+'_updates'
         controller['network_mode'] = 'bridge'
         temporary = path/'.compose-updates.tmp'
         with temporary.open('w',encoding='utf-8') as stream:
@@ -203,7 +203,7 @@ def verify_new_domain_updates(directory, name):
     if (config.get('project') != name or config.get('kind') != 'domain'
             or config.get('identity') != name+'.'+cfg['base_domain'] or proof.get('targeted_enrollment') is not True):
         raise BootstrapError('إعداد قناة تحديث الدومين غير مطابق.')
-    image = json.loads(run(['docker','inspect','max_radius_'+name+'_web']))[0]
+    image = json.loads(run(['docker','inspect','alpha_radius_'+name+'_web']))[0]
     version = json.loads(run(['docker','image','inspect',image['Image']]))[0]['Config']['Labels']['org.opencontainers.image.version']
     code = ("import json;from services.system_update_control import request;"
             "r=request('GET','check');p=request('GET','progress');"
@@ -212,7 +212,7 @@ def verify_new_domain_updates(directory, name):
     result = None
     for attempt in range(5):
         try:
-            result = json.loads(run(['docker','exec','max_radius_'+name+'_web','python','-c',code],timeout=25))
+            result = json.loads(run(['docker','exec','alpha_radius_'+name+'_web','python','-c',code],timeout=25))
             break
         except BootstrapError:
             if attempt == 4:raise

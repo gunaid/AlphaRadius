@@ -1,5 +1,5 @@
 # ==============================================================================
-# SAFE ROUTEROS HOTSPOT PROVISIONING SCRIPT (MAX RADIUS INTEGRATION)
+# SAFE ROUTEROS HOTSPOT PROVISIONING SCRIPT (ALPHA RADIUS INTEGRATION)
 # Note: Hotspot is strictly configured on virtual 'hotspot-bridge', NOT on ether1.
 # ==============================================================================
 
@@ -42,7 +42,7 @@ add address=172.21.0.3 \
     authentication-port=1812 \
     accounting-port=1813 \
     timeout=3000ms \
-    comment="MAX RADIUS Server"
+    comment="ALPHA RADIUS Server"
 
 # 7. Incoming CoA / Disconnect (RFC 5176)
 /radius incoming
@@ -54,4 +54,4 @@ set allow-remote-requests=yes
 /ip dns static
 add name=hotspot.local address=10.5.50.1
 
-:log info "MAX RADIUS Safe Hotspot Provisioning Completed Successfully"
+:log info "ALPHA RADIUS Safe Hotspot Provisioning Completed Successfully"

@@ -2,19 +2,19 @@
   "schema": 1,
   "scope": {
     "kind": "domain",
-    "identity": "4k.max-net.net"
+    "identity": "4k.alpha.amtik.online"
   },
   "automatic_install": false,
   "versions": [
     {
       "version": "2.6.6",
-      "title": "MAX RADIUS 2.6.6 — تحسين آلية التحديث",
+      "title": "ALPHA RADIUS 2.6.6 — تحسين آلية التحديث",
       "changelog": [
         "⚙️ تهيئة محرك التحديث لاستقبال الإصدارات القادمة.",
         "🔎 تحسين التحقق من متطلبات التحديث قبل بدء التثبيت."
       ],
       "images": {
-        "web": "mohd777/max-radius-web@sha256:b25d26a770f8ea20ead01c7bc7a01de30a4911dc3869ddb54a78b9021978183f"
+        "web": "mohd777/alpha-radius-web@sha256:b25d26a770f8ea20ead01c7bc7a01de30a4911dc3869ddb54a78b9021978183f"
       },
       "min_client_version": "2.6.5",
       "migration": "none",
@@ -23,14 +23,14 @@
     },
     {
       "version": "2.6.7",
-      "title": "MAX RADIUS 2.6.7 — استكمال تحسينات محرك التحديث",
+      "title": "ALPHA RADIUS 2.6.7 — استكمال تحسينات محرك التحديث",
       "changelog": [
         "🔧 استكمال ترقية محرك التحديث وتجهيزه لتحديث الميزات الجديدة.",
         "🔗 إظهار التحديث التالي بعد اكتمال مرحلة التهيئة بنجاح.",
         "🔒 التحقق من توافق قاعدة البيانات قبل الانتقال إلى تحديث الميزات."
       ],
       "images": {
-        "web": "mohd777/max-radius-web@sha256:34b9ed1bf51e88129fc93f11ca25a98507cba18ee942910944eff41a81dbd898"
+        "web": "mohd777/alpha-radius-web@sha256:34b9ed1bf51e88129fc93f11ca25a98507cba18ee942910944eff41a81dbd898"
       },
       "min_client_version": "2.6.6",
       "migration": "none",
@@ -39,7 +39,7 @@
     },
     {
       "version": "2.6.8",
-      "title": "MAX RADIUS 2.6.8 — تطوير التقارير والجلسات وهوية النظام",
+      "title": "ALPHA RADIUS 2.6.8 — تطوير التقارير والجلسات وهوية النظام",
       "changelog": [
         "📊 تنظيم صفحة «المبيعات والاستهلاك» في تبويبات لتسهيل التنقل بين الجداول.",
         "💰 تحسين حساب المبيعات وعمولات الموزعين وفق الفترة والفلاتر المحددة.",
@@ -58,8 +58,8 @@
         "📱 توسيع صفحات تفاصيل المشترك والكرت وتحسين ترتيب عناصرها وعرضها على الجوال."
       ],
       "images": {
-        "core": "mohd777/max-radius-core@sha256:bc4d4644108018c7f67188e639bfeea9a4d12deedc01602bc15e219406ac4932",
-        "web": "mohd777/max-radius-web@sha256:506267e0299e13620cf0bad118fbcbb6f68bdd6bb976d4846114372503b54cac"
+        "core": "mohd777/alpha-radius-core@sha256:bc4d4644108018c7f67188e639bfeea9a4d12deedc01602bc15e219406ac4932",
+        "web": "mohd777/alpha-radius-web@sha256:506267e0299e13620cf0bad118fbcbb6f68bdd6bb976d4846114372503b54cac"
       },
       "min_client_version": "2.6.7",
       "migration": "explicit",
@@ -78,8 +78,8 @@
         "release_kind": "feature",
         "rollback": {
           "images": {
-            "core": "mohd777/max-radius-core@sha256:bc4d4644108018c7f67188e639bfeea9a4d12deedc01602bc15e219406ac4932",
-            "web": "mohd777/max-radius-web@sha256:8648572e9bda01dcd7bf04a7deb623e80fba54fa5aa32ae2df836415555b5021"
+            "core": "mohd777/alpha-radius-core@sha256:bc4d4644108018c7f67188e639bfeea9a4d12deedc01602bc15e219406ac4932",
+            "web": "mohd777/alpha-radius-web@sha256:8648572e9bda01dcd7bf04a7deb623e80fba54fa5aa32ae2df836415555b5021"
           },
           "policy": "compatible"
         },

@@ -25,7 +25,7 @@
          control.command(base+['up','-d','db'],timeout=180)
          deadline=time.monotonic()+100
 @@ -139,6 +142,7 @@
-         control.command(['docker','exec','max_radius_'+name+'_core','freeradius','-C'],timeout=30)
+         control.command(['docker','exec','alpha_radius_'+name+'_core','freeradius','-C'],timeout=30)
          mark_loaded(name,loaded_signature)
          verify_creation_images(path, name)
 +        verify_new_domain_updates(path, name)

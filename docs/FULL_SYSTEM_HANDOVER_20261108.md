@@ -2,7 +2,7 @@
 
 هذا ملخص الاستئناف العام. الملف الشامل للتشغيل والعملاء واللوحات والوصول محفوظ محليًا خارج Git:
 
-`C:/Users/lenovo/Documents/Codex/private/max-radius/handoff-complete-20261108-r1/HANDOFF-COMPLETE.private.md`
+`C:/Users/lenovo/Documents/Codex/private/alpha-radius/handoff-complete-20261108-r1/HANDOFF-COMPLETE.private.md`
 
 ## نقطة الوصول
 

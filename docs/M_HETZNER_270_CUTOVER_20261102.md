@@ -4,7 +4,7 @@
 
 ## التسلسل والبيانات
 
-نفذ الطلب بوقفتي خدمات، مع استعادة وتجهيز بينهما بينما العملاء على المصدر. حفظت أسماء وكلمات مرور النفق وAPI ومنفذAPI53780 وCoA3799 وRADIUSsecret، وعنوانNAS10.81.0.4/gateway10.81.0.1. لم تضف وصلة أوRADIUS في الراوتر: تغير connect-to في L2TP الحالي *57 MAX RADIUS منmax-r.cc إلى2.31.161.122 فقط؛ RADIUS *5 بقي كماهو. بقيت الوصلات الأخرى وحالات إعدادها.
+نفذ الطلب بوقفتي خدمات، مع استعادة وتجهيز بينهما بينما العملاء على المصدر. حفظت أسماء وكلمات مرور النفق وAPI ومنفذAPI53780 وCoA3799 وRADIUSsecret، وعنوانNAS10.81.0.4/gateway10.81.0.1. لم تضف وصلة أوRADIUS في الراوتر: تغير connect-to في L2TP الحالي *57 ALPHA RADIUS منmax-r.cc إلى2.31.161.122 فقط؛ RADIUS *5 بقي كماهو. بقيت الوصلات الأخرى وحالات إعدادها.
 
 الوقفة الناجحة الأولى first-r3 أغلقت240جلسة فعليًا؛240طلبStop ورد صحيحان وعدادات مطابقة وصفر فقد بأداة الالتقاط، ثم نسخت البيانات وعادت22Hotspot و3خدماتPPPoE إلى المصدر خلال **27.653ثانية**. لا تخلط ذلك بمحاولةfirst-r2 غير المكتملة المذكورة في تقرير التقدم؛ تلك عادت إلى المصدر ولم تنقل البيانات، ولا توجد مدة دقيقة مثبتة لكل فترة تعطيل جزئي فيها.
 
@@ -46,8 +46,8 @@
 
 ## هوية النسخة وحدود الاستئناف
 
-Web `mohd777/max-radius-web@sha256:5455db7ca85a1d5f6c5c205fca0e171cefb28dc9f008dc56d25d4ecd090fa2ca` وCore `mohd777/max-radius-core@sha256:10cc88946c5ed6310a36c4c11b7e991277137da87eb019958f2eb45c8d2eabf5`. محركmهوالمشتركa، وضبطهسبقالتجهيز؛max1علىb. لا رفعصور/Gitأوlatestأوإعلان تحديث بهذهالجولة.
+Web `mohd777/alpha-radius-web@sha256:5455db7ca85a1d5f6c5c205fca0e171cefb28dc9f008dc56d25d4ecd090fa2ca` وCore `mohd777/alpha-radius-core@sha256:10cc88946c5ed6310a36c4c11b7e991277137da87eb019958f2eb45c8d2eabf5`. محركmهوالمشتركa، وضبطهسبقالتجهيز؛max1علىb. لا رفعصور/Gitأوlatestأوإعلان تحديث بهذهالجولة.
 
-الأدلةالمحميةمحليًا `C:/Users/lenovo/Documents/Codex/private/max-radius/hetzner-provision270-20261102-r1`، وعلىكلمنالمصدر173والهدف2.31 `/var/lib/max-m-hetzner-cutover-20261102-r1`. الإيصالات الأساسية CUTOVER-COMPLETE وFINAL-READY وFINAL-DELTA-APPLIED وRESTORE-FINAL وFINAL-AUDIT وDIRECT-NEW-API-VERIFIED وPOST-first/later وSOURCE-FINAL-VERIFIED وDELIVERY-MARKED. تجاربالمرآةوالاستعادةموقوفةومحفوظة خارجmالحية؛ لا تحذفDBبالاسم العامأوتعدتشغيلfixture.
+الأدلةالمحميةمحليًا `C:/Users/lenovo/Documents/Codex/private/alpha-radius/hetzner-provision270-20261102-r1`، وعلىكلمنالمصدر173والهدف2.31 `/var/lib/max-m-hetzner-cutover-20261102-r1`. الإيصالات الأساسية CUTOVER-COMPLETE وFINAL-READY وFINAL-DELTA-APPLIED وRESTORE-FINAL وFINAL-AUDIT وDIRECT-NEW-API-VERIFIED وPOST-first/later وSOURCE-FINAL-VERIFIED وDELIVERY-MARKED. تجاربالمرآةوالاستعادةموقوفةومحفوظة خارجmالحية؛ لا تحذفDBبالاسم العامأوتعدتشغيلfixture.
 
-**لا replay** لأيpause/alias-close/restore/delta-apply/final-controller/switch/عمليةمالية. توقفمشغلSSHالمحليأوغيابstdoutلايعنيعدمCOMMIT؛اقرأالإيصالات. الرجوعبعدهذهالحركةيحتاجتجميدًاوتسويةوفروقاتعكسية؛لا تعيدنفقالمصدرأوWebالقديمةكتابةًدونذلك. القبولرصدحيقصير،لااختبارrebootكاملأوضماناستقرارأيام. متابعةبطاقاتالموزعفيm.max-net.net طلبلاحقمستقل،لا تعاداستعادةmلإضافتها.
+**لا replay** لأيpause/alias-close/restore/delta-apply/final-controller/switch/عمليةمالية. توقفمشغلSSHالمحليأوغيابstdoutلايعنيعدمCOMMIT؛اقرأالإيصالات. الرجوعبعدهذهالحركةيحتاجتجميدًاوتسويةوفروقاتعكسية؛لا تعيدنفقالمصدرأوWebالقديمةكتابةًدونذلك. القبولرصدحيقصير،لااختبارrebootكاملأوضماناستقرارأيام. متابعةبطاقاتالموزعفيm.alpha.amtik.online طلبلاحقمستقل،لا تعاداستعادةmلإضافتها.

@@ -18,7 +18,7 @@ def load(name, path):
     module=importlib.util.module_from_spec(spec);sys.modules[name]=module;spec.loader.exec_module(module);return module
 r=load('services.system_update_runtime','services/system_update_runtime.py')
 u=load('legacy_system_update_service','tests/fixtures/system_update_legacy.py')
-OLD='a'*64;NEW='b'*64;IMAGE='sha256:'+'c'*64;PIN='mohd777/max-radius-web@sha256:'+'d'*64
+OLD='a'*64;NEW='b'*64;IMAGE='sha256:'+'c'*64;PIN='mohd777/alpha-radius-web@sha256:'+'d'*64
 
 def original():
     return {'Id':OLD,'Name':'/owned_web','Image':'sha256:'+'e'*64,
@@ -118,7 +118,7 @@ class DispatchTests(unittest.TestCase):
             def __enter__(self):return response
             def __exit__(self,*a):pass
         with patch.object(u,'DEFAULT_UPDATE_SERVER_URL','https://trusted/updates'),patch.object(u.urllib.request,'urlopen',return_value=Context()):return u.check_for_updates(True)
-    def test_catalogue_requires_pin(self):self.assertFalse(self.catalogue({'version':'2.6.3','docker_image':'mohd777/max-radius-web:latest','update_scope':'web_only'})['success'])
+    def test_catalogue_requires_pin(self):self.assertFalse(self.catalogue({'version':'2.6.3','docker_image':'mohd777/alpha-radius-web:latest','update_scope':'web_only'})['success'])
     def test_catalogue_requires_scope(self):self.assertFalse(self.catalogue({'version':'2.6.3','docker_image':PIN})['success'])
     def test_valid_pin_catalogue(self):self.assertTrue(self.catalogue({'version':'2.6.3','docker_image':PIN,'update_scope':'web_only'})['has_update'])
     def test_downgrade_redirect_rejected(self):self.assertFalse(self.catalogue({'version':'2.6.3'},'http://untrusted/')['success'])

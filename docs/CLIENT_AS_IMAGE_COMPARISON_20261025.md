@@ -31,7 +31,7 @@
 
 ## فرق Core الحرج
 
-من 250 ملفًا مجرودًا، تطابق 248 ملفًا مباشرة. ملف license-capacity-postauth.conf متطابق بعد تجاهل نهاية الملف. الفرق الدلالي في queries.conf هو **11 استبدالًا من radacct a إلى radacct_owned a**، ولا توجد فروق نصية أخرى بعد توحيد نهاية الملف. سياسة max-accounting-identity مطابقة بالبايت، فتظل معالجة ثبات هوية الجلسة محفوظة.
+من 250 ملفًا مجرودًا، تطابق 248 ملفًا مباشرة. ملف license-capacity-postauth.conf متطابق بعد تجاهل نهاية الملف. الفرق الدلالي في queries.conf هو **11 استبدالًا من radacct a إلى radacct_owned a**، ولا توجد فروق نصية أخرى بعد توحيد نهاية الملف. سياسة alpha-accounting-identity مطابقة بالبايت، فتظل معالجة ثبات هوية الجلسة محفوظة.
 
 قراءة information_schema في قاعدة Web الفعلية أثبتت وجود radacct وwisp_subscribers وwisp_vouchers، وغياب عروض owned وجداول الأسماء وإيصالات التعديل الأربعة وأعمدة الملكية المطلوبة.
 

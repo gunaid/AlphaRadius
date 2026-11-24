@@ -2,7 +2,7 @@
 """
 database/schema_healer.py
 -------------------------
-Enterprise Self-Healing Database Schema Engine for MAX RADIUS.
+Enterprise Self-Healing Database Schema Engine for ALPHA RADIUS.
 Automatically inspects, repairs, and backfills missing tables, columns, indexes,
 and triggers whenever an old backup is restored or when new features are deployed.
 """
@@ -23,14 +23,14 @@ REQUIRED_TABLES = {
             gateway_provider VARCHAR(40) DEFAULT 'simulator',
             api_endpoint VARCHAR(255) DEFAULT 'http://localhost:8080',
             api_key VARCHAR(255) DEFAULT '',
-            instance_name VARCHAR(80) DEFAULT 'max_radius_bot',
+            instance_name VARCHAR(80) DEFAULT 'alpha_radius_bot',
             phone_number VARCHAR(40) DEFAULT '',
             is_bot_enabled TINYINT(1) DEFAULT 1,
             is_notifications_enabled TINYINT(1) DEFAULT 1,
             meta_app_id VARCHAR(80) DEFAULT '',
             meta_phone_number_id VARCHAR(80) DEFAULT '',
             meta_access_token TEXT DEFAULT NULL,
-            meta_webhook_verify_token VARCHAR(120) DEFAULT 'max_radius_whatsapp_token_2026',
+            meta_webhook_verify_token VARCHAR(120) DEFAULT 'alpha_radius_whatsapp_token_2026',
             status VARCHAR(30) DEFAULT 'disconnected',
             qr_code_raw MEDIUMTEXT DEFAULT NULL,
             last_connected_at DATETIME DEFAULT NULL,
@@ -258,7 +258,7 @@ BEGIN
         s.first_used_at = IFNULL(s.first_used_at, NEW.acctstarttime),
         s.last_renewed_at = IFNULL(s.last_renewed_at, NEW.acctstarttime)
     WHERE s.username = NEW.username AND s.status IN ('active', 'inactive')
-      AND COALESCE(@max_radius_import, 0) = 0;
+      AND COALESCE(@alpha_radius_import, 0) = 0;
 END;
 """
 
@@ -289,14 +289,14 @@ BEGIN
     DECLARE v_assigned_seq BIGINT DEFAULT NULL;
     DECLARE v_policy_result INT;
 
-    IF COALESCE(@max_radius_import,0)=0 THEN
+    IF COALESCE(@alpha_radius_import,0)=0 THEN
         SET v_policy_result=fn_freeze_voucher_policy(NEW.username);
         IF v_policy_result=0 THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Voucher policy unavailable'; END IF;
     END IF;
     
     -- Resolve username first, then legacy PIN, using their indexes.
     -- Read the current contract under a primary-key lock, not a metadata join.
-    IF COALESCE(@max_radius_import, 0) = 0 THEN
+    IF COALESCE(@alpha_radius_import, 0) = 0 THEN
         SELECT id INTO v_lookup_id FROM wisp_vouchers
         WHERE username = NEW.username LIMIT 1;
         IF v_lookup_id IS NULL THEN

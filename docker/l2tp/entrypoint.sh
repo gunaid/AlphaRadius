@@ -2,7 +2,7 @@
 set -e
 
 echo "===================================================================="
-echo "  🚀 Starting MAX RADIUS Native Linux L2TP/PPP Server Engine"
+echo "  🚀 Starting ALPHA RADIUS Native Linux L2TP/PPP Server Engine"
 echo "  📡 Protocol: User-Based Static IP Assignment via IPCP"
 echo "===================================================================="
 
@@ -43,7 +43,7 @@ require authentication = yes
 require chap = yes
 refuse pap = no
 refuse chap = no
-name = maxradius_l2tp
+name = alpharadius_l2tp
 pppoptfile = /etc/ppp/options.xl2tpd
 length bit = yes
 EOC
@@ -84,7 +84,7 @@ iptables -A FORWARD -j ACCEPT
 iptables -t nat -A POSTROUTING -s 192.168.44.0/24 -j MASQUERADE
 iptables -t nat -A POSTROUTING -o ppp+ -j MASQUERADE
 
-# DNAT for RADIUS ports 1812 & 1813 to max_radius_core (172.18.0.3)
+# DNAT for RADIUS ports 1812 & 1813 to alpha_radius_core (172.18.0.3)
 iptables -t nat -A PREROUTING -p udp --dport 1812 -j DNAT --to-destination 172.18.0.3:1812
 iptables -t nat -A PREROUTING -p udp --dport 1813 -j DNAT --to-destination 172.18.0.3:1813
 

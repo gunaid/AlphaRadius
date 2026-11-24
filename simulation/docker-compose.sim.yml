@@ -17,7 +17,7 @@ services:
       - ./mikrotik/entrypoint-routeros.sh:/entrypoint-custom.sh:ro
     entrypoint: ["/entrypoint-custom.sh"]
     networks:
-      max-radius-net:
+      alpha-radius-net:
         ipv4_address: 172.21.0.100
       hotspot_net:
 
@@ -100,8 +100,8 @@ services:
       - mock-routeros
 
 networks:
-  max-radius-net:
-    name: max-radius_max-radius-net
+  alpha-radius-net:
+    name: alpha-radius_alpha-radius-net
     external: true
   hotspot_net:
     name: max_hotspot_net

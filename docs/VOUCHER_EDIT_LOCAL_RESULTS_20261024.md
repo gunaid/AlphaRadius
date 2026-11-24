@@ -42,8 +42,8 @@ Core تحتفظ بجميع طبقات خط الأساس الكامل وملفا�
 
 | الحاوية | الوسم المحلي | Image ID |
 | --- | --- | --- |
-| Web | `max-radius-web:2.6.5-voucher-edit-local-20261024-r4` | `sha256:5eda6a3450ddef586478153082395fbeb73f661be0fcf73b47bffd1e02559d38` |
-| Core | `max-radius-core:2.6.5-voucher-edit-local-20261024-r2` | `sha256:7bf2baa71525ea79e866daeb063c35346f39054fbf81ae209107f632681c1a5e` |
+| Web | `alpha-radius-web:2.6.5-voucher-edit-local-20261024-r4` | `sha256:5eda6a3450ddef586478153082395fbeb73f661be0fcf73b47bffd1e02559d38` |
+| Core | `alpha-radius-core:2.6.5-voucher-edit-local-20261024-r2` | `sha256:7bf2baa71525ea79e866daeb063c35346f39054fbf81ae209107f632681c1a5e` |
 
 التطبيق بمعرفات Docker محددة، دون Compose lifecycle. ثبت مرجعا الصورة فقط في Compose المحلي، وحفظت الإعدادات والحاويتان السابقتان متوقفتين للرجوع. حفظت لقطة DB قبل التبديل ولم تستعد. لا تعاد مشغلات التبديل أو الاختبارات المالية المكتملة.
 

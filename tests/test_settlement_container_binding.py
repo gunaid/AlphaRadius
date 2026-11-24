@@ -68,7 +68,7 @@ class SettlementBinding(unittest.TestCase):
         with self.assertRaises(self.ns['SettlementPending']): self.resolve()
 
     def test_local_domain_role_matrix(self):
-        for project in ('max-radius', 'tenant-fixture', 'custom_installation'):
+        for project in ('alpha-radius', 'tenant-fixture', 'custom_installation'):
             for web in ('web', 'wisp-web'):
                 for core in ('radius_core', 'freeradius', 'core'):
                     with self.subTest(project=project, web=web, core=core):

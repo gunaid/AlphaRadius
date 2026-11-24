@@ -40,7 +40,7 @@ def restore_workbook(rows, batch_name=None, admin_username='admin'):
             cur.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
             conn.begin()
             # Avoid first-activation financial triggers for historical summaries.
-            cur.execute('SET @max_radius_import=1')
+            cur.execute('SET @alpha_radius_import=1')
         else:
             cur.execute('BEGIN IMMEDIATE')
         def run(sql, args=()):
@@ -120,7 +120,7 @@ def restore_workbook(rows, batch_name=None, admin_username='admin'):
     finally:
         if mysql:
             try:
-                cur.execute('SET @max_radius_import=NULL')
+                cur.execute('SET @alpha_radius_import=NULL')
             except Exception:
                 pass
         cur.close()

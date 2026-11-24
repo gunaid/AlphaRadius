@@ -11,8 +11,8 @@ import tempfile
 import stat
 
 FILES = {
-    'clock_ready.py': 'usr/local/libexec/max-radius-clock-ready.py',
-    '99-max-radius-clock-ready.conf': 'etc/systemd/system/docker.service.d/99-max-radius-clock-ready.conf',
+    'clock_ready.py': 'usr/local/libexec/alpha-radius-clock-ready.py',
+    '99-alpha-radius-clock-ready.conf': 'etc/systemd/system/docker.service.d/99-alpha-radius-clock-ready.conf',
 }
 
 

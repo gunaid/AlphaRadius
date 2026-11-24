@@ -20,8 +20,8 @@
 
 | الدور | الوسم | digestالمستودع المتحقق |
 |---|---|---|
-| Web | `mohd777/max-radius-web:2.7.0-maintenance-20261105-r2` | `sha256:db5c36f5e93fb842b97c6c3de59b703994933184594b2476d346a6552e7378cc` |
-| Core | `mohd777/max-radius-core:2.7.0-maintenance-20261105-r2` | `sha256:8c5594cf7a89e7127aff1cae0303d3967ca2af0d7043c01229fe1825b7a4836a` |
+| Web | `mohd777/alpha-radius-web:2.7.0-maintenance-20261105-r2` | `sha256:db5c36f5e93fb842b97c6c3de59b703994933184594b2476d346a6552e7378cc` |
+| Core | `mohd777/alpha-radius-core:2.7.0-maintenance-20261105-r2` | `sha256:8c5594cf7a89e7127aff1cae0303d3967ca2af0d7043c01229fe1825b7a4836a` |
 
 كان الوسمان غير موجودين قبل الرفع. بعده قرئdigestمنRegistryوقورن بإيصالpush، وسحبت كل صورة بالبصمة؛ طابقتConfigوطبقاتRootFSالصورة المقبولة محليًا. تحقق الوصول العام إلى البصمتين دون اعتمادDockerخاص، حتى يعمل المثبت العام. [إيصالRegistry](../releases/2.7.0-maintenance-20261105-r2/registry.json).
 
@@ -40,8 +40,8 @@
 المثبت يظل:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/mohd-1992/MAX-RADIUS/main/install.sh -o /tmp/max-radius-install.sh
-sudo bash /tmp/max-radius-install.sh
+curl -fsSL https://raw.githubusercontent.com/gunaid/AlphaRadius/main/install.sh -o /tmp/alpha-radius-install.sh
+sudo bash /tmp/alpha-radius-install.sh
 ```
 
 هذا أمر تشغيل صريح للمسؤول، ولم ينفذه الوكيل على أي بيئة قائمة. الصور تدعم التهيئة القائمة؛ إعداد منظومات بمحركDBمشترك يتم عبر اللوحة وخطة خاصة بالبيئة، ولا يحول المثبت العام قاعدة مستقلة إلى محرك مشترك تلقائيًا.

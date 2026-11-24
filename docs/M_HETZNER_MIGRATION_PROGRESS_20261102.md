@@ -16,9 +16,9 @@
 
 ## الحالة الحية والحدود
 
-حتى هذا التوثيق: العملاء على المصدر173، والنفق الفعلي MAX RADIUS ما زال connect-to=max-r.cc، ولم يتغيرRADIUS. الوجهة تحمل لقطة أولية مغلقة وليست جاهزة لإعلان التحويل قبل الفروقات النهائية. لا تغيرDNSللجذر؛ الخطة تعديلconnect-toللنفق الحالي إلى2.31.161.122 فقط، بنفس بياناته وبقية إعداداته. الموقعm.max-r.cc اسمه نفسه؛ يلزم توجيه الويب إلى الوجهة مع قطع كتابة المصدر، بخطة proxy أوDNS مدققة. المصدرNginx `/etc/nginx/sites-available/mrcc-m` يستخدم127.0.0.1:5506 وحجم128M؛ لا تفترض160Mكمافيالهدف.
+حتى هذا التوثيق: العملاء على المصدر173، والنفق الفعلي ALPHA RADIUS ما زال connect-to=max-r.cc، ولم يتغيرRADIUS. الوجهة تحمل لقطة أولية مغلقة وليست جاهزة لإعلان التحويل قبل الفروقات النهائية. لا تغيرDNSللجذر؛ الخطة تعديلconnect-toللنفق الحالي إلى2.31.161.122 فقط، بنفس بياناته وبقية إعداداته. الموقعm.max-r.cc اسمه نفسه؛ يلزم توجيه الويب إلى الوجهة مع قطع كتابة المصدر، بخطة proxy أوDNS مدققة. المصدرNginx `/etc/nginx/sites-available/mrcc-m` يستخدم127.0.0.1:5506 وحجم128M؛ لا تفترض160Mكمافيالهدف.
 
-الراوتر: L2TP *57 MAX RADIUS الحالي، وRADIUS *5 gateway10.81.0.1/src10.81.0.4. الوصلتان الأخريان *37 RamRadiusCloud و*56 إلى199.247.3.47 تبقيان كماهما؛ *35 معطل أصلاً. لا تنشئ نفقًا أوRADIUS جديدًا في الراوتر. لا replay لأيfirst/alias/restore/fixture/financial driver. تغيرات Source/Target الآن تجعل اختبار «m فارغة» القديم غير صالح.
+الراوتر: L2TP *57 ALPHA RADIUS الحالي، وRADIUS *5 gateway10.81.0.1/src10.81.0.4. الوصلتان الأخريان *37 RamRadiusCloud و*56 إلى199.247.3.47 تبقيان كماهما؛ *35 معطل أصلاً. لا تنشئ نفقًا أوRADIUS جديدًا في الراوتر. لا replay لأيfirst/alias/restore/fixture/financial driver. تغيرات Source/Target الآن تجعل اختبار «m فارغة» القديم غير صالح.
 
 ## المتبقي
 
@@ -30,7 +30,7 @@
 
 ## الإحالات المحمية
 
-محليًا C:/Users/lenovo/Documents/Codex/private/max-radius/hetzner-provision270-20261102-r1. علىكلمنالمصدر173والهدف2.31: `/var/lib/max-m-hetzner-cutover-20261102-r1`، ولا تخلط المضيفين رغم تطابق المسار. remote.private.py source/target مثبتة البصمة والهوية؛ issuer199عبرlicense-remote.private.py مستقل. الأسرار والنسخ والصفوف الخام خارجGit.
+محليًا C:/Users/lenovo/Documents/Codex/private/alpha-radius/hetzner-provision270-20261102-r1. علىكلمنالمصدر173والهدف2.31: `/var/lib/max-m-hetzner-cutover-20261102-r1`، ولا تخلط المضيفين رغم تطابق المسار. remote.private.py source/target مثبتة البصمة والهوية؛ issuer199عبرlicense-remote.private.py مستقل. الأسرار والنسخ والصفوف الخام خارجGit.
 
 الإيصالات: DELTA-SELFTEST،TRIAL-APPLIED،RESTORE-PROOF/AUDIT،ALIAS-CLOSE-COMPLETE،first-r3/SETTLED وRESUMED-OLD،BACKUP-first،RESTORE-FIRST،FIRST-AUDIT،MIRROR-FIRST-READY،SERVER-PEER-READY،PRECOPY-READY/APPLIED. مصدرمساعداتالجولة *.private.py و*.private.sh داخل المرجع المحمي؛ لم تعدل صورMAXأوGitremote.
 

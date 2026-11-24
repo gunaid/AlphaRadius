@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-MAX RADIUS Application Factory & Blueprint Initializer.
+ALPHA RADIUS Application Factory & Blueprint Initializer.
 """
 
 import os
@@ -58,7 +58,7 @@ def create_app(config=None):
     app.jinja_env.auto_reload = True
 
     # Robust Session Isolation & Extended Lifetime
-    app.config['SESSION_COOKIE_NAME'] = 'max_radius_session'
+    app.config['SESSION_COOKIE_NAME'] = 'alpha_radius_session'
     app.config['PERMANENT_SESSION_LIFETIME'] = datetime.timedelta(days=30)
     app.config['SESSION_REFRESH_EACH_REQUEST'] = True
     app.config['SESSION_COOKIE_HTTPONLY'] = True
@@ -226,7 +226,7 @@ def create_app(config=None):
                 settings = {}
                 global_settings_available = False
 
-            network_name = settings.get('network_name') or settings.get('company_name') or settings.get('isp_name') or 'MAX RADIUS'
+            network_name = settings.get('network_name') or settings.get('company_name') or settings.get('isp_name') or 'ALPHA RADIUS'
             network_logo = settings.get('network_logo', '').strip()
             
             logo_url = None
@@ -244,8 +244,8 @@ def create_app(config=None):
             support_phone = settings.get('support_phone', '')
             support_email = settings.get('support_email', '')
             address = settings.get('address', '')
-            hotspot_domain = settings.get('hotspot_domain', 'wifi.maxradius.net')
-            system_title = settings.get('system_title', 'MAX RADIUS - نظام إدارة الشبكات والفوترة و FreeRADIUS')
+            hotspot_domain = settings.get('hotspot_domain', 'wifi.alpharadius.net')
+            system_title = settings.get('system_title', 'ALPHA RADIUS - نظام إدارة الشبكات والفوترة و FreeRADIUS')
             default_coa_port = settings.get('default_coa_port', '3799')
             try:
                 nas_cnt_row = query_one('SELECT COUNT(*) as cnt FROM wisp_nas_devices')
@@ -290,7 +290,7 @@ def create_app(config=None):
                 network_name = APP_NAME
                 network_logo = ''
                 logo_url = None
-                system_title = 'MAX RADIUS - نظام إدارة الشبكات والفوترة و FreeRADIUS'
+                system_title = 'ALPHA RADIUS - نظام إدارة الشبكات والفوترة و FreeRADIUS'
 
             from core.ownership import owner_id
             if owner_id() is not None or not has_permission('system.settings'):
@@ -343,9 +343,9 @@ def create_app(config=None):
             logger.error(f"[Global Settings Context Fallback Triggered]: {_ctx_err}")
             return {
                 'settings': {},
-                'network_name': 'MAX RADIUS',
-                'company_name': 'MAX RADIUS',
-                'isp_name': 'MAX RADIUS',
+                'network_name': 'ALPHA RADIUS',
+                'company_name': 'ALPHA RADIUS',
+                'isp_name': 'ALPHA RADIUS',
                 'currency_symbol': 'ر.ي',
                 'is_over_quota': False,
                 'quota_warning': '',

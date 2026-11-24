@@ -10,7 +10,7 @@ import stat
 
 import managed_files as files
 
-HELPER = '/usr/local/libexec/max-radius-clock-ready.py'
+HELPER = '/usr/local/libexec/alpha-radius-clock-ready.py'
 
 
 def load(root, journal):

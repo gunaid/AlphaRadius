@@ -53,7 +53,7 @@ class ManagedFileTests(unittest.TestCase):
     def test_failure_between_files_rolls_back_first(self):
         original=m.atomic_create
         def fail(path,data,mode=0o644):
-            if path.name=='99-max-radius-clock-ready.conf':raise OSError('simulated disk fault')
+            if path.name=='99-alpha-radius-clock-ready.conf':raise OSError('simulated disk fault')
             return original(path,data,mode)
         with patch.object(m,'atomic_create',side_effect=fail),self.assertRaises(OSError):self.stage()
         self.assertFalse(any(v.exists() for v in self.destinations()))

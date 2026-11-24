@@ -4,7 +4,7 @@
   "report": "docs/BACKUP_DELETE_PUBLICATION_ACCEPTANCE_270_20261104.md",
   "images": {
     "web": {
-      "tag": "max-radius-web:2.7.0-backup-delete-acceptance-local-20261103-r1",
+      "tag": "alpha-radius-web:2.7.0-backup-delete-acceptance-local-20261103-r1",
       "id": "sha256:bd046305c881dfa113a0a43b50d036097cba700f0730c1d79bcfb8625f3dd998",
       "size": 2902847436,
       "base": "sha256:2489716712d288fc738351f8590abfd0d9ae97eded0b18b16f45bd859d0d73c0",
@@ -12,7 +12,7 @@
     },
     "core": {
       "id": "sha256:04fd43b4e13f6842d8d26d99250f5825eb3bb0bf67df58f5c35f125909f55f83",
-      "tag": "max-radius-core:2.7.0-backup-delete-acceptance-local-20261103-r1",
+      "tag": "alpha-radius-core:2.7.0-backup-delete-acceptance-local-20261103-r1",
       "size": 314730243,
       "code_changed_this_round": false
     },
@@ -117,7 +117,7 @@
     "web/templates/tools/database_migration.html": "71ce76b3cdee0a676a92e582acd2edce5535779d302ab2002f5e93974c8b329c",
     "web/templates/tools/hotspot_generator.html": "23b2875fded3f062f749c48941bcc7e67d74e4a884c40a6e58660eab79bfc3fd",
     "web/templates/tools/mikrotik_userman_import.html": "2e946ee2f6528378c391fe0c884e34fbebd8cdc178241d18f4a12b8da0cbc56e",
-    "web/templates/tools/nas_diagnostics.html": "0d5e1ede3dfc3ed7cab052253d39137d70554e8f120e09223feb6ebb8fa18d8c",
+    "web/templates/tools/nas_diagnostics.html": "6a51f6be31f48fb3c3003c853cfcddc4242e5a4616ab3bbe9a1cc75b22ce9895",
     "web/templates/tools/radius_simulator.html": "3c30f4fe48650fa03cddca71476d35b36ed3220798b09969cbec797368f669b9",
     "web/templates/tools/system_update.html": "d1711006f3e4965c9f44778122557f03fcdac5903f346bf538b463d0dace707b",
     "web/templates/tools/traffic_analytics.html": "3695406b99724e62c9bf57f7ab0934cb849793d40d8e550fea0716fe46749efe",
@@ -130,7 +130,7 @@
     "web/templates/user_portal/sessions.html": "1a81d226eb4d87db935a4a120cc9a62e2a4ad529ea3e4f3ffb47a26c1a42f124",
     "web/templates/user_portal/user_base.html": "4b4258ced8e37c0af031f78380ed976b4d52915eb0d617e0974582db7b52ffa3",
     "web/templates/whatsapp/broadcast.html": "00f915cab7049f89883a551ee7fdedc48e4c71cc34c45383475a65524271e5f7",
-    "web/templates/whatsapp/dashboard.html": "5f82057e36ce4813feb9299f2f6b7a5d8223abd07da9de7be1d6b680721a1abf",
+    "web/templates/whatsapp/dashboard.html": "5ba5d3c74949e8ccfdd6beba3c7953c08b2cc3bc3f3d41bef045bd993973933e",
     "web/templates/whatsapp/logs.html": "75b80160b036cc7a84ae18b906f3386e551ce7ec3c6c8f68610d649bc955fe1a",
     "web/templates/whatsapp/simulator.html": "72d27f440b4c546beac56f45e4e8e9b8709b98eccaf2d7d2dba804357e54f41a",
     "web/templates/whatsapp/templates.html": "039b5cf173f709d8b9339fbc8bc4aeda07d0aeab8769a60db349917c1ae88c73",

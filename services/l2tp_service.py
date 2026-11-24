@@ -3,7 +3,7 @@
 """
 services/l2tp_service.py
 -------------------------
-High-Performance Linux Native L2TP/PPP Server Management Service for MAX RADIUS.
+High-Performance Linux Native L2TP/PPP Server Management Service for ALPHA RADIUS.
 Provides direct User-Based Static IP Assignment via PPP IPCP protocol (Port 1701 UDP),
 eliminating dynamic MAC/DHCP collisions permanently, maintaining zero CPU overhead,
 enforcing strict license limits, and generating clean 1-Click MikroTik RouterOS setup scripts.
@@ -32,7 +32,7 @@ _vps_ip_cache = {'ip': None, 'timestamp': 0}
 _tunnels_live_cache = {'data': None, 'timestamp': 0}
 _cache_lock = threading.Lock()
 
-L2TP_CONTAINER_NAME = os.environ.get('L2TP_CONTAINER', 'max_radius_l2tp')
+L2TP_CONTAINER_NAME = os.environ.get('L2TP_CONTAINER', 'alpha_radius_l2tp')
 L2TP_GATEWAY_IP = os.environ.get('L2TP_GATEWAY_IP', '192.168.44.1')
 L2TP_SUBNET = os.environ.get('L2TP_SUBNET', '192.168.44.0/24')
 L2TP_SERVER_PORT = int(os.environ.get('L2TP_SERVER_PORT', '1701'))
@@ -274,7 +274,7 @@ def get_public_vps_ip():
     ]
     for url in resolvers:
         try:
-            req = urllib.request.Request(url, headers={'User-Agent': 'MAX-RADIUS-L2TP/2.0'})
+            req = urllib.request.Request(url, headers={'User-Agent': 'ALPHA-RADIUS-L2TP/2.0'})
             with urllib.request.urlopen(req, timeout=1.5) as resp:
                 ip_str = resp.read().decode('utf-8').strip()
                 if re.match(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$', ip_str):
@@ -712,7 +712,7 @@ def generate_mikrotik_rsc_script(tunnel_id_or_username, vps_host=None):
     api_pass = (nas_dev.get('api_password') if nas_dev else None) or 'api_pass123'
 
     script = f"""###############################################################################
-#  🚀 MAX RADIUS 2.0 - Clean 1-Click RouterOS Setup Script
+#  🚀 ALPHA RADIUS 2.0 - Clean 1-Click RouterOS Setup Script
 #  📡 Router: {tun['name']}
 #  🌐 Dedicated Tunnel IP: {tunnel_ip}
 #  ⚡ Engine: Native L2TP/PPP (User-Bound Static IP via IPCP)
@@ -720,26 +720,26 @@ def generate_mikrotik_rsc_script(tunnel_id_or_username, vps_host=None):
 ###############################################################################
 
 :put "============================================================"
-:put "  🚀 Starting MAX RADIUS Integration Script for: {tun['name']}"
+:put "  🚀 Starting ALPHA RADIUS Integration Script for: {tun['name']}"
 :put "============================================================"
 
-# 1. Configure L2TP Client Tunnel (Connects to MAX RADIUS VPS)
+# 1. Configure L2TP Client Tunnel (Connects to ALPHA RADIUS VPS)
 /interface l2tp-client
-:do {{ remove [find name="l2tp-maxradius"] }} on-error={{}}
-add name="l2tp-maxradius" connect-to="{vps_ip}" user="{tun_user}" password="{tun_pass}" \\
-    profile=default use-ipsec={use_ipsec}{ipsec_param} disabled=no comment="MAX RADIUS VPN Tunnel"
+:do {{ remove [find name="l2tp-alpharadius"] }} on-error={{}}
+add name="l2tp-alpharadius" connect-to="{vps_ip}" user="{tun_user}" password="{tun_pass}" \\
+    profile=default use-ipsec={use_ipsec}{ipsec_param} disabled=no comment="ALPHA RADIUS VPN Tunnel"
 
 :put "✔ L2TP Tunnel Interface Created."
 
 # 2. Configure FreeRADIUS Server Connection (with require-message-auth=no)
 /radius
-:do {{ remove [find comment="MAX_RADIUS_CORE"] }} on-error={{}}
+:do {{ remove [find comment="ALPHA_RADIUS_CORE"] }} on-error={{}}
 :do {{
     add address={L2TP_GATEWAY_IP} secret="{radius_secret}" service=hotspot,login,wireless,ppp \\
-        authentication-port=1812 accounting-port=1813 timeout=3s require-message-auth=no comment="MAX_RADIUS_CORE"
+        authentication-port=1812 accounting-port=1813 timeout=3s require-message-auth=no comment="ALPHA_RADIUS_CORE"
 }} on-error={{
     add address={L2TP_GATEWAY_IP} secret="{radius_secret}" service=hotspot,login,wireless,ppp \\
-        authentication-port=1812 accounting-port=1813 timeout=3s comment="MAX_RADIUS_CORE"
+        authentication-port=1812 accounting-port=1813 timeout=3s comment="ALPHA_RADIUS_CORE"
 }}
 
 /radius incoming
@@ -765,12 +765,12 @@ set accept=yes port=3799
 
 # 5. Create Dedicated Secure API User for Live Monitoring
 /user
-:do {{ remove [find comment="MAX_RADIUS_API"] }} on-error={{}}
+:do {{ remove [find comment="ALPHA_RADIUS_API"] }} on-error={{}}
 :do {{ remove [find name="{api_user}"] }} on-error={{}}
-add name="{api_user}" password="{api_pass}" group=full comment="MAX_RADIUS_API" disabled=no
+add name="{api_user}" password="{api_pass}" group=full comment="ALPHA_RADIUS_API" disabled=no
 
 :put "============================================================"
-:put "  ✅ MAX RADIUS Setup Completed Successfully!"
+:put "  ✅ ALPHA RADIUS Setup Completed Successfully!"
 :put "  🌐 Dedicated Static IP: {tunnel_ip}"
 :put "  🔑 API Port: {api_port} | API User: {api_user}"
 :put "============================================================"

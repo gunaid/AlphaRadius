@@ -39,21 +39,21 @@ class ServiceControlScopeTests(unittest.TestCase):
         self.autoheal._resolve_managed_container.return_value = (info, None)
 
     def test_canonical_name_is_not_a_global_container_lookup(self):
-        result = self.ns['get_container_info'](['max_radius_core'])
+        result = self.ns['get_container_info'](['alpha_radius_core'])
         self.assertFalse(result['exists'])
         self.ns['query_docker_socket'].assert_not_called()
         self.ns['subprocess'].run.assert_not_called()
 
     def test_known_role_uses_verified_immutable_id(self):
         self.verified()
-        result = self.ns['get_container_info'](['max_radius_core'])
+        result = self.ns['get_container_info'](['alpha_radius_core'])
         self.assertEqual(result['container_id'], OWN)
         self.autoheal._resolve_managed_container.assert_called_once_with(OWN, require_id=True)
 
     def test_ambiguous_role_is_denied(self):
         self.verified()
         self.autoheal.get_container_fleet_status.return_value *= 2
-        self.assertFalse(self.ns['get_container_info'](['max_radius_core'])['exists'])
+        self.assertFalse(self.ns['get_container_info'](['alpha_radius_core'])['exists'])
         self.autoheal._resolve_managed_container.assert_not_called()
 
     def test_unverified_action_has_no_cli_or_systemd_fallback(self):
@@ -99,7 +99,7 @@ class RuntimeIdentityScopeTests(unittest.TestCase):
         tree = ast.parse((ROOT / 'services/autoheal_service.py').read_text(encoding='utf-8'))
         selected = ast.Module(body=[n for n in tree.body if isinstance(n, ast.FunctionDef)
                                    and n.name == 'get_container_fleet_status'], type_ignores=[])
-        foreign = dict(Id='b' * 64, Names=['/max_radius_core'], Labels={
+        foreign = dict(Id='b' * 64, Names=['/alpha_radius_core'], Labels={
             'com.docker.compose.project': 'foreign', 'com.docker.compose.service': 'core'})
         api = Mock(return_value=([foreign], None))
         namespace = dict(docker_api_request=api, _runtime_container_ids=lambda: set(),
@@ -125,8 +125,8 @@ class ServiceGenerationScopeTests(unittest.TestCase):
         namespace = dict(datetime=datetime,
                          docker_api_request=lambda *a: ([web] + cores, None),
                          _runtime_container_ids=lambda: {OWN},
-                         MONITORED_CONTAINER_NAMES=['max_radius_autoheal', 'max_radius_core',
-                                                   'max_radius_web', 'max_radius_db', 'max_radius_l2tp'])
+                         MONITORED_CONTAINER_NAMES=['alpha_radius_autoheal', 'alpha_radius_core',
+                                                   'alpha_radius_web', 'alpha_radius_db', 'alpha_radius_l2tp'])
         services = types.ModuleType('services')
         services.hosted_control_service = types.SimpleNamespace(configured=lambda: False)
         with patch.dict('sys.modules', {'services': services}):

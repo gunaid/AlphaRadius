@@ -3,14 +3,14 @@
   "status": "historical_r3_acceptance_superseded_by_finance_r5",
   "ready_for_general_publication": false,
   "web": {
-    "tag": "max-radius-web:2.7.0-rc-local-20261102-r3",
+    "tag": "alpha-radius-web:2.7.0-rc-local-20261102-r3",
     "id": "sha256:9fcbfca04af5999956e1a8e82adcffa3aa13cde150f94eb4df2b3a879211bdda",
     "bytes": 2631761313,
     "base": "sha256:2ae36708f360dc4880446c6a515e4feda767e5f5302a1ef09fbf553908dba995",
     "source_sha256": "0f1fdea988d70e1facdebf973348f38f0e9b3551afcb814e1c267f6af9cfb53a"
   },
   "core": {
-    "tag": "max-radius-core:2.7.0-rc-local-20261101-r1",
+    "tag": "alpha-radius-core:2.7.0-rc-local-20261101-r1",
     "id": "sha256:10cc88946c5ed6310a36c4c11b7e991277137da87eb019958f2eb45c8d2eabf5",
     "runtime_identical_to_published_269": true
   },

@@ -1,4 +1,4 @@
-# MAX RADIUS 2.6.3 — LAB snapshot, 22 October 2026
+# ALPHA RADIUS 2.6.3 — LAB snapshot, 22 October 2026
 
 This release publishes the exact accepted LAB image artifacts under the immutable
 tag `20261022-lab-v2.6.3-limit45`. It is a separately selected release, not an

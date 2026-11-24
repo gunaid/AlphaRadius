@@ -568,19 +568,19 @@ CREATE TABLE IF NOT EXISTS `wisp_system_settings` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `wisp_system_settings` (`key`, `value`, `description`) VALUES
-('network_name', 'MAX RADIUS', 'اسم الشبكة أو مزود الخدمة'),
-('company_name', 'MAX RADIUS', 'اسم الشركة'),
-('isp_name', 'MAX RADIUS', 'اسم مزود الخدمة'),
+('network_name', 'ALPHA RADIUS', 'اسم الشبكة أو مزود الخدمة'),
+('company_name', 'ALPHA RADIUS', 'اسم الشركة'),
+('isp_name', 'ALPHA RADIUS', 'اسم مزود الخدمة'),
 ('network_logo', '', 'مسار شعار الشبكة'),
 ('currency', 'YER', 'رمز كود العملة'),
 ('currency_symbol', 'ر.ي', 'رمز العملة المعروض'),
 ('timezone', 'Asia/Aden', 'المنطقة الزمنية للنظام'),
 ('support_phone', '777366226', 'رقم هاتف الدعم الفني'),
-('support_email', 'support@max-radius.net', 'البريد الإلكتروني للدعم الفني'),
+('support_email', 'support@alpha-radius.net', 'البريد الإلكتروني للدعم الفني'),
 ('address', 'المركز الرئيسي لخدمات الإنترنت', 'العنوان والمقر'),
-('hotspot_domain', 'wifi.maxradius.net', 'نطاق صفحة تسجيل الدخول'),
-('system_title', 'MAX RADIUS - نظام إدارة الشبكات والفوترة و FreeRADIUS', 'عنوان النظام'),
-('sms_sender_id', 'MAX-RADIUS', 'اسم مرسل الرسائل'),
+('hotspot_domain', 'wifi.alpharadius.net', 'نطاق صفحة تسجيل الدخول'),
+('system_title', 'ALPHA RADIUS - نظام إدارة الشبكات والفوترة و FreeRADIUS', 'عنوان النظام'),
+('sms_sender_id', 'ALPHA-RADIUS', 'اسم مرسل الرسائل'),
 ('allow_data_loan', '1', 'تفعيل أو تعطيل ميزة سلفة البيانات للمشتركين'),
 ('loan_amount_mb', '1024', 'حجم سلفة البيانات بالميجابايت الافتراضية'),
 ('loan_threshold_mb', '100', 'حد الرصيد المتبقي بالميجابايت الذي يسمح بطلب السلفة عنده')
@@ -804,11 +804,11 @@ CREATE TABLE IF NOT EXISTS `wisp_sstp_tunnels` (
 
 
 INSERT INTO `wisp_admins` (`id`, `username`, `password`, `full_name`, `email`, `role`, `is_active`)
-VALUES (1, 'admin', 'admin', 'المدير العام', 'admin@maxradius.local', 'superadmin', 1)
+VALUES (1, 'admin', 'admin', 'المدير العام', 'admin@alpharadius.local', 'superadmin', 1)
 ON DUPLICATE KEY UPDATE `username`='admin', `password`='admin', `is_active`=1;
 
 INSERT INTO `wisp_admins` (`id`, `username`, `password`, `full_name`, `email`, `role`, `is_active`)
-VALUES (2, 'max', 'max123', 'المدير العام (MAX)', 'max@maxradius.local', 'superadmin', 1)
+VALUES (2, 'max', 'max123', 'المدير العام (MAX)', 'max@alpharadius.local', 'superadmin', 1)
 ON DUPLICATE KEY UPDATE `username`='max', `password`='max123', `is_active`=1;
 
 INSERT INTO `wisp_roles` (`id`, `name`, `code`, `description`, `is_system`) VALUES
@@ -819,11 +819,11 @@ INSERT INTO `wisp_roles` (`id`, `name`, `code`, `description`, `is_system`) VALU
 ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
 
 INSERT INTO `wisp_managers` (`id`, `username`, `password_hash`, `full_name`, `email`, `role_id`, `is_active`)
-VALUES (1, 'admin', 'admin', 'المدير العام', 'admin@maxradius.local', 1, 1)
+VALUES (1, 'admin', 'admin', 'المدير العام', 'admin@alpharadius.local', 1, 1)
 ON DUPLICATE KEY UPDATE `username`='admin', `password_hash`='admin', `role_id`=1, `is_active`=1;
 
 INSERT INTO `wisp_managers` (`id`, `username`, `password_hash`, `full_name`, `email`, `role_id`, `is_active`)
-VALUES (2, 'max', 'max123', 'المدير العام (MAX)', 'max@maxradius.local', 1, 1)
+VALUES (2, 'max', 'max123', 'المدير العام (MAX)', 'max@alpharadius.local', 1, 1)
 ON DUPLICATE KEY UPDATE `username`='max', `password_hash`='max123', `role_id`=1, `is_active`=1;
 -- First-use contracts: created before the application accepts requests.
 DELIMITER ;;
@@ -881,7 +881,7 @@ SET NEW.snap_rate_upload=COALESCE(NEW.snap_rate_upload,(SELECT rate_upload FROM 
           END IF; END;;
 CREATE OR REPLACE TRIGGER trg_voucher_first_policy_update
           BEFORE UPDATE ON wisp_vouchers FOR EACH ROW BEGIN
-          IF OLD.policy_frozen_at IS NOT NULL AND COALESCE(@max_radius_import,0)=1 THEN
+          IF OLD.policy_frozen_at IS NOT NULL AND COALESCE(@alpha_radius_import,0)=1 THEN
           SET NEW.snap_price=OLD.snap_price;
 SET NEW.snap_cost=OLD.snap_cost;
 SET NEW.snap_volume_quota_mb=OLD.snap_volume_quota_mb;
@@ -944,7 +944,7 @@ BEGIN
         s.first_used_at = IFNULL(s.first_used_at, NEW.acctstarttime),
         s.last_renewed_at = IFNULL(s.last_renewed_at, NEW.acctstarttime)
     WHERE s.username = NEW.username AND s.status IN ('active', 'inactive')
-      AND COALESCE(@max_radius_import, 0) = 0;
+      AND COALESCE(@alpha_radius_import, 0) = 0;
 END;;
 CREATE OR REPLACE TRIGGER trg_radacct_activate_voucher AFTER INSERT ON radacct
 FOR EACH ROW
@@ -972,14 +972,14 @@ BEGIN
     DECLARE v_assigned_seq BIGINT DEFAULT NULL;
     DECLARE v_policy_result INT;
 
-    IF COALESCE(@max_radius_import,0)=0 THEN
+    IF COALESCE(@alpha_radius_import,0)=0 THEN
         SET v_policy_result=fn_freeze_voucher_policy(NEW.username);
         IF v_policy_result=0 THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Voucher policy unavailable'; END IF;
     END IF;
 
     -- Resolve username first, then legacy PIN, using their indexes.
     -- Read the current contract under a primary-key lock, not a metadata join.
-    IF COALESCE(@max_radius_import, 0) = 0 THEN
+    IF COALESCE(@alpha_radius_import, 0) = 0 THEN
         SELECT id INTO v_lookup_id FROM wisp_vouchers
         WHERE username = NEW.username LIMIT 1;
         IF v_lookup_id IS NULL THEN

@@ -10,7 +10,7 @@ import socket
 import time
 import urllib.parse
 
-PIN = re.compile(r'^mohd777/max-radius-web@sha256:[0-9a-f]{64}$')
+PIN = re.compile(r'^mohd777/alpha-radius-web@sha256:[0-9a-f]{64}$')
 TERMINAL = {'completed', 'error', 'rolled_back', 'recovery_required'}
 
 class UpdateError(RuntimeError):

@@ -10,7 +10,7 @@ import unittest
 
 ROOT=Path(__file__).resolve().parents[1]
 ROLES=('autoheal','freeradius','wisp-web','mariadb','l2tp')
-NAMES=('max_radius_autoheal','max_radius_core','max_radius_web','max_radius_db','max_radius_l2tp')
+NAMES=('alpha_radius_autoheal','alpha_radius_core','alpha_radius_web','alpha_radius_db','alpha_radius_l2tp')
 
 def load_functions():
     source=(ROOT/'services/autoheal_service.py').read_text(encoding='utf-8-sig')
@@ -89,7 +89,7 @@ class Binding(unittest.TestCase):
     def test_archived_name_denied(self):
         self.assertFalse(self.ns['restart_system_container']('max_web_previous_fixture')[0]);self.no_mutation()
     def test_restart_requires_full_id(self):
-        for bad in ['max_radius_web','%012x'%3,'../containers/web','',None]:
+        for bad in ['alpha_radius_web','%012x'%3,'../containers/web','',None]:
             self.assertFalse(self.ns['restart_system_container'](bad)[0])
         self.no_mutation()
     def test_foreign_id_denied(self):
@@ -105,7 +105,7 @@ class Binding(unittest.TestCase):
         self.inspect_hook=lambda d:d['Config']['Labels'].update({'com.docker.compose.service':'mariadb'})
         self.assertFalse(self.ns['restart_system_container']('%064x'%3)[0]);self.no_mutation()
     def test_logs_pin_full_id_even_for_canonical_name(self):
-        self.assertEqual(self.ns['get_live_container_logs']('max_radius_web'),'fixture-only log')
+        self.assertEqual(self.ns['get_live_container_logs']('alpha_radius_web'),'fixture-only log')
         self.assertIn(('GET','/containers/'+'%064x'%3+'/logs?stdout=1&stderr=1&tail=60&timestamps=1'),self.calls)
         self.no_mutation()
     def test_stale_logs_do_not_fall_back_to_replacement(self):

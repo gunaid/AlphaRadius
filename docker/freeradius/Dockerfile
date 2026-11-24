@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /etc/freeradius/3.0
 COPY entrypoint.sh /entrypoint.sh
 COPY license-capacity-postauth.conf /etc/freeradius/3.0/license-capacity-postauth.conf
-COPY max-accounting-identity.conf /etc/freeradius/3.0/policy.d/max-accounting-identity
+COPY alpha-accounting-identity.conf /etc/freeradius/3.0/policy.d/alpha-accounting-identity
 COPY queries.conf /etc/freeradius/3.0/mods-config/sql/main/mysql/queries.conf
 COPY detail /etc/freeradius/3.0/mods-available/detail
 RUN chmod +x /entrypoint.sh
@@ -42,5 +42,5 @@ RUN sh /build-detail.sh
 
 FROM radius-runtime
 COPY --from=detail-build /build/detail/rlm_detail.so /usr/lib/freeradius/rlm_detail.so
-COPY --from=detail-build /build/detail/rlm_detail.c /usr/share/doc/max-radius-detail/rlm_detail.c
-COPY patches/detail-close.patch /usr/share/doc/max-radius-detail/detail-close.patch
+COPY --from=detail-build /build/detail/rlm_detail.c /usr/share/doc/alpha-radius-detail/rlm_detail.c
+COPY patches/detail-close.patch /usr/share/doc/alpha-radius-detail/detail-close.patch

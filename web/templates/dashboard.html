@@ -82,7 +82,7 @@
                 <div>
                     <div class="flex items-center gap-2.5 flex-wrap">
                         <h2 class="text-xl sm:text-2xl font-black text-white tracking-tight">
-                            نظام إدارة {{ settings.get('isp_name', 'MAX RADIUS') if settings.get('isp_name', '').startswith('شبكة') else 'شبكة ' ~ settings.get('isp_name', 'MAX RADIUS') }}
+                            نظام إدارة {{ settings.get('isp_name', 'ALPHA RADIUS') if settings.get('isp_name', '').startswith('شبكة') else 'شبكة ' ~ settings.get('isp_name', 'ALPHA RADIUS') }}
                         </h2>
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-500/15 text-blue-400 border border-blue-500/25">
                             v{{ app_version|default('2.4.0') }} {{ app_edition|default('Enterprise') }}
@@ -1087,7 +1087,7 @@
                 const titleEl = document.getElementById('update-banner-title');
                 const descEl = document.getElementById('update-banner-desc');
                 const latestVer = data.latest_version || data.target_version || '2.5.0';
-                const updateTitle = data.title || data.update_title || `تحديث MAX RADIUS v${latestVer}`;
+                const updateTitle = data.title || data.update_title || `تحديث ALPHA RADIUS v${latestVer}`;
 
                 if (banner) {
                     if (verEl) {

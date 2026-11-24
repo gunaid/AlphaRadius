@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Advanced Role-Based Access Control (RBAC) Module for MAX RADIUS.
+Advanced Role-Based Access Control (RBAC) Module for ALPHA RADIUS.
 Handles authentication, password hashing/verification, route protection decorators,
 and Super Admin (ID 1 / superadmin) bypass.
 """

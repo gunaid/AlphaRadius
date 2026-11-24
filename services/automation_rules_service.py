@@ -1,7 +1,7 @@
 """
 services/automation_rules_service.py
 ------------------------------------
-Smart Automation & Rules Engine for MAX RADIUS.
+Smart Automation & Rules Engine for ALPHA RADIUS.
 Provides trigger-based actions (auto-purge expired, auto-generate invoices, auto-alert on low quota).
 """
 

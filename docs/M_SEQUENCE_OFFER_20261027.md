@@ -1,6 +1,6 @@
 # M update sequence offered — 2026-10-27
 
-Scope: m.max-net.net only. Existing reader identity was reused. The human installs each stage.
+Scope: m.alpha.amtik.online only. Existing reader identity was reused. The human installs each stage.
 
 Published sequence: **2.6.5 → 2.6.6 → 2.6.7 → 2.6.8 → 2.6.9**.
 The 2.6.9 offer uses the corrected reports/backup image `sha256:c5ab9fe42359c867c6dedabaf607ff492b2652e8160fa5df987e34e645db098b` and approved Arabic release notes.

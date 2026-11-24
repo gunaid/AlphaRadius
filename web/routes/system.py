@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-MAX RADIUS Web - System Settings, Backups, Updates, Diagnostics, and Maintenance Routes Module.
+ALPHA RADIUS Web - System Settings, Backups, Updates, Diagnostics, and Maintenance Routes Module.
 """
 
 from services.heavy_operation_service import heavy_operation
@@ -387,7 +387,7 @@ def export_sales():
             mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';extension='xlsx'
         output.seek(0)
         response=send_file(output,mimetype=mime,as_attachment=True,
-            download_name=f'MAX_RADIUS_Sales_{stamp}.{extension}',max_age=0)
+            download_name=f'ALPHA_RADIUS_Sales_{stamp}.{extension}',max_age=0)
         response.call_on_close(output.close)
         response.headers['Cache-Control']='no-store, private'
         return response
@@ -569,7 +569,7 @@ def api_autoheal_restart():
 @require_permission('settings_manage')
 @_autoheal_input_guard
 def api_autoheal_logs():
-    container_name = request.args.get('container', 'max_radius_autoheal').strip()
+    container_name = request.args.get('container', 'alpha_radius_autoheal').strip()
     lines = int(request.args.get('lines', 80))
     from services.autoheal_service import get_live_container_logs
     logs = get_live_container_logs(container_name, lines=lines)
@@ -892,7 +892,7 @@ def api_notifications_test_send():
     msg = request.form.get('message', '').strip()
     target_chat = request.form.get('target_chat', '').strip() or None
     from services.bot_notifications_service import send_telegram_alert
-    ok, res = send_telegram_alert(msg or "🚀 Test Message from MAX RADIUS", message_type='TEST_ALERT', override_chat_id=target_chat)
+    ok, res = send_telegram_alert(msg or "🚀 Test Message from ALPHA RADIUS", message_type='TEST_ALERT', override_chat_id=target_chat)
     return jsonify({'success': ok, 'message': res})
 
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Database Maintenance, Storage Analysis & Optimization Service for MAX RADIUS.
+Database Maintenance, Storage Analysis & Optimization Service for ALPHA RADIUS.
 Handles:
 1. High-Performance Live Statistics for Vouchers, Radius tables, Expired cards.
 2. Table Size Analyzer (Top 5 key tables with Arabic labels + other tables aggregation).

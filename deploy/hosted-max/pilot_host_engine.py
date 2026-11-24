@@ -37,7 +37,7 @@ class Engine:
     def __init__(self, root):
         self.root = Path(root)
         self.plan = json.loads((self.root/'plan.private.json').read_text())
-        if self.plan.get('domain') != '4k.max-net.net' or self.plan.get('project') != '4k':
+        if self.plan.get('domain') != '4k.alpha.amtik.online' or self.plan.get('project') != '4k':
             raise ValueError('Only the 4k pilot is permitted')
         if set(self.plan.get('old', {})) != set(ROLES) or set(self.plan.get('images', {})) != set(ROLES):
             raise ValueError('Only Web/Core may be switched')
@@ -81,7 +81,7 @@ class Engine:
         self.state.update(status=status, percent=percent, stage=stage, **extra)
         write(self.root/'state.json', self.state)
         public={k:v for k,v in self.state.items() if k in ('status','percent','stage','completed_at')}
-        public.update(release=self.plan['release'],domain='4k.max-net.net')
+        public.update(release=self.plan['release'],domain='4k.alpha.amtik.online')
         target=self.root.parent.parent/'public-progress.json';write(target,public);os.chmod(target,0o644)
 
     def validate(self):

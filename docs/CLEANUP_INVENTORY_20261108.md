@@ -17,8 +17,8 @@
 
 التقرير المفصل والقائمة الكاملة خارج Git:
 
-`C:/Users/lenovo/Documents/Codex/private/max-radius/cleanup-inventory-20261108-r1/REPORT.private.md`
+`C:/Users/lenovo/Documents/Codex/private/alpha-radius/cleanup-inventory-20261108-r1/REPORT.private.md`
 
-`C:/Users/lenovo/Documents/Codex/private/max-radius/cleanup-inventory-20261108-r1/CONTAINERS-REVIEW.private.csv`
+`C:/Users/lenovo/Documents/Codex/private/alpha-radius/cleanup-inventory-20261108-r1/CONTAINERS-REVIEW.private.csv`
 
 لبدء المحادثة الجديدة اقرأ[HANDOFF](../HANDOFF.md) ثم[نقطة الاستئناف](SESSION_RESUME_20261108.md) وهذا التقرير. الجرد لا يجيز حذفًا أو مراقبة أو تحديثًا تلقائيًا، ولا يغير صورة الإصدار وبيان بصماتها.

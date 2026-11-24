@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-MAX RADIUS Web - Voucher Batch Generation, Printing, and Card Inspection Routes Module.
+ALPHA RADIUS Web - Voucher Batch Generation, Printing, and Card Inspection Routes Module.
 """
 
 from services.heavy_operation_service import heavy_operation
@@ -1195,7 +1195,7 @@ def new_voucher_design():
     curr_setting = query_one("SELECT `value` FROM wisp_system_settings WHERE `key` = 'currency_symbol'")
     domain_setting = query_one("SELECT `value` FROM wisp_system_settings WHERE `key` = 'hotspot_domain'")
     
-    system_isp_name = isp_setting['value'] if isp_setting else 'شبكة MAX RADIUS'
+    system_isp_name = isp_setting['value'] if isp_setting else 'شبكة ALPHA RADIUS'
     system_currency = curr_setting['value'] if curr_setting else 'ر.ي'
     system_domain = domain_setting['value'] if domain_setting else 'wifi.hotspot'
 
@@ -1224,7 +1224,7 @@ def edit_voucher_design(design_id):
     curr_setting = query_one("SELECT `value` FROM wisp_system_settings WHERE `key` = 'currency_symbol'")
     domain_setting = query_one("SELECT `value` FROM wisp_system_settings WHERE `key` = 'hotspot_domain'")
     
-    system_isp_name = isp_setting['value'] if isp_setting else 'شبكة MAX RADIUS'
+    system_isp_name = isp_setting['value'] if isp_setting else 'شبكة ALPHA RADIUS'
     system_currency = curr_setting['value'] if curr_setting else 'ر.ي'
     system_domain = domain_setting['value'] if domain_setting else 'wifi.hotspot'
 

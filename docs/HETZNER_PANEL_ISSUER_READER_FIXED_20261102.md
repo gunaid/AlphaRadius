@@ -36,7 +36,7 @@
 
 - مصدر اللوحة المحلي: `C:/Users/lenovo/.gemini/antigravity/scratch/max_saas_panel_v2_local`؛ التعديل العام في `backend/hosting_issuer_api.py` و`backend/reference_issuer.py`، واختباره في `tests/test_hosting_issuer_api.py`.
 - إصدار الربط الجديد على جهة الترخيص: `/opt/max-hetzner-r-issuer/releases/reader-fix-20261102-r1`، والمشغّل `/opt/max-hetzner-r-issuer/run`.
-- مرجع الأدلة المحمي: `C:/Users/lenovo/Documents/Codex/private/max-radius/hetzner-provision270-20261102-r1`؛ candidate وإيصال manifest ونتائج المخطط الحقيقي واختبار النطاق ومخرجات المقارنة محفوظة هناك. تحويل namespace خاص بنشر Hetzner ومحفوظ في سكربت إعداد candidate؛ لا يعمم على اللوحة القديمة.
+- مرجع الأدلة المحمي: `C:/Users/lenovo/Documents/Codex/private/alpha-radius/hetzner-provision270-20261102-r1`؛ candidate وإيصال manifest ونتائج المخطط الحقيقي واختبار النطاق ومخرجات المقارنة محفوظة هناك. تحويل namespace خاص بنشر Hetzner ومحفوظ في سكربت إعداد candidate؛ لا يعمم على اللوحة القديمة.
 - أدلة الجهة: `/var/lib/max-hetzner-r-issuer/reader-fix-20261102-r1`، وفيها before وCONTRACTS-VERIFIED وإعداد الرجوع.
 - أدلة الواجهة: `/var/lib/max-hetzner-provision-20261102/reader-fix-20261102-r1/ALL-READS.private.json` وTENANT-LICENSES.
 

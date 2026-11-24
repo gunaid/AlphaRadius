@@ -3,8 +3,8 @@
   "purpose": "scoped-update-helper-only",
   "base_digest": "sha256:aea59466d4ac388ed2a3b9dc14ff91b53acb1a985dbbf7a19976c657bbc88829",
   "image_digest": "sha256:e02e159a2afb5599e08d5e2f4607ea64f524775b871aa895fd485bae8b32f703",
-  "tag": "mohd777/max-radius-web:2.7.1-lease-admission-20261110-r27",
-  "prepared_target": "max1.max-net.net",
+  "tag": "mohd777/alpha-radius-web:2.7.1-lease-admission-20261110-r27",
+  "prepared_target": "max1.alpha.amtik.online",
   "changed_modules": [
     "services.system_update_safety",
     "services.system_update_executor"

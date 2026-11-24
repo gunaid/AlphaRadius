@@ -18,7 +18,7 @@
 | المنفذ |Compose وقناة محلية تحتاج تسجيلًا وتجهيزًا|مضيف max-r وbinding ومستأجر وقاعدة تديرها المنصة|
 | الرجوع |Web الحالية مع نفس التخزين والبيئة والشبكة|Web الحالية مع binding وهوية المستأجر؛ دون استعادة DB|
 
-وسم المرشحة `mohd777/max-radius-web:2.7.1-automation-20261107-r5`، registry digest `sha256:9169d40c3819f4d31cee756ccdcd3108a9854a4977f1bf14f3d592ef9a7943b8`. سجل `IMAGES.private.json` البصمات الكاملة. مصدر المضيف المقروء `/opt/max-host-r/releases/hetzner270-20261102-r1/backend/hosting_runtime.py` بصمة SHA256 `e3c4f9490749481e638b1746529864218045bab6f445aba1aa41ce6c98a4f64f`؛ يختلف عن المصدر المحلي، ولذلك استُخدمت نسخته المقروءة في تجارب المضيف.
+وسم المرشحة `mohd777/alpha-radius-web:2.7.1-automation-20261107-r5`، registry digest `sha256:9169d40c3819f4d31cee756ccdcd3108a9854a4977f1bf14f3d592ef9a7943b8`. سجل `IMAGES.private.json` البصمات الكاملة. مصدر المضيف المقروء `/opt/max-host-r/releases/hetzner270-20261102-r1/backend/hosting_runtime.py` بصمة SHA256 `e3c4f9490749481e638b1746529864218045bab6f445aba1aa41ce6c98a4f64f`؛ يختلف عن المصدر المحلي، ولذلك استُخدمت نسخته المقروءة في تجارب المضيف.
 
 ## ما اختُبر والنتيجة
 

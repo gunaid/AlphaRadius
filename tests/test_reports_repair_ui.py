@@ -34,8 +34,8 @@ def render(template,data,args):
     app.jinja_env.globals.update(csrf_token=lambda:'fixture',has_feature=lambda *a,**k:True,
         has_permission=lambda *a,**k:True,can_access_endpoint=lambda *a,**k:True,
         is_reseller_scope=lambda:False,can_view_network_totals=lambda:True,traffic_bytes=format_bytes,url_for=url_for)
-    common=dict(app_version='2.7.1',app_edition='Enterprise',system_title='MAX RADIUS',
-        product_identity=dict(name='MAX RADIUS',website=''),current_manager=dict(id=1,username='fixture',full_name='اختبار التقارير',role_code='superadmin'),
+    common=dict(app_version='2.7.1',app_edition='Enterprise',system_title='ALPHA RADIUS',
+        product_identity=dict(name='ALPHA RADIUS',website=''),current_manager=dict(id=1,username='fixture',full_name='اختبار التقارير',role_code='superadmin'),
         license_info=dict(valid=True,has_license=True,status='active',features={}),
         system_timezone='Asia/Aden',server_timestamp_ms=1794301200000,server_date_only='2026-11-10',server_time_only='15:00:00',
         default_coa_port=3799,currency_symbol='ريال',network_name='اختبار التقارير',is_over_quota=False)

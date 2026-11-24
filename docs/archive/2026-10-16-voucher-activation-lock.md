@@ -37,4 +37,4 @@
 
 أي نقل لاحق يحتاج صورة محمية متحققة، ونسخة احتياطية وخطة رجوع Web وتعريف التريغر، وترحيل الفهرس/التريغر صراحة ومراقبة المحاسبة. لا تستعد DB قديمة فوق محاسبة أحدث، ولا تحذف حاويات الرجوع الحالية.
 
-الأدلة المحلية المحمية: `C:/Users/lenovo/Documents/Codex/private/max-radius/voucher-lock-fix-20261016`؛ ابدأ بـRESULTS.private.ar.md وFINAL.private.json. مراقبة العميل تبقى في monitor-reports المعتاد. لا تنقل الاعتمادات أو dumps إلى Git أو الصور.
+الأدلة المحلية المحمية: `C:/Users/lenovo/Documents/Codex/private/alpha-radius/voucher-lock-fix-20261016`؛ ابدأ بـRESULTS.private.ar.md وFINAL.private.json. مراقبة العميل تبقى في monitor-reports المعتاد. لا تنقل الاعتمادات أو dumps إلى Git أو الصور.

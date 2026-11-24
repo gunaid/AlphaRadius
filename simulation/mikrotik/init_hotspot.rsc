@@ -1,10 +1,10 @@
 # =============================================================================
-# MAX RADIUS - Mock RouterOS Auto-Configuration Script (.rsc)
+# ALPHA RADIUS - Mock RouterOS Auto-Configuration Script (.rsc)
 # Target: MikroTik RouterOS v6.x / v7.x (Mock Container & CHR)
 # =============================================================================
 
 # 1. Router Identity
-/system identity set name="MAX-RADIUS-MOCK-ROUTER"
+/system identity set name="ALPHA-RADIUS-MOCK-ROUTER"
 
 # 2. IP Pool & Addressing for Hotspot
 /ip pool add name="hs-pool-1" ranges=192.168.88.10-192.168.88.250
@@ -13,9 +13,9 @@
 
 # 3. Hotspot Server Profile Configuration (RADIUS Authentication & Accounting)
 /ip hotspot profile
-add name="hsprof-maxradius" \
+add name="hsprof-alpharadius" \
     hotspot-address=192.168.88.1 \
-    dns-name="wifi.maxradius.net" \
+    dns-name="wifi.alpharadius.net" \
     html-directory="hotspot" \
     login-by=http-chap,http-pap,mac-cookie,cookie \
     use-radius=yes \
@@ -31,7 +31,7 @@ add name="hsprof-maxradius" \
 add name="hotspot1" \
     interface=ether1 \
     address-pool=hs-pool-1 \
-    profile=hsprof-maxradius \
+    profile=hsprof-alpharadius \
     addresses-per-mac=1 \
     idle-timeout=5m \
     keepalive-timeout=2m \
@@ -46,7 +46,7 @@ set [ find default=yes ] \
     transparent-proxy=no \
     shared-users=1
 
-# 6. RADIUS Client Configuration (Connected to max_radius_core)
+# 6. RADIUS Client Configuration (Connected to alpha_radius_core)
 /radius
 add service=hotspot,login \
     address=172.21.0.3 \
@@ -54,7 +54,7 @@ add service=hotspot,login \
     authentication-port=1812 \
     accounting-port=1813 \
     timeout=3000ms \
-    comment="MAX-RADIUS-Core-Server"
+    comment="ALPHA-RADIUS-Core-Server"
 
 # 7. Enable RADIUS Incoming (CoA / PoD Disconnect Requests on RFC 5176 Port 3799)
 /radius incoming
@@ -67,4 +67,4 @@ set api port=8728 disabled=no
 set winbox port=8291 disabled=no
 set www port=80 disabled=no
 
-:log info "MAX RADIUS Mock RouterOS Hotspot and RADIUS Configuration Applied Successfully!"
+:log info "ALPHA RADIUS Mock RouterOS Hotspot and RADIUS Configuration Applied Successfully!"

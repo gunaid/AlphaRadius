@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Automated Backup Scheduler & Daemon Service for MAX RADIUS.
+Automated Backup Scheduler & Daemon Service for ALPHA RADIUS.
 Powered by APScheduler (with background thread fallback) to execute scheduled comprehensive backups,
 monitor health, handle watchdog probes, and support live control actions (start/stop/restart/reload).
 """

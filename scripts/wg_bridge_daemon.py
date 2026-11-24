@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Multi-Tenant WireGuard Bridge Daemon for MAX RADIUS 2.0.
+Multi-Tenant WireGuard Bridge Daemon for ALPHA RADIUS 2.0.
 Manages kernel WireGuard interfaces (wg0, wg_{subdomain}) dynamically.
 """
 import os
@@ -13,7 +13,7 @@ import threading
 import logging
 import time
 
-SOCK_PATH = "/opt/max-radius/storage/wg_bridge.sock"
+SOCK_PATH = "/opt/alpha-radius/storage/wg_bridge.sock"
 DEFAULT_IFACE = "wg0"
 TENANTS_ROOT = "/opt/clients"
 
@@ -86,7 +86,7 @@ def sync_main_peers():
     """Syncs main system peers to wg0."""
     try:
         cmd = [
-            "docker", "exec", "max_radius_db",
+            "docker", "exec", "alpha_radius_db",
             "mariadb", "-u", "root", "-prootpass", "radius_wisp", "-N", "-e",
             "SELECT public_key, tunnel_ip, IFNULL(preshared_key, '') FROM wisp_wireguard_tunnels WHERE public_key IS NOT NULL AND tunnel_ip IS NOT NULL;"
         ]
@@ -116,7 +116,7 @@ def sync_tenant_peers():
         if os.path.isdir(tenant_dir) and os.path.exists(meta_file):
             subdomain = item
             iface = f"wg_{subdomain}"
-            db_container = f"max_radius_{subdomain}_db"
+            db_container = f"alpha_radius_{subdomain}_db"
             db_name = f"radius_{subdomain}"
             try:
                 cmd = [

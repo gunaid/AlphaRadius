@@ -2,7 +2,7 @@
 
 اقرأ `AGENTS.md` ثم `HANDOFF.md` و[التسليم الموحد](FULL_SYSTEM_HANDOVER_20261108.md)، ثم الملف الشامل الخاص:
 
-`C:/Users/lenovo/Documents/Codex/private/max-radius/handoff-complete-20261108-r1/HANDOFF-COMPLETE.private.md`
+`C:/Users/lenovo/Documents/Codex/private/alpha-radius/handoff-complete-20261108-r1/HANDOFF-COMPLETE.private.md`
 
 يضم الحالة والبيئات والعملاء واللوحات والاختبارات والقرارات والمتبقي. `ACCESS-INDEX.private.json` في المجلد نفسه يحدد طريقة الوصول ومرجع اعتماد كل هدف. لا تطبع كلمة مرور أو مفتاحًا ولا تنقل البيانات الخاصة إلى Git أو صورة.
 

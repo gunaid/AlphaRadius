@@ -178,7 +178,7 @@ def compact_dump(stream, snapshot_at, work_parent=None, session_days=90, auth_da
     cutoff = snapshot_at - dt.timedelta(days=session_days)
     auth_cutoff = snapshot_at - dt.timedelta(days=auth_days)
     with tempfile.TemporaryDirectory(prefix='max-backup-sort-', dir=work_parent) as work:
-        (Path(work) / '.max-backup-owner').write_bytes(b'max-radius-backup-work-v1\n')
+        (Path(work) / '.max-backup-owner').write_bytes(b'alpha-radius-backup-work-v1\n')
         db = sqlite3.connect(str(Path(work) / 'sort.sqlite'))
         try:
             db.executescript('''PRAGMA cache_size=-4096; PRAGMA temp_store=FILE;
@@ -331,7 +331,7 @@ def backup_lock(directory, work_directory=None):
                         old.unlink()
                     elif re.fullmatch(r'max-backup-sort-[a-z0-9_]{8}', old.name) and old.is_dir():
                         marker = old / '.max-backup-owner'
-                        if marker.is_file() and not marker.is_symlink() and marker.read_bytes() == b'max-radius-backup-work-v1\n':
+                        if marker.is_file() and not marker.is_symlink() and marker.read_bytes() == b'alpha-radius-backup-work-v1\n':
                             shutil.rmtree(old)
             yield
         finally:

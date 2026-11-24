@@ -3,11 +3,11 @@
   "change": "Remove unrequested CPU caption and tooltip only",
   "images": {
     "shared": {
-      "tag": "max-radius-web:2.7.1-cpu-label-removed-shared-20261110-r1",
+      "tag": "alpha-radius-web:2.7.1-cpu-label-removed-shared-20261110-r1",
       "id": "sha256:52b4481427b2f448caf811e75f1d441eb2c8c05c94febed97b8f7f97f0654f12"
     },
     "m": {
-      "tag": "max-radius-web:2.7.1-cpu-label-removed-m-20261110-r1",
+      "tag": "alpha-radius-web:2.7.1-cpu-label-removed-m-20261110-r1",
       "id": "sha256:0ad78169ab6c17c1da5be564e6ccbc4e3b415ff8240f611741a02b88beaaf326"
     }
   },

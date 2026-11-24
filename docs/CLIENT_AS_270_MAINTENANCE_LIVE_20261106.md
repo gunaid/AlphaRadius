@@ -11,7 +11,7 @@
 
 البصمات الكاملة في `release.json` وPACKAGE/JOURNAL المحميين. Web بدأت08:35:31UTC وCore08:35:25UTC، أي11:35بتوقيتعدن. العنوانان ثابتان:Web172.18.0.14 وCore172.18.0.3، وتوجيه1812/1813لم يتغير. DB/L2TP/Autoheal الأصلية بنفس الصور والهويات وStartedAt/RestartCount. لا تحديث لأي دومين آخر أو NAS أو جهة ترخيص أو latest أو Gitبعيد.
 
-الجولة على العميل `/var/lib/max-radius/rollouts/client270-maintenance-stage-20261106-r1`؛ **هذا مسار تشغيل حي، لا يحذف**. اعتماد Web على `native-kit` و`control-new` و`maintenance270.override.private.json` فيه دائم، وملصقاتComposeفي الحاويتين تشير إلى الملفات الأصلية مع هذاoverrideالجديد. تحقق renderقبل التنفيذ دون compose up، وبقية خدماتComposeمطابقة. إعدادات env وentrypoint/cmd والمنافذ والصحة والذاكرة محفوظة.
+الجولة على العميل `/var/lib/alpha-radius/rollouts/client270-maintenance-stage-20261106-r1`؛ **هذا مسار تشغيل حي، لا يحذف**. اعتماد Web على `native-kit` و`control-new` و`maintenance270.override.private.json` فيه دائم، وملصقاتComposeفي الحاويتين تشير إلى الملفات الأصلية مع هذاoverrideالجديد. تحقق renderقبل التنفيذ دون compose up، وبقية خدماتComposeمطابقة. إعدادات env وentrypoint/cmd والمنافذ والصحة والذاكرة محفوظة.
 
 الأدلة المحلية `PRIVATE/client270-maintenance-ready-20261106-r1`، مع أدلة التجهيز في `PRIVATE/client270-maintenance-stage-20261106-r1`. لاreplayلـprepare/launch/complete أوengine/guard/migration أوعمليات المال. SOURCE وPACKAGE/JOURNALوالتعريفات وأرشيفCoreسريّة خارجGitوالصور.
 
@@ -42,7 +42,7 @@
 المشغل الجديد فقط:
 
 ```powershell
-python -X utf8 -B C:/Users/lenovo/Documents/Codex/private/max-radius/client270-maintenance-ready-20261106-r1/monitor-check.private.py
+python -X utf8 -B C:/Users/lenovo/Documents/Codex/private/alpha-radius/client270-maintenance-ready-20261106-r1/monitor-check.private.py
 ```
 
 قراءة فقط عبر اتصالSSHمثبت وHOST-LOCK. يحتفظ بـMONITOR-SUMMARY/LAST/PREVIOUSوmonitor-historyمحليًا، وبـMONITOR-LAST-NOTIFIEDلمنع تكرار البلاغ. يقارنهويةوصوروأوقاتالخدماتوالإعاداتوOOMوHTTPوleaseوالمصادقةالطبيعيةوتقدمالمحاسبةوUID/العداداتوالتوجيه وRAM/swap/CPU/PSI/IO/القرص وتشخيصSQL. العينةالأولىمرجعوليستدليلتقدمبمفردها؛ غيابauthجديدةأوثباتعدادليسعطلًا، والمجهولليسصفرًا.

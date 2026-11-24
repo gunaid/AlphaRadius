@@ -1,4 +1,4 @@
-# فحص max1.max-net.net بعد التحديث — 7 نوفمبر 2026
+# فحص max1.alpha.amtik.online بعد التحديث — 7 نوفمبر 2026
 
 ثبت اكتمال تحديث Web ومحرك التحديث إلى2.7.1 بالصورةef615475. Web5190199c وCoreda602909 وDBf7f81c9c تعملhealthy، صفرrestart وOOM. CoreوDBبقيتا على الصور السابقة. منفذ التحديثcompleted/100%.
 

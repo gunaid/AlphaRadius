@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-License Guard Service for MAX RADIUS:
+License Guard Service for ALPHA RADIUS:
 Handles license storage in DB, live status lookup, quota enforcement,
 grace period management, and automated heartbeat sync with vendor license hub.
 """
@@ -24,7 +24,7 @@ from core.config import STORAGE_DIR
 
 logger = logging.getLogger('license_guard_service')
 
-DEFAULT_MASTER_SERVER_URL = os.environ.get("MASTER_LICENSE_SERVER_URL", "https://license.max-net.net")
+DEFAULT_MASTER_SERVER_URL = os.environ.get("MASTER_LICENSE_SERVER_URL", "https://license.alpha.amtik.online")
 
 _LICENSE_CACHE = {
     'data': None,
@@ -846,7 +846,7 @@ def install_and_activate_license(license_str, master_server_url=DEFAULT_MASTER_S
             'enrollment_key_mismatch': 'مفتاح النسخة لا يطابق المفتاح المعتمد. استعد مجلد storage الأصلي أو اطلب إعادة اعتماد المفتاح؛ لن يُستبدل تلقائيًا.'
         }
         if 'requires HTTPS' in str(ex):
-            return False, 'عنوان خادم التراخيص غير آمن. استخدم https://license.max-net.net بدل عنوان HTTP القديم.'
+            return False, 'عنوان خادم التراخيص غير آمن. استخدم https://license.alpha.amtik.online بدل عنوان HTTP القديم.'
         return False, messages.get(getattr(ex, 'code', None), 'تعذر الاتصال الآمن بخادم التراخيص أو التحقق من رده؛ راجع الاتصال وHTTPS وتوقيت الجهاز.')
 
     try:

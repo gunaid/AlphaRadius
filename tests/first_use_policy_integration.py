@@ -155,7 +155,7 @@ def used_imports():
  expect(out[(14988,8)]==b'1M/2M','Imported historical speed is not in upload/download order')
  expect(snapshot(row('wisp_vouchers',used['id']))==fixed,'Used import snapshot changed')
  with db_session() as c:
-  cur=c.cursor();cur.execute('SET @max_radius_import=1');cur.execute('UPDATE wisp_vouchers SET snap_volume_quota_mb=9999,snap_price=99 WHERE id=%s',(used['id'],));cur.execute('SET @max_radius_import=0')
+  cur=c.cursor();cur.execute('SET @alpha_radius_import=1');cur.execute('UPDATE wisp_vouchers SET snap_volume_quota_mb=9999,snap_price=99 WHERE id=%s',(used['id'],));cur.execute('SET @alpha_radius_import=0')
  expect(snapshot(row('wisp_vouchers',used['id']))==fixed,'Reimport overwrote used policy')
 def unlimited_and_burst():
  p=package();setpkg(p,quota=0,down='0',up='0');v=generate(p)[0]

@@ -2,7 +2,7 @@
 """
 services/database_migration_service.py
 ---------------------------------------
-Bounded Database Migration & Extraction Engine for MAX RADIUS.
+Bounded Database Migration & Extraction Engine for ALPHA RADIUS.
 Includes live progress tracking, safe cancellation & rollback.
 """
 
@@ -585,7 +585,7 @@ def execute_database_migration(file_input, options=None, _cancel_prepared=False)
         raise RuntimeError("Failed to analyze backup archive prior to execution.")
     selected_rows = (analysis.get('fixed_subscribers_count', 0) if import_subscribers else 0) + (analysis.get('cards_count', 0) if import_cards else 0)
     if not analysis.get('profiles') or not selected_rows:
-        message = 'ملف قاعدة البيانات لا يحتوي حسابات وباقات متوافقة مع محرك الاستيراد؛ لم يتم تغيير البيانات. نسخ MAX RADIUS تستعاد من محرك النسخ الاحتياطي.'
+        message = 'ملف قاعدة البيانات لا يحتوي حسابات وباقات متوافقة مع محرك الاستيراد؛ لم يتم تغيير البيانات. نسخ ALPHA RADIUS تستعاد من محرك النسخ الاحتياطي.'
         update_migration_progress(status='error', error=message, message=message)
         raise ValueError(message)
 
@@ -680,7 +680,7 @@ def execute_database_migration(file_input, options=None, _cancel_prepared=False)
                 cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name IN ('wisp_vouchers','wisp_subscribers','wisp_voucher_batches','radacct','wisp_imported_session_history','wisp_traffic_history','radcheck','radreply','radusergroup','wisp_packages','wisp_managers','wisp_global_sequence') AND engine <> 'InnoDB'")
                 if cur.fetchone():
                     raise RuntimeError('Database migration requires transactional InnoDB tables.')
-                cur.execute("SET @max_radius_import = 1")
+                cur.execute("SET @alpha_radius_import = 1")
                 from services.userman_import_journal import lock_writers
                 lock_writers(db)
 
@@ -1523,7 +1523,7 @@ def execute_database_migration(file_input, options=None, _cancel_prepared=False)
         if _CANCEL_EVENT.is_set():
             raise RuntimeError("تم إلغاء عملية الاستيراد بناءً على طلب المستخدم.")
         if is_mysql_conn(db):
-            cur.execute("SET @max_radius_import = 0")
+            cur.execute("SET @alpha_radius_import = 0")
             cur.execute("SET unique_checks = 1")
             cur.execute("SET foreign_key_checks = 1")
         db.commit()

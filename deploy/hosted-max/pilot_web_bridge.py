@@ -42,7 +42,7 @@ def get_current_system_version():
 def check_for_updates(force_refresh=False, force=False):
     try:
         result = _request('GET', 'check')
-        if result.get('target_domain') != '4k.max-net.net' or result.get('components') != ['web', 'core']:
+        if result.get('target_domain') != '4k.alpha.amtik.online' or result.get('components') != ['web', 'core']:
             raise ValueError('Audience mismatch')
         result.update(current_version=APP_VERSION, has_update=bool(result.get('has_update') and APP_VERSION != result.get('latest_version')))
         return result
@@ -62,7 +62,7 @@ def get_update_progress():
 def _authorized():
     import hmac
     from flask import has_request_context, request, session
-    if not has_request_context() or request.host.split(':')[0]!='4k.max-net.net':
+    if not has_request_context() or request.host.split(':')[0]!='4k.alpha.amtik.online':
         return False
     from core.rbac import get_current_manager
     manager=get_current_manager()
@@ -70,7 +70,7 @@ def _authorized():
     token=request.headers.get('X-CSRF-Token','')
     expected=session.get('_license_csrf','')
     return bool(manager and manager.get('role_code')=='superadmin' and
-                (not origin or origin=='https://4k.max-net.net') and token and expected and hmac.compare_digest(token,expected))
+                (not origin or origin=='https://4k.alpha.amtik.online') and token and expected and hmac.compare_digest(token,expected))
 
 
 def trigger_system_update(target_version=None, backup_first=True, triggered_by='Admin'):

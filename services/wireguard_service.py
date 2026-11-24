@@ -2,7 +2,7 @@
 """
 services/wireguard_service.py
 ------------------------------
-Ultra-High-Performance Linux Kernel Native WireGuard VPN Engine for MAX RADIUS 2.0.
+Ultra-High-Performance Linux Kernel Native WireGuard VPN Engine for ALPHA RADIUS 2.0.
 Provides:
 1. Kernel-Level Crypto Routing (chacha20-poly1305) on dynamic WireGuard port.
 2. Dynamic, sub-millisecond Peer Registration without interface restarts or traffic interruption.
@@ -32,8 +32,8 @@ logger = logging.getLogger('wireguard_service')
 
 WG_SOCK_PATH = os.environ.get('WG_SOCK_PATH', '/app/storage/wg_bridge.sock')
 if not os.path.exists(WG_SOCK_PATH):
-    if os.path.exists('/opt/max-radius/storage/wg_bridge.sock'):
-        WG_SOCK_PATH = '/opt/max-radius/storage/wg_bridge.sock'
+    if os.path.exists('/opt/alpha-radius/storage/wg_bridge.sock'):
+        WG_SOCK_PATH = '/opt/alpha-radius/storage/wg_bridge.sock'
 
 WG_GATEWAY_IP = os.environ.get('WG_GATEWAY_IP', '192.168.45.1')
 WG_SUBNET = os.environ.get('WG_SUBNET', '192.168.45.0/24')
@@ -435,7 +435,7 @@ def generate_mikrotik_wireguard_script(tunnel_id, vps_host=None):
     api_pass = (nas_dev.get('api_password') if nas_dev else None) or 'api_pass123'
 
     script = f"""###############################################################################
-#  ⚡ MAX RADIUS 2.0 - 1-Click RouterOS v7+ WireGuard Setup Script
+#  ⚡ ALPHA RADIUS 2.0 - 1-Click RouterOS v7+ WireGuard Setup Script
 #  📡 Router: {tun['name']}
 #  🌐 Dedicated Tunnel IP: {tunnel_ip}/24 (Gateway: {WG_GATEWAY_IP})
 #  🚀 Protocol: Native WireGuard Kernel VPN (Port {server_port} UDP)
@@ -443,41 +443,41 @@ def generate_mikrotik_wireguard_script(tunnel_id, vps_host=None):
 ###############################################################################
 
 :put "============================================================"
-:put "  ⚡ Starting MAX RADIUS WireGuard Setup for: {tun['name']}"
+:put "  ⚡ Starting ALPHA RADIUS WireGuard Setup for: {tun['name']}"
 :put "============================================================"
 
 # 1. Create WireGuard Interface (RouterOS v7+)
 /interface wireguard
-:do {{ remove [find name="wg-maxradius"] }} on-error={{}}
-add name="wg-maxradius" listen-port=13231 mtu=1420 private-key="{client_priv}" comment="MAX RADIUS WireGuard VPN"
+:do {{ remove [find name="wg-alpharadius"] }} on-error={{}}
+add name="wg-alpharadius" listen-port=13231 mtu=1420 private-key="{client_priv}" comment="ALPHA RADIUS WireGuard VPN"
 
 :put "✔ WireGuard Interface Created."
 
-# 2. Configure WireGuard Peer Connection to MAX RADIUS VPS Server
+# 2. Configure WireGuard Peer Connection to ALPHA RADIUS VPS Server
 /interface wireguard peers
-:do {{ remove [find interface="wg-maxradius"] }} on-error={{}}
-add interface="wg-maxradius" public-key="{server_pub}" \
+:do {{ remove [find interface="wg-alpharadius"] }} on-error={{}}
+add interface="wg-alpharadius" public-key="{server_pub}" \
     endpoint-address="{vps_ip}" endpoint-port={server_port} \
-    allowed-address={WG_SUBNET} persistent-keepalive=25s comment="MAX RADIUS Server Peer"
+    allowed-address={WG_SUBNET} persistent-keepalive=25s comment="ALPHA RADIUS Server Peer"
 
 :put "✔ WireGuard Server Peer Configured."
 
 # 3. Assign Dedicated Static IP to WireGuard Interface
 /ip address
-:do {{ remove [find interface="wg-maxradius"] }} on-error={{}}
-add address={tunnel_ip}/24 interface="wg-maxradius" network={prefix}.0 comment="MAX RADIUS WireGuard Static IP"
+:do {{ remove [find interface="wg-alpharadius"] }} on-error={{}}
+add address={tunnel_ip}/24 interface="wg-alpharadius" network={prefix}.0 comment="ALPHA RADIUS WireGuard Static IP"
 
 :put "✔ Static IP {tunnel_ip} Assigned to Interface."
 
 # 4. Configure FreeRADIUS Server Connection (Port 1812/1813 via WG Gateway)
 /radius
-:do {{ remove [find comment="MAX_RADIUS_CORE"] }} on-error={{}}
+:do {{ remove [find comment="ALPHA_RADIUS_CORE"] }} on-error={{}}
 :do {{
     add address={WG_GATEWAY_IP} secret="{radius_secret}" service=hotspot,login,wireless,ppp \
-        authentication-port=1812 accounting-port=1813 timeout=3s require-message-auth=no comment="MAX_RADIUS_CORE"
+        authentication-port=1812 accounting-port=1813 timeout=3s require-message-auth=no comment="ALPHA_RADIUS_CORE"
 }} on-error={{
     add address={WG_GATEWAY_IP} secret="{radius_secret}" service=hotspot,login,wireless,ppp \
-        authentication-port=1812 accounting-port=1813 timeout=3s comment="MAX_RADIUS_CORE"
+        authentication-port=1812 accounting-port=1813 timeout=3s comment="ALPHA_RADIUS_CORE"
 }}
 
 /radius incoming
@@ -503,12 +503,12 @@ set accept=yes port=3799
 
 # 7. Create Dedicated Secure API User for Live Monitoring
 /user
-:do {{ remove [find comment="MAX_RADIUS_API"] }} on-error={{}}
+:do {{ remove [find comment="ALPHA_RADIUS_API"] }} on-error={{}}
 :do {{ remove [find name="{api_user}"] }} on-error={{}}
-add name="{api_user}" password="{api_pass}" group=full comment="MAX_RADIUS_API" disabled=no
+add name="{api_user}" password="{api_pass}" group=full comment="ALPHA_RADIUS_API" disabled=no
 
 :put "============================================================"
-:put "  ✅ MAX RADIUS WireGuard Setup Completed Successfully!"
+:put "  ✅ ALPHA RADIUS WireGuard Setup Completed Successfully!"
 :put "  🌐 Dedicated Static IP: {tunnel_ip}"
 :put "  🔑 API Port: {api_port} | API User: {api_user}"
 :put "============================================================"

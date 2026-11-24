@@ -33,8 +33,8 @@ Accounting-On وحدها لم تعد دليل إغلاق نهائي. إذا أع
 
 | المكوّن | الصورة |
 | --- | --- |
-| Web269 المعدلة، دون تغيير بهذه الجولة | `max-radius-web:2.6.9-renewal-engine-local-20261030-r2` — `sha256:3f2b7ddb285e333d40460049de59c8bdf7fe019fb43e4a01411a816728cfede8` |
-| Core المرشحة المصاحبة | `max-radius-core:2.6.9-accounting-events-local-20261030-r1` — `sha256:7ffa03b73990e25f8e10b72eb8e29dd446e2ffb2942ec8df2599e539f37cb7c5` |
+| Web269 المعدلة، دون تغيير بهذه الجولة | `alpha-radius-web:2.6.9-renewal-engine-local-20261030-r2` — `sha256:3f2b7ddb285e333d40460049de59c8bdf7fe019fb43e4a01411a816728cfede8` |
+| Core المرشحة المصاحبة | `alpha-radius-core:2.6.9-accounting-events-local-20261030-r1` — `sha256:7ffa03b73990e25f8e10b72eb8e29dd446e2ffb2942ec8df2599e539f37cb7c5` |
 | أساس Core والرجوع | `sha256:bc4d4644108018c7f67188e639bfeea9a4d12deedc01602bc15e219406ac4932` |
 
 الهويات أعلاه كما أرجعها Docker المحلي وطابقتها حاويات الاختبار؛ ليست إثبات رفع إلىRegistry. البناءLinux/amd64 حفظ طبقات Core الأصلية وأضاف طبقتي نسخ وصلاحيات لملف الاستعلامات فقط. SHA256 لملف الاستعلامات المركب الجديد: `589eff8721d72b2485c1c6f771c82d2f5ae95aef155c0e80931a0bba947ca087`. لا تنزيل ناجح لصورة أساس جديدة ولا تحديثlatest.

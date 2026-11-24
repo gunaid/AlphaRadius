@@ -279,7 +279,7 @@ class IncidentsAndSafety(unittest.TestCase):
             run.return_value.returncode=0;run.return_value.stdout='{"ok":1}\n'
             self.assertEqual(db.query("SELECT JSON_OBJECT('ok',1)"),[{'ok':1}])
             args=run.call_args.args[0]
-            self.assertEqual(args[2],'max_radius_m_db')
+            self.assertEqual(args[2],'alpha_radius_m_db')
             self.assertIn('START TRANSACTION READ ONLY;',args[-1])
             self.assertTrue(args[-1].endswith(';ROLLBACK;'))
 

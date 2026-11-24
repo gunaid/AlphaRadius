@@ -1,4 +1,4 @@
-name: max-radius
+name: alpha-radius
 
 services:
 
@@ -7,7 +7,7 @@ services:
   # ============================================================
   mariadb:
     image: mariadb:10.11
-    container_name: max_radius_db
+    container_name: alpha_radius_db
     restart: unless-stopped
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --innodb-buffer-pool-size=512M --innodb-flush-log-at-trx-commit=2 --innodb-log-file-size=64M
     environment:
@@ -30,7 +30,7 @@ services:
     labels:
       - "autoheal=true"
     networks:
-      max-radius-net:
+      alpha-radius-net:
         ipv4_address: 172.18.0.2
 
   # ============================================================
@@ -40,8 +40,8 @@ services:
     build:
       context: ./docker/freeradius
       dockerfile: Dockerfile
-    image: mohd777/max-radius-core:latest
-    container_name: max_radius_core
+    image: mohd777/alpha-radius-core:latest
+    container_name: alpha_radius_core
     cap_add:
       - NET_ADMIN
     restart: unless-stopped
@@ -71,7 +71,7 @@ services:
     labels:
       - "autoheal=true"
     networks:
-      max-radius-net:
+      alpha-radius-net:
         ipv4_address: 172.18.0.3
 
   # ============================================================
@@ -81,8 +81,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: mohd777/max-radius-web:latest
-    container_name: max_radius_web
+    image: mohd777/alpha-radius-web:latest
+    container_name: alpha_radius_web
     restart: unless-stopped
     cap_add:
       - NET_ADMIN
@@ -94,7 +94,7 @@ services:
     environment:
       - RADIUS_HOST=freeradius
       - RADIUS_HEALTH_SECRET=${RADIUS_HEALTH_SECRET:-max123}
-      - APP_NAME=MAX_RADIUS
+      - APP_NAME=ALPHA_RADIUS
       - DB_TYPE=mysql
       - DB_HOST=mariadb
       - DB_PORT=3306
@@ -103,7 +103,7 @@ services:
       - DB_NAME=radius_wisp
       - PORT=5090
       - RADIUS_COA_PORT=37990
-      - L2TP_CONTAINER=max_radius_l2tp
+      - L2TP_CONTAINER=alpha_radius_l2tp
       - TZ=${SYSTEM_TIMEZONE:-Asia/Riyadh}
       - DEFAULT_TIMEZONE=Asia/Riyadh
     ports:
@@ -125,7 +125,7 @@ services:
     labels:
       - "autoheal=true"
     networks:
-      max-radius-net:
+      alpha-radius-net:
         ipv4_address: 172.18.0.4
 
   # ============================================================
@@ -134,7 +134,7 @@ services:
   autoheal:
     image: willfarrell/autoheal:latest
     pull_policy: always
-    container_name: max_radius_autoheal
+    container_name: alpha_radius_autoheal
     restart: unless-stopped
     environment:
       - AUTOHEAL_CONTAINER_LABEL=autoheal
@@ -145,7 +145,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
-      max-radius-net:
+      alpha-radius-net:
         ipv4_address: 172.18.0.6
 
   # ============================================================
@@ -155,8 +155,8 @@ services:
     build:
       context: ./docker/l2tp
       dockerfile: Dockerfile
-    image: mohd777/max-radius-l2tp:latest
-    container_name: max_radius_l2tp
+    image: mohd777/alpha-radius-l2tp:latest
+    container_name: alpha_radius_l2tp
     restart: unless-stopped
     labels:
       - "autoheal=true"
@@ -183,7 +183,7 @@ services:
       - ./docker/l2tp/options.xl2tpd:/etc/ppp/options.xl2tpd:ro
       - ./docker/l2tp/entrypoint.sh:/entrypoint.sh
     networks:
-      max-radius-net:
+      alpha-radius-net:
         ipv4_address: 172.18.0.10
 
 
@@ -193,7 +193,7 @@ volumes:
     driver: local
 
 networks:
-  max-radius-net:
+  alpha-radius-net:
     driver: bridge
     ipam:
       config:

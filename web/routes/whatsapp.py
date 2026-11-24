@@ -2,7 +2,7 @@
 """
 web/routes/whatsapp.py
 ----------------------
-Flask Web Blueprint for WhatsApp Engine & Interactive Bot in MAX RADIUS.
+Flask Web Blueprint for WhatsApp Engine & Interactive Bot in ALPHA RADIUS.
 """
 
 import json
@@ -143,7 +143,7 @@ def api_whatsapp_save_template():
 def api_whatsapp_send_test():
     data = request.get_json(silent=True) or request.form.to_dict()
     phone = data.get('phone_number', '').strip()
-    message = data.get('message', 'رسالة اختبارية من نظام MAX RADIUS 🚀').strip()
+    message = data.get('message', 'رسالة اختبارية من نظام ALPHA RADIUS 🚀').strip()
     if not phone:
         return jsonify({'success': False, 'message': 'يرجى إدخال رقم الهاتف المستلم.'})
 
@@ -204,7 +204,7 @@ def api_whatsapp_webhook():
     # 1. Meta Webhook Verification Challenge (GET)
     if request.method == 'GET':
         settings = get_whatsapp_settings()
-        verify_token = settings.get('meta_webhook_verify_token', 'max_radius_whatsapp_token_2026')
+        verify_token = settings.get('meta_webhook_verify_token', 'alpha_radius_whatsapp_token_2026')
         mode = request.args.get('hub.mode')
         token = request.args.get('hub.verify_token')
         challenge = request.args.get('hub.challenge')

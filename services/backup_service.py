@@ -115,7 +115,7 @@ def split_sql_statements(sql_text):
 
 # -*- coding: utf-8 -*-
 """
-Universal & Comprehensive Backup Management Service for MAX RADIUS (FreeRADIUS & WISP Manager).
+Universal & Comprehensive Backup Management Service for ALPHA RADIUS (FreeRADIUS & WISP Manager).
 Handles full MySQL database dumps, uploads/attachments packaging, card designs & settings archive,
 atomic multi-component restores, and settings management.
 """
@@ -377,7 +377,7 @@ def list_backups():
 def generate_mysql_dump(output=None):
     """Exports all MySQL tables as a valid SQL script using batched fetching to prevent OOM."""
     sql_buffer = output if output is not None else io.StringIO()
-    sql_buffer.write("-- MAX RADIUS MySQL Database Dump\n")
+    sql_buffer.write("-- ALPHA RADIUS MySQL Database Dump\n")
     sql_buffer.write(f"-- Generated at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
     sql_buffer.write("SET FOREIGN_KEY_CHECKS = 0;\n\n")
 
@@ -451,7 +451,7 @@ def _native_mysql_options():
     def quote(value):
         value = str(value).replace('\\', '\\\\').replace('"', '\\"').replace('\n', '\\n').replace('\r', '\\r')
         return '"' + value + '"'
-    with tempfile.TemporaryDirectory(prefix='max-radius-db-client-') as directory:
+    with tempfile.TemporaryDirectory(prefix='alpha-radius-db-client-') as directory:
         path = os.path.join(directory, 'client.cnf')
         with open(path, 'w', encoding='utf-8') as config:
             os.chmod(path, 0o600)
@@ -530,7 +530,7 @@ def _create_backup(sql_file, admin_username, notes, dispatch_notifications):
     now = datetime.datetime.now()
     timestamp_str = now.strftime('%Y%m%d_%H%M%S')
     rand_suffix = secrets.randbelow(1000)
-    filename = f"max_radius_backup_{timestamp_str}_{rand_suffix:03d}.tar.gz"
+    filename = f"alpha_radius_backup_{timestamp_str}_{rand_suffix:03d}.tar.gz"
     filepath = os.path.join(b_dir, filename)
 
     conn = get_connection()
@@ -578,7 +578,7 @@ def _create_backup(sql_file, admin_username, notes, dispatch_notifications):
         'filename': filename,
         'created_at': now.strftime('%Y-%m-%d %H:%M:%S'),
         'system_version': CURRENT_SYSTEM_VERSION,
-        'app_name': 'MAX RADIUS',
+        'app_name': 'ALPHA RADIUS',
         'db_engine': db_engine_name,
         'table_count': len(table_names),
         'tables': table_names,
@@ -733,7 +733,7 @@ def upload_backup_file(file_storage, admin_username='admin'):
         return False, "صيغة الملف غير مدعومة. يرجى رفع ملف بصيغة (.tar.gz أو .zip أو .sql أو .db)."
 
     clean_name = os.path.basename(orig_filename).replace(' ', '_')
-    if not clean_name.startswith('max_radius_') and not clean_name.startswith('wisp_') and not clean_name.startswith('backup_'):
+    if not clean_name.startswith('alpha_radius_') and not clean_name.startswith('wisp_') and not clean_name.startswith('backup_'):
         clean_name = f"uploaded_{clean_name}"
 
     target_path = os.path.join(b_dir, clean_name)
@@ -808,7 +808,7 @@ def restore_backup(filename, admin_username='admin'):
                          'started': False, 'restored': False}
     except Exception:
         return False, 'تعذر حفظ بيانات ترخيص المنظومة قبل الاستعادة؛ لم يبدأ الاستيراد.'
-    with tempfile.TemporaryDirectory(prefix='max-radius-restore-') as temp_dir:
+    with tempfile.TemporaryDirectory(prefix='alpha-radius-restore-') as temp_dir:
         protection_error = None
         try:
             result = _restore_backup(filename, admin_username, temp_dir, license_state)
@@ -1120,7 +1120,7 @@ def send_backup_to_telegram(filename, admin_username='admin', override_chat_id=N
 
     # Build rich caption for Telegram (HTML formatted)
     caption = (
-        f"📦 <b>نسخة احتياطية جديدة - MAX RADIUS</b>\n"
+        f"📦 <b>نسخة احتياطية جديدة - ALPHA RADIUS</b>\n"
         f"━━━━━━━━━━━━━━━━━━━\n"
         f"📁 <b>اسم الملف:</b> <code>{safe_name}</code>\n"
         f"⚖️ <b>الحجم:</b> <code>{size_str}</code>\n"
@@ -1129,7 +1129,7 @@ def send_backup_to_telegram(filename, admin_username='admin', override_chat_id=N
         f"👤 <b>المُنشئ:</b> <code>{created_by}</code>\n"
         f"🔒 <b>SHA256:</b> <code>{checksum[:16]}...</code>\n"
         f"━━━━━━━━━━━━━━━━━━━\n"
-        f"#Backup #MAX_RADIUS #Database"
+        f"#Backup #ALPHA_RADIUS #Database"
     )
 
     try:

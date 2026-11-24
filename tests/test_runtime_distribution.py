@@ -15,7 +15,7 @@ BASE = ['docker-compose.production.yml', 'database/schema_mysql.sql',
         'docker/l2tp/options.xl2tpd', 'storage/keys/master_public_key.pem',
         'runtime-release.env']
 HOST = ['host/clock-guard/' + n for n in ['clock_ready.py', 'managed_files.py',
-        'active_files.py', 'manage.py', '99-max-radius-clock-ready.conf']]
+        'active_files.py', 'manage.py', '99-alpha-radius-clock-ready.conf']]
 
 
 class BundleContracts(unittest.TestCase):

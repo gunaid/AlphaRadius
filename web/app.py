@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-MAX RADIUS Web Application Entrypoint.
+ALPHA RADIUS Web Application Entrypoint.
 Exposes the central Flask WSGI application instance `app` created via `create_app()`.
 """
 

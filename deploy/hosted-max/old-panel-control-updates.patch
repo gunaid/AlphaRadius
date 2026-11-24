@@ -18,7 +18,7 @@
 -    path = tenant_path(name)
 -    repair_compose(path)
 -    original_compose = (path / 'docker-compose.yml').read_bytes()
--    before = {s: inspect(f'max_radius_{name}_{s}') for s in ('web', 'core')}
+-    before = {s: inspect(f'alpha_radius_{name}_{s}') for s in ('web', 'core')}
 -    if any(not value for value in before.values()):
 -        raise RuntimeError('الخدمات الحالية غير مكتملة')
 -    view = inventory(force=True)
@@ -35,7 +35,7 @@
 -    # Pull failures stop the operation, and database upgrades are separate.
 -    from update_release import schema_migration
 -    release = json.loads((path / 'update-release.json').read_text())
--    db = inspect(f'max_radius_{name}_db')
+-    db = inspect(f'alpha_radius_{name}_db')
 -    if not db: raise RuntimeError('قاعدة بيانات المنظومة غير موجودة')
 -    try:
 -        schema_migration(command, path, release['web']['reference'], before['web'], db)
@@ -47,11 +47,11 @@
 -        raise
 -    deadline = time.monotonic() + 100
 -    while time.monotonic() < deadline:
--        current = [inspect(f'max_radius_{name}_{suffix}') for suffix in ('web', 'core')]
+-        current = [inspect(f'alpha_radius_{name}_{suffix}') for suffix in ('web', 'core')]
 -        if all(c and c['State'].get('Running') and c['State'].get('Health', {}).get('Status') not in ('unhealthy', 'starting') for c in current):
 -            if current[0]['Image'] != release['web']['image_id'] or current[1]['Image'] != release['radius_core']['image_id']:
 -                raise RuntimeError('هوية الحاويات لا تطابق الإصدار الجديد؛ لم يثبت نجاح التحديث')
--            command(['docker', 'exec', f'max_radius_{name}_core', 'freeradius', '-C'], timeout=30)
+-            command(['docker', 'exec', f'alpha_radius_{name}_core', 'freeradius', '-C'], timeout=30)
 -            refresh_routes(name)
 -            CACHE['time'] = 0
 -            return 'تم تحديث الويب والراديوس والتحقق من الإعدادات ومزامنة التوجيه؛ تم ترحيل المخطط دون إعادة تسعير العقود أو ترقية محرك قاعدة البيانات.'

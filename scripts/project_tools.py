@@ -171,8 +171,8 @@ def main():
     elif args.command=='build-plan':
         if not re.fullmatch(r'[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}',args.tag):raise ValueError('Invalid Docker tag')
         emit({'execute':False,'cwd':str(ROOT),'commands':[
-              ['docker','build','-t','max-radius-web:'+args.tag,'.'],
-              ['docker','build','-t','max-radius-core:'+args.tag,'docker/freeradius']],
+              ['docker','build','-t','alpha-radius-web:'+args.tag,'.'],
+              ['docker','build','-t','alpha-radius-core:'+args.tag,'docker/freeradius']],
               'deployment':'Select target project/service and follow docs/DEPLOYMENT.md; no automatic push or restart'})
     return 0
 

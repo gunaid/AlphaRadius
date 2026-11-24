@@ -152,7 +152,7 @@ def _collect_server_resources_internal():
     scoped_socket=os.environ.get('MAX_RESOURCE_METRICS_SOCKET')
     cpu_available=False
 
-    target_containers = ['max_radius_core', 'max_radius_db', 'max_radius_web']
+    target_containers = ['alpha_radius_core', 'alpha_radius_db', 'alpha_radius_web']
 
     # 1. Direct Docker Socket Query for exact container metrics via parallel threads
     try:

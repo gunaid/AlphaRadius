@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-MAX RADIUS Web - Reseller Networks, Wallets, Roles, and Staff Accounts Routes Module.
+ALPHA RADIUS Web - Reseller Networks, Wallets, Roles, and Staff Accounts Routes Module.
 """
 
 import os

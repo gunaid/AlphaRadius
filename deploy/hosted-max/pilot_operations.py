@@ -21,7 +21,7 @@ def call(root,args,timeout=120,input=None):
 
 def checked(root):
     plan=json.loads((root/'plan.private.json').read_text())
-    if plan.get('domain')!='4k.max-net.net' or plan.get('project')!='4k':raise ValueError('Wrong helper scope')
+    if plan.get('domain')!='4k.alpha.amtik.online' or plan.get('project')!='4k':raise ValueError('Wrong helper scope')
     database=plan['database']
     actual=json.loads(call(root,['docker','inspect',database['Id']]))[0]
     if (actual['Id']!=database['Id'] or actual['Image']!=database['Image'] or actual['Mounts']!=database['Mounts']

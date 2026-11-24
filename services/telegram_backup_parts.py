@@ -30,7 +30,7 @@ def join_backup(manifest_path):
     path = Path(manifest_path).resolve()
     folder = path.parent
     manifest = json.loads(path.read_text(encoding='utf-8'))
-    if manifest.get('format') != 'max-radius-backup-parts-v1':
+    if manifest.get('format') != 'alpha-radius-backup-parts-v1':
         raise ValueError('Unknown manifest format')
     name = safe_name(manifest['filename'])
     size = manifest['size_bytes']
@@ -146,7 +146,7 @@ def plan_parts(filepath, *, part_bytes=PART_BYTES):
     prefix = name+'.'+aggregate.hexdigest()[:12]
     for part in parts:
         part['filename'] = prefix+'.part'+str(part['index']).zfill(3)
-    return {'format': 'max-radius-backup-parts-v1', 'filename': name,
+    return {'format': 'alpha-radius-backup-parts-v1', 'filename': name,
             'size_bytes': size, 'sha256': aggregate.hexdigest(), 'parts': parts}
 
 

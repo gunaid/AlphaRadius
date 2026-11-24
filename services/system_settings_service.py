@@ -21,10 +21,10 @@ def setting_values(form):
     currency = form.get('currency', 'YER').strip()
     symbols = {'YER': 'ر.ي', 'EGP': 'ج.م', 'IQD': 'د.ع', 'SYP': 'ل.س',
                'SAR': 'ر.س', 'AED': 'د.إ', 'USD': '$'}
-    name = form.get('network_name', '').strip() or form.get('company_name', '').strip() or 'MAX RADIUS'
+    name = form.get('network_name', '').strip() or form.get('company_name', '').strip() or 'ALPHA RADIUS'
     values = {
         'network_name': name, 'company_name': name, 'isp_name': name,
-        'system_title': form.get('system_title', 'MAX RADIUS - نظام إدارة الشبكات والفوترة و FreeRADIUS').strip(),
+        'system_title': form.get('system_title', 'ALPHA RADIUS - نظام إدارة الشبكات والفوترة و FreeRADIUS').strip(),
         'currency': currency,
         'currency_symbol': form.get('currency_symbol', '').strip() or symbols.get(currency, 'ر.ي'),
         'timezone': form.get('timezone', 'Asia/Aden').strip(),

@@ -120,7 +120,7 @@
 
         var script = '/radius incoming set accept=yes port=' + port + '\n' +
 
-                     '/radius add address=' + ip + ' secret="' + secret + '" service=hotspot,ppp,login authentication-port=1812 accounting-port=1813 timeout=3000ms comment="MAX_RADIUS"\n' +
+                     '/radius add address=' + ip + ' secret="' + secret + '" service=hotspot,ppp,login authentication-port=1812 accounting-port=1813 timeout=3000ms comment="ALPHA_RADIUS"\n' +
 
                      '/ip hotspot profile set [find default=yes] use-radius=yes radius-accounting=yes radius-interim-update=1m\n' +
 
@@ -1607,7 +1607,7 @@
 
         const script = `/radius incoming set accept=yes port=${port}
 
-/radius add address=${ip} secret="${secret}" service=hotspot,ppp,login authentication-port=1812 accounting-port=1813 timeout=3000ms comment="MAX_RADIUS"
+/radius add address=${ip} secret="${secret}" service=hotspot,ppp,login authentication-port=1812 accounting-port=1813 timeout=3000ms comment="ALPHA_RADIUS"
 
 /ip hotspot profile set [find default=yes] use-radius=yes radius-accounting=yes radius-interim-update=1m
 

@@ -1,7 +1,7 @@
 {
   "release": "20261115-v2.7.1-summary-efficiency-r38",
-  "base": "mohd777/max-radius-web:2.7.1-maintenance-admission-20261113-r37",
-  "compiler": "max-radius-release271-automation-compiler:r3",
+  "base": "mohd777/alpha-radius-web:2.7.1-maintenance-admission-20261113-r37",
+  "compiler": "alpha-radius-release271-automation-compiler:r3",
   "image": "sha256:28553ef8f6956f794771b2db4ae5d33ac2bde824aa4c359c611e61d02e56c7f7",
   "changed": [
     "services/backup_usage_summary.py",
