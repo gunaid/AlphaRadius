@@ -3,14 +3,14 @@
   "release": "20261115-v2.7.1-summary-efficiency-r38",
   "image_digest": "sha256:28553ef8f6956f794771b2db4ae5d33ac2bde824aa4c359c611e61d02e56c7f7",
   "updated_tags": [
-    "mohd777/max-radius-web:2.7.1-summary-efficiency-20261115-r38",
-    "mohd777/max-radius-web:2.7.1",
-    "mohd777/max-radius-web:2.7.1-update-safety-20261107-r7"
+    "mohd777/alpha-radius-web:2.7.1-summary-efficiency-20261115-r38",
+    "mohd777/alpha-radius-web:2.7.1",
+    "mohd777/alpha-radius-web:2.7.1-update-safety-20261107-r7"
   ],
   "previous_web_digest": "sha256:cfbb38203bc94a770242040e48a398f2a2c4594829a486b00303986ef795c30d",
   "runtime_delta": {
     "image": "sha256:28553ef8f6956f794771b2db4ae5d33ac2bde824aa4c359c611e61d02e56c7f7",
-    "base": "mohd777/max-radius-web:2.7.1-maintenance-admission-20261113-r37",
+    "base": "mohd777/alpha-radius-web:2.7.1-maintenance-admission-20261113-r37",
     "changed_runtime_files": 3,
     "runtime_paths": [
       "services/backup_usage_summary.cpython-311-x86_64-linux-gnu.so",
@@ -33,7 +33,7 @@
     "compiled-old-reader": null
   },
   "runtime_bundle": {
-    "url": "https://raw.githubusercontent.com/mohd-1992/MAX-RADIUS/main/releases/runtime-20261115-v2.7.1-summary-efficiency-r38.tar.gz",
+    "url": "https://raw.githubusercontent.com/gunaid/AlphaRadius/main/releases/runtime-20261115-v2.7.1-summary-efficiency-r38.tar.gz",
     "sha256": "2fcf817c3d38cfee2bd8574c0f9475450ff261bdc097f2b01911c1589e95468e"
   },
   "source_manifest": "releases/source-20261115-v2.7.1-summary-efficiency-r38.json",
@@ -42,8 +42,8 @@
   "gzip": "6 FILTERED unchanged",
   "production_status": "Completed on all four authorized 2.7.1 domains and subsequently authorized CLIENT_AS",
   "authorized_domains": [
-    "max1.max-net.net",
-    "shn.max-net.net",
+    "max1.alpha.amtik.online",
+    "shn.alpha.amtik.online",
     "max1.max-r.cc",
     "m.max-r.cc"
   ],

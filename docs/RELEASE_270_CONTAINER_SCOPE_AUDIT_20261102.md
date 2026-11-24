@@ -22,8 +22,8 @@
 
 تحقق Registry في هذه الجولة من فهرس OCI الفعلي للوسمين، وليس من اسم latest أو من تقرير قديم وحده:
 
-- Web: `mohd777/max-radius-web:2.6.9-backup-reader-20261101-r1`، digest `sha256:690cfa939cdc4dff5d09c2a2ef0543cd0abd506cad680baff814f7a5b6dca832`.
-- Core: `mohd777/max-radius-core:2.6.9-maintenance-20261101-r1`، digest `sha256:9786df38bb3ce725c7a1f87a52b2db34ee90a0a221df29dd0331d95684a0a067`.
+- Web: `mohd777/alpha-radius-web:2.6.9-backup-reader-20261101-r1`، digest `sha256:690cfa939cdc4dff5d09c2a2ef0543cd0abd506cad680baff814f7a5b6dca832`.
+- Core: `mohd777/alpha-radius-core:2.6.9-maintenance-20261101-r1`، digest `sha256:9786df38bb3ce725c7a1f87a52b2db34ee90a0a221df29dd0331d95684a0a067`.
 
 المراجع ثابتة في [إيصال قارئ النسخ المنشور](../releases/publish-20261101-v2.6.9-backup-reader-r1.json) و[إيصال الصورتين المنشورتين](../releases/publish-20261101-v2.6.9-maintenance-r1.json). هذه بصمات الفهرس؛ بصمة manifest الخاص بـlinux/amd64 وبصمة config مفاهيم مختلفة وليست دليل تعارض بين الصور.
 

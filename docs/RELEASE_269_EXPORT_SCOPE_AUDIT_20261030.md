@@ -12,7 +12,7 @@
 
 ## الصور والفحص المباشر
 
-- المنشورة: `mohd777/max-radius-web:2.6.9-reports-backup-r1`، بالبصمة `sha256:c5ab9fe42359c867c6dedabaf607ff492b2652e8160fa5df987e34e645db098b`.
+- المنشورة: `mohd777/alpha-radius-web:2.6.9-reports-backup-r1`، بالبصمة `sha256:c5ab9fe42359c867c6dedabaf607ff492b2652e8160fa5df987e34e645db098b`.
 - المعدلة غير المنشورة: `sha256:3f2b7ddb285e333d40460049de59c8bdf7fe019fb43e4a01411a816728cfede8`.
 - شُغّلت الصورتان المثبتتان في حاويتين مؤقتتين بلا شبكة ودون تركيب مصدر التطبيق؛ قرئت ملفات /app المجمعة وحُسبت بصماتها. عُطل بدء الخيوط ولم يُستورد web.app.
 - وحدات traffic_sample_service وtraffic_history_service وsales_reporting_service وnetwork_traffic_service وsession_history_service وbackup_service وaccounting_archiver_service وdb_maintenance_service وbackup_archive_policy متطابقة بايتًا بين الصورتين. كذلك web.session_export متطابقة.

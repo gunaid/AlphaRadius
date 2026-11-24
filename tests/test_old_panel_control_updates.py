@@ -28,7 +28,7 @@ class AdapterTests(unittest.TestCase):
         self.preflight=patch.object(panel.bootstrap,'preflight_new_domain_updates',return_value=self.cfg);self.preflight.start()
         self.state=self.root/'private/fixture';self.sock=self.root/'sockets/fixture'
         self.reader={'kind':'domain','identity':'fixture.example.test','reader_id':'test-reader','token':'test-secret-do-not-log'}
-        self.config=dict(self.reader,project='fixture',executor='host',channel='https://control.max-net.net',
+        self.config=dict(self.reader,project='fixture',executor='host',channel='https://control.alpha.amtik.online',
                          public_key=panel.PUBLIC_KEY,key_fingerprint=panel.bootstrap.PUBLIC_TRUST)
     def tearDown(self):self.preflight.stop();self.t.cleanup()
     def existing(self,managed=False):
@@ -195,7 +195,7 @@ class WorkerDispatchTests(unittest.TestCase):
         host=importlib.util.module_from_spec(spec);spec.loader.exec_module(host)
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory);sock=root/'controller.sock'
-            cfg=dict(protocol.config,project='owned',executor='host',channel='https://control.max-net.net',compose_path=str(root/'compose.yml'))
+            cfg=dict(protocol.config,project='owned',executor='host',channel='https://control.alpha.amtik.online',compose_path=str(root/'compose.yml'))
             (root/'update-channel.private.json').write_text(json.dumps(cfg))
             class Controller(host.Controller):
                 def current(self,config):return '2.6.4',{}

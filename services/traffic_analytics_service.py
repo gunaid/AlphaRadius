@@ -2,7 +2,7 @@
 """
 services/traffic_analytics_service.py
 -------------------------------------
-Network Traffic & Bandwidth Analytics Inspector for MAX RADIUS.
+Network Traffic & Bandwidth Analytics Inspector for ALPHA RADIUS.
 Calculates real-time bandwidth consumption, top data hogs, hourly peak usage distribution, and anomalous sessions.
 """
 

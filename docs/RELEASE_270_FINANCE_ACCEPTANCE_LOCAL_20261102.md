@@ -4,7 +4,7 @@
 
 ## هوية النسخة
 
-- Web: `max-radius-web:2.7.0-rc-local-20261102-r5`، `sha256:8bb3520a2501a53c3e71099cd8895a265ef7b0672560d833706a780006aa902a`.
+- Web: `alpha-radius-web:2.7.0-rc-local-20261102-r5`، `sha256:8bb3520a2501a53c3e71099cd8895a265ef7b0672560d833706a780006aa902a`.
 - الأساس r3: `sha256:9fcbfca04af5999956e1a8e82adcffa3aa13cde150f94eb4df2b3a879211bdda`، وهو وريث Web269 المنشورة `690cfa939cdc`.
 - Core ثابتة: `sha256:10cc88946c5ed6310a36c4c11b7e991277137da87eb019958f2eb45c8d2eabf5`؛ لم تعدل في الجولة.
 - التوقيع سليم ومفتاح الناشر مطابق. تغيرت ثلاث وحدات مترجمة فقط مقارنة بـr3: `reseller_service` و`loyalty_rewards_service` و`web/routes/subscribers`. بقية ملفات manifest مطابقة، بما فيها المحاسبة والتجديد وسياسة السرعة والتحديث والنسخ والاستعادة والتصدير.

@@ -190,7 +190,7 @@ class Controller:
         helper_image = old['web']['Image']
         if config.get('executor_image'):
             reference = config['executor_image']
-            if not re.fullmatch(r'mohd777/max-radius-web@sha256:[a-f0-9]{64}',reference):raise ValueError('Invalid prepared executor image')
+            if not re.fullmatch(r'mohd777/alpha-radius-web@sha256:[a-f0-9]{64}',reference):raise ValueError('Invalid prepared executor image')
             executor = self.api('GET','/images/'+urllib.parse.quote(reference,safe='')+'/json')
             if reference not in executor.get('RepoDigests',[]):raise ValueError('Prepared executor digest is missing')
             helper_image = executor['Id']

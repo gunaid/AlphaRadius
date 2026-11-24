@@ -1,17 +1,17 @@
 {
-  "tenant": "m.max-net.net",
+  "tenant": "m.alpha.amtik.online",
   "project": "m",
   "version": "2.7.0",
   "phase": "ACCEPTED_M_ONLY",
   "images": {
     "core": {
-      "tag": "max-radius-core:2.7.0-backup-delete-local-20261103-r1",
+      "tag": "alpha-radius-core:2.7.0-backup-delete-local-20261103-r1",
       "id": "sha256:04fd43b4e13f6842d8d26d99250f5825eb3bb0bf67df58f5c35f125909f55f83",
       "size": 314730243,
       "seconds": 4.27
     },
     "web": {
-      "tag": "max-radius-web:2.7.0-backup-delete-local-20261103-r1",
+      "tag": "alpha-radius-web:2.7.0-backup-delete-local-20261103-r1",
       "id": "sha256:a5ea9b6448cb8c9307158a9ae9644d8b5f19fffead89f1ea259edb7661dfdc0b",
       "size": 2867470942,
       "seconds": 436.55
@@ -27,7 +27,7 @@
   },
   "public_http": {
     "status": 200,
-    "url": "https://m.max-net.net/login"
+    "url": "https://m.alpha.amtik.online/login"
   },
   "business_tables_exact_before_user_trial": 24,
   "license_fields_exact_except": [

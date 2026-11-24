@@ -16,8 +16,8 @@ class PlanAuthorization(unittest.TestCase):
         self.value = {'engine_protocol':3,'platforms':['linux/amd64'],
             'schema_revisions':['features267'],'migration_plan':self.plan,
             'rollback':{'policy':'compatible','images':{
-                'web':'mohd777/max-radius-web@sha256:'+'a'*64,
-                'core':'mohd777/max-radius-core@sha256:'+'b'*64}},
+                'web':'mohd777/alpha-radius-web@sha256:'+'a'*64,
+                'core':'mohd777/alpha-radius-core@sha256:'+'b'*64}},
             'release_kind':'feature','prepares_engine_protocol':None}
     def test_plan_is_fixed_and_never_contains_executable_feed_text(self):
         self.assertEqual(m.validate_plan(self.plan,{'web','core'})['initializer'],'features268_additive_v1')
@@ -39,7 +39,7 @@ class PlanAuthorization(unittest.TestCase):
                 with self.assertRaises(ValueError):requirements.validate(self.value,{},['web','core'])
     def test_forward_only_and_unscoped_rollback_references_rejected(self):
         for value in ({'policy':'forward_only','images':{}},
-                      {'policy':'compatible','images':{'web':'mohd777/max-radius-core@sha256:'+'a'*64}}):
+                      {'policy':'compatible','images':{'web':'mohd777/alpha-radius-core@sha256:'+'a'*64}}):
             self.value['rollback']=value
             with patch.object(requirements,'facts',return_value={'engine_protocol':3,'platform':'linux/amd64','schema_revision':'features267'}):
                 with self.assertRaises(ValueError):requirements.validate(self.value,{},['web','core'])

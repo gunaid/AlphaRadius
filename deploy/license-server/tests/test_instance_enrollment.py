@@ -77,7 +77,7 @@ class Tests(unittest.TestCase):
   token=self.token();self.sql("UPDATE master_licenses SET instance_id='INST-ONE'");self.sql("INSERT INTO master_license_installations VALUES('LIC','INST-OLD')");self.assertEqual(self.post(self.envelope(token)).status_code,200);self.assertEqual(self.sql('SELECT instance_uuid FROM master_license_installations')[0][0],'INST-ONE')
  def test_actual_client_exchange_on_local_http_and_persistent_key(self):
   from werkzeug.serving import make_server
-  client_path=Path(os.environ.get('MAX_CLIENT_PROTOCOL_TEST_PATH',str(ROOT.parent/'max_radius_local/core/license_protocol.py')));spec=importlib.util.spec_from_file_location('activation_client',client_path);module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+  client_path=Path(os.environ.get('MAX_CLIENT_PROTOCOL_TEST_PATH',str(ROOT.parent/'alpha_radius_local/core/license_protocol.py')));spec=importlib.util.spec_from_file_location('activation_client',client_path);module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
   server=make_server('127.0.0.1',0,self.app);worker=threading.Thread(target=server.serve_forever);worker.start()
   try:
    with tempfile.TemporaryDirectory() as storage,patch.object(h,'sign_data_payload',side_effect=MASTER.sign):

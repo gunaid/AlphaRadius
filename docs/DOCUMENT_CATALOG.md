@@ -6,12 +6,12 @@
 
 | المسار | النوع/مرجع المراجعة |
 |---|---|
-| `.agents/skills/max-bug-investigation/SKILL.md` | مهارة؛ UTF8/روابط ضمن الفحص الموسع |
-| `.agents/skills/max-database-migrations/SKILL.md` | مهارة؛ UTF8/روابط ضمن الفحص الموسع |
-| `.agents/skills/max-feature-development/SKILL.md` | مهارة؛ UTF8/روابط ضمن الفحص الموسع |
-| `.agents/skills/max-project-onboarding/SKILL.md` | مهارة؛ UTF8/روابط ضمن الفحص الموسع |
-| `.agents/skills/max-release-deployment/SKILL.md` | مهارة؛ UTF8/روابط ضمن الفحص الموسع |
-| `.agents/skills/max-verification/SKILL.md` | مهارة؛ UTF8/روابط ضمن الفحص الموسع |
+| `.agents/skills/alpha-bug-investigation/SKILL.md` | مهارة؛ UTF8/روابط ضمن الفحص الموسع |
+| `.agents/skills/alpha-database-migrations/SKILL.md` | مهارة؛ UTF8/روابط ضمن الفحص الموسع |
+| `.agents/skills/alpha-feature-development/SKILL.md` | مهارة؛ UTF8/روابط ضمن الفحص الموسع |
+| `.agents/skills/alpha-project-onboarding/SKILL.md` | مهارة؛ UTF8/روابط ضمن الفحص الموسع |
+| `.agents/skills/alpha-release-deployment/SKILL.md` | مهارة؛ UTF8/روابط ضمن الفحص الموسع |
+| `.agents/skills/alpha-verification/SKILL.md` | مهارة؛ UTF8/روابط ضمن الفحص الموسع |
 | `AGENTS.md` | مرجع مصدر/تشغيل؛ UTF8/روابط ضمن الفحص الموسع |
 | `deploy/hosted-max/README.md` | مكونات مشروع مستقل؛ UTF8/روابط ضمن الفحص الموسع |
 | `deploy/license-server/README.md` | مكونات مشروع مستقل؛ UTF8/روابط ضمن الفحص الموسع |

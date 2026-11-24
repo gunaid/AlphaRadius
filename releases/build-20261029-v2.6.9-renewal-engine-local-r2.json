@@ -1,7 +1,7 @@
 {
   "application_version": "2.6.9",
   "build_id": "renewal-policy-engine4-local-20261029-r2",
-  "tag": "max-radius-web:2.6.9-renewal-engine-local-20261029-r2",
+  "tag": "alpha-radius-web:2.6.9-renewal-engine-local-20261029-r2",
   "image_id": "sha256:87620a4bc1504cbec669f7183e57d5c9a00542eb895bf6c1714900e854261191",
   "published": false,
   "base_image_id": "sha256:ffdcaf5f0b76f41fa8fb75cec866d8e9245af044847201f74aeae6755fa4b925",

@@ -11,12 +11,12 @@
     [
       "docker",
       "push",
-      "mohd777/max-radius-core:2.7.0-maintenance-20261105-r2"
+      "mohd777/alpha-radius-core:2.7.0-maintenance-20261105-r2"
     ],
     [
       "docker",
       "push",
-      "mohd777/max-radius-web:2.7.0-maintenance-20261105-r2"
+      "mohd777/alpha-radius-web:2.7.0-maintenance-20261105-r2"
     ]
   ],
   "after_upload": [

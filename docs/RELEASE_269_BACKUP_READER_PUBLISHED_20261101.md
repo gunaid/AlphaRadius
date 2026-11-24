@@ -6,12 +6,12 @@
 
 | العنصر | المرجع |
 |---|---|
-|الوسم المنشور|`mohd777/max-radius-web:2.6.9-backup-reader-20261101-r1`|
-|مرجع Registry المثبت|`mohd777/max-radius-web@sha256:690cfa939cdc4dff5d09c2a2ef0543cd0abd506cad680baff814f7a5b6dca832`|
+|الوسم المنشور|`mohd777/alpha-radius-web:2.6.9-backup-reader-20261101-r1`|
+|مرجع Registry المثبت|`mohd777/alpha-radius-web@sha256:690cfa939cdc4dff5d09c2a2ef0543cd0abd506cad680baff814f7a5b6dca832`|
 |ImageID المختبرة والمسحوبة بعد الرفع|`sha256:690cfa939cdc4dff5d09c2a2ef0543cd0abd506cad680baff814f7a5b6dca832`|
-|المرشح المحلي|`max-radius-web:2.6.9-backup-reader-local-20261101-r1`|
+|المرشح المحلي|`alpha-radius-web:2.6.9-backup-reader-local-20261101-r1`|
 |الأساس المختبر قبل رقعة القارئ|`sha256:f62a87801ca942486821387ecfce3e1f099fcc9036415ad353240f8721dc2666`|
-|Core المرافقة الثابتة، لا رفع جديد لها|`mohd777/max-radius-core:2.6.9-maintenance-20261101-r1`، ImageID `sha256:9786df38bb3ce725c7a1f87a52b2db34ee90a0a221df29dd0331d95684a0a067`|
+|Core المرافقة الثابتة، لا رفع جديد لها|`mohd777/alpha-radius-core:2.6.9-maintenance-20261101-r1`، ImageID `sha256:9786df38bb3ce725c7a1f87a52b2db34ee90a0a221df29dd0331d95684a0a067`|
 
 سُحبت Web من Registry بعد الرفع، وطابقت الصورة المختبرة بالمعرّف وطبقاتrootfsوإعدادات التشغيل. تحققت مطابقة manifestلكل منWeblatestوCorelatestقبل/بعدالرفع. كتالوجcontrol.max-r.ccلميتغير؛المنظوماتالجديدةلاتنتقللهذهالصورةتلقائيًابهذاالنشر.
 

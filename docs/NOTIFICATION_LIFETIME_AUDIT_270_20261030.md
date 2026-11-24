@@ -136,4 +136,4 @@
 
 ## الأدلة
 
-PRIVATE/notification-lifetime-audit-20261030-r1 يحتوي SOURCE-INVENTORY.private.json لكل53موضعًا معرفًا وOTHER-WAIT-TITLES.private.json وTIMER-REPRO.private.json ومشغل VM. PRIVATE هو C:/Users/lenovo/Documents/Codex/private/max-radius. الأدلة لا تحتوي سجلات عملاء أو مفاتيح أو نتائج NAS؛ لا تعد الاختبار محاكاة لعملية خادم، بل لإغلاق إشعار الواجهة. لم يعدل سلوك المنتج بهذا الطلب.
+PRIVATE/notification-lifetime-audit-20261030-r1 يحتوي SOURCE-INVENTORY.private.json لكل53موضعًا معرفًا وOTHER-WAIT-TITLES.private.json وTIMER-REPRO.private.json ومشغل VM. PRIVATE هو C:/Users/lenovo/Documents/Codex/private/alpha-radius. الأدلة لا تحتوي سجلات عملاء أو مفاتيح أو نتائج NAS؛ لا تعد الاختبار محاكاة لعملية خادم، بل لإغلاق إشعار الواجهة. لم يعدل سلوك المنتج بهذا الطلب.

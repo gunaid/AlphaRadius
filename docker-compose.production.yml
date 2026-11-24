@@ -1,4 +1,4 @@
-name: max-radius
+name: alpha-radius
 
 services:
 
@@ -7,7 +7,7 @@ services:
   # ============================================================
   mariadb:
     image: ${MAX_DB_IMAGE:-mariadb:10.11}
-    container_name: max_radius_db
+    container_name: alpha_radius_db
     restart: unless-stopped
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --innodb-buffer-pool-size=512M --innodb-flush-log-at-trx-commit=2 --innodb-log-file-size=64M
     environment:
@@ -30,15 +30,15 @@ services:
     labels:
       - "autoheal=true"
     networks:
-      max-radius-net:
+      alpha-radius-net:
         ipv4_address: 172.18.0.2
 
   # ============================================================
   # 2. FreeRADIUS Core
   # ============================================================
   freeradius:
-    image: ${MAX_CORE_IMAGE:-mohd777/max-radius-core:latest}
-    container_name: max_radius_core
+    image: ${MAX_CORE_IMAGE:-mohd777/alpha-radius-core:latest}
+    container_name: alpha_radius_core
     cap_add:
       - NET_ADMIN
     restart: unless-stopped
@@ -65,15 +65,15 @@ services:
     labels:
       - "autoheal=true"
     networks:
-      max-radius-net:
+      alpha-radius-net:
         ipv4_address: 172.18.0.3
 
   # ============================================================
   # 3. WISP Web Dashboard
   # ============================================================
   wisp-web:
-    image: ${MAX_WEB_IMAGE:-mohd777/max-radius-web:latest}
-    container_name: max_radius_web
+    image: ${MAX_WEB_IMAGE:-mohd777/alpha-radius-web:latest}
+    container_name: alpha_radius_web
     restart: unless-stopped
     cap_add:
       - NET_ADMIN
@@ -85,8 +85,8 @@ services:
     environment:
       - RADIUS_HOST=freeradius
       - RADIUS_HEALTH_SECRET=${RADIUS_HEALTH_SECRET:-max123}
-      - APP_NAME=MAX_RADIUS
-      - MASTER_LICENSE_SERVER_URL=https://license.max-net.net
+      - APP_NAME=ALPHA_RADIUS
+      - MASTER_LICENSE_SERVER_URL=https://license.alpha.amtik.online
       - DB_TYPE=mysql
       - DB_HOST=mariadb
       - DB_PORT=3306
@@ -95,7 +95,7 @@ services:
       - DB_NAME=radius_wisp
       - PORT=5090
       - RADIUS_COA_PORT=37990
-      - L2TP_CONTAINER=max_radius_l2tp
+      - L2TP_CONTAINER=alpha_radius_l2tp
       - TZ=${SYSTEM_TIMEZONE:-Asia/Riyadh}
       - DEFAULT_TIMEZONE=Asia/Riyadh
     ports:
@@ -113,7 +113,7 @@ services:
     labels:
       - "autoheal=true"
     networks:
-      max-radius-net:
+      alpha-radius-net:
         ipv4_address: 172.18.0.4
 
   # ============================================================
@@ -122,7 +122,7 @@ services:
   autoheal:
     image: ${MAX_AUTOHEAL_IMAGE:-willfarrell/autoheal:latest}
     pull_policy: always
-    container_name: max_radius_autoheal
+    container_name: alpha_radius_autoheal
     restart: unless-stopped
     environment:
       - AUTOHEAL_CONTAINER_LABEL=autoheal
@@ -133,15 +133,15 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
-      max-radius-net:
+      alpha-radius-net:
         ipv4_address: 172.18.0.6
 
   # ============================================================
   # 5. L2TP / VPN Server
   # ============================================================
   l2tp:
-    image: ${MAX_L2TP_IMAGE:-mohd777/max-radius-l2tp:latest}
-    container_name: max_radius_l2tp
+    image: ${MAX_L2TP_IMAGE:-mohd777/alpha-radius-l2tp:latest}
+    container_name: alpha_radius_l2tp
     restart: unless-stopped
     labels:
       - "autoheal=true"
@@ -167,7 +167,7 @@ services:
       - ./storage/l2tp/pap-secrets:/etc/ppp/pap-secrets
       - ./docker/l2tp/options.xl2tpd:/etc/ppp/options.xl2tpd:ro
     networks:
-      max-radius-net:
+      alpha-radius-net:
         ipv4_address: 172.18.0.10
 
 
@@ -177,7 +177,7 @@ volumes:
     driver: local
 
 networks:
-  max-radius-net:
+  alpha-radius-net:
     driver: bridge
     ipam:
       config:

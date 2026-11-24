@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-MAX RADIUS Web Routes Package - Exports all 10 Functional Blueprints.
+ALPHA RADIUS Web Routes Package - Exports all 10 Functional Blueprints.
 """
 
 from web.routes.auth import auth_bp

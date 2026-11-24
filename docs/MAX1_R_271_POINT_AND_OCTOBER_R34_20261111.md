@@ -11,7 +11,7 @@
 
 ## البناء والفحص المحلي
 
-الصورة الموقعة المحلية `max-radius-web:2.7.1-point-classification-20261111-r34` بهوية:
+الصورة الموقعة المحلية `alpha-radius-web:2.7.1-point-classification-20261111-r34` بهوية:
 
 `sha256:89ce5cd11959ac2acda0c41aeff82bb71fe083c9685fd2fb3f113001dc02a951`
 

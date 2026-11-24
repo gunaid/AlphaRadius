@@ -6,12 +6,12 @@ licensing decision is made here. Network names and support contacts stay separat
 from types import MappingProxyType
 
 PRODUCT_IDENTITY = MappingProxyType({
-    'name': 'MAX RADIUS',
-    'owner': 'MAX RADIUS',
+    'name': 'ALPHA RADIUS',
+    'owner': 'ALPHA RADIUS',
     'phone': '967777366226',
     'whatsapp_url': 'https://wa.me/967777366226',
     'telephone_url': 'tel:+967777366226',
-    'website': 'https://max-net.net',
+    'website': 'https://alpha.amtik.online',
 })
 
 

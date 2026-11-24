@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-MAX RADIUS Web - Subscriber Management, Invoices, and Profiles Routes Module.
+ALPHA RADIUS Web - Subscriber Management, Invoices, and Profiles Routes Module.
 """
 
 import os

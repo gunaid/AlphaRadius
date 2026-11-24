@@ -6,11 +6,11 @@
 
 | الحاوية | وسم الإصدار | SHA256 للوسم | التغيير |
 | --- | --- | --- | --- |
-| web | `mohd777/max-radius-web:2.7.1` | `d1877af154ad20b3393f1239f9f79e1d3cd42c5dea0706b31daf422124b289a1` | Web r25 المقبولة |
-| core | `mohd777/max-radius-core:2.7.1` | `6e71f1e291a90d8c45df79a3f88c5886193bb774054ec3d7e30e72d470b928af` | اسم إصدار للملفات الثنائية المعتمدة نفسها |
-| l2tp | `mohd777/max-radius-l2tp:2.7.1` | `a7fa96b5a7a485ce47755e0379c5553d1a0490855fcfda950602d6c1d9affee7` | اسم إصدار للملفات الثنائية المعتمدة نفسها |
-| database | `mohd777/max-radius-db:2.7.1` | `bb27bde261794d326398a9c998ddf9f35db45296d829123bff829cd076f68107` | اسم إصدار للملفات الثنائية المعتمدة نفسها |
-| autoheal | `mohd777/max-radius-autoheal:2.7.1` | `bc7ee40195302925cb0d43260ec56b194dc820215cd8694cb21d8234d48346e0` | اسم إصدار للملفات الثنائية المعتمدة نفسها |
+| web | `mohd777/alpha-radius-web:2.7.1` | `d1877af154ad20b3393f1239f9f79e1d3cd42c5dea0706b31daf422124b289a1` | Web r25 المقبولة |
+| core | `mohd777/alpha-radius-core:2.7.1` | `6e71f1e291a90d8c45df79a3f88c5886193bb774054ec3d7e30e72d470b928af` | اسم إصدار للملفات الثنائية المعتمدة نفسها |
+| l2tp | `mohd777/alpha-radius-l2tp:2.7.1` | `a7fa96b5a7a485ce47755e0379c5553d1a0490855fcfda950602d6c1d9affee7` | اسم إصدار للملفات الثنائية المعتمدة نفسها |
+| database | `mohd777/alpha-radius-db:2.7.1` | `bb27bde261794d326398a9c998ddf9f35db45296d829123bff829cd076f68107` | اسم إصدار للملفات الثنائية المعتمدة نفسها |
+| autoheal | `mohd777/alpha-radius-autoheal:2.7.1` | `bc7ee40195302925cb0d43260ec56b194dc820215cd8694cb21d8234d48346e0` | اسم إصدار للملفات الثنائية المعتمدة نفسها |
 
 صورتا MariaDB وAutoheal لهما مرآتان بوسم 2.7.1 لمنصة Linux amd64 المطلوبة، مع حفظ manifest المنصة وConfig والطبقات بالبصمات نفسها. بصمة الوسم هنا هي بصمة المنصة، وليست فهرس جميع المعماريات؛ يظل المثبت يستخدم المرجعين الرسميين المثبتين ببصمة فهرسهما الأصلي في release.json. لا يلزم تبديل قاعدة قائمة لمجرد توحيد رقم الإصدار. [إيصال الصور والبصمات](../releases/2.7.1/registry.json).
 
@@ -24,7 +24,7 @@
 
 ## المثبت والتحقق
 
-رابط التثبيت: https://raw.githubusercontent.com/mohd-1992/MAX-RADIUS/main/install.sh
+رابط التثبيت: https://raw.githubusercontent.com/gunaid/AlphaRadius/main/install.sh
 
 الحزمة `runtime-20261108-v2.7.1-r25.tar.gz` تضم10ملفات تشغيل فقط، بحجم **20667 بايت**. بصمتها:
 

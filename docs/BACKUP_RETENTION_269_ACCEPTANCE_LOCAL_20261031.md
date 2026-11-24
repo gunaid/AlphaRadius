@@ -42,9 +42,9 @@
 
 ## الصور وحدود التغطية
 
-- Web: `max-radius-web:2.6.9-backup-retention-local-20261031-r4`، ID `sha256:eab5cd4ff44303a44110b94c843a64045add3db6cccbfab843084d61109f94cc`.
-- Core ثابتة: `max-radius-core:2.6.9-detail-local-20261031-r6`، ID `sha256:9786df38bb3ce725c7a1f87a52b2db34ee90a0a221df29dd0331d95684a0a067`.
-- Web السابقة للرجوع: `max-radius-web:2.6.9-locks-local-20261031-r2`، ID `sha256:ddce804366a6d14de6519a47bc456597fe145404a451fdfe10a3ca286ae7a06c`.
+- Web: `alpha-radius-web:2.6.9-backup-retention-local-20261031-r4`، ID `sha256:eab5cd4ff44303a44110b94c843a64045add3db6cccbfab843084d61109f94cc`.
+- Core ثابتة: `alpha-radius-core:2.6.9-detail-local-20261031-r6`، ID `sha256:9786df38bb3ce725c7a1f87a52b2db34ee90a0a221df29dd0331d95684a0a067`.
+- Web السابقة للرجوع: `alpha-radius-web:2.6.9-locks-local-20261031-r2`، ID `sha256:ddce804366a6d14de6519a47bc456597fe145404a451fdfe10a3ca286ae7a06c`.
 
 حُفظ 215 ملف runtime سابقًا دون تغيير باستثناء وحدة النسخ المعدلة، وأضيفت وحدة الترشيح. توقيع manifest صالح ومفتاح الناشر ثابت. اختُبرت الحزمة بالتصدير ثم docker load وتطابقت هوية الصورتين.
 

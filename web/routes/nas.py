@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-MAX RADIUS Web - NAS Routers, VPN Tunnels, and MikroTik Integration Routes Module.
+ALPHA RADIUS Web - NAS Routers, VPN Tunnels, and MikroTik Integration Routes Module.
 """
 
 import os

@@ -41,4 +41,4 @@ def validate(requirements, config, components):
     images=rollback['images']
     if not isinstance(images,dict) or set(images)!=set(components):raise ValueError('Missing compatible rollback images')
     for role,ref in images.items():
-        if not isinstance(ref,str) or not re.fullmatch('mohd777/max-radius-'+role+r'@sha256:[a-f0-9]{64}',ref):raise ValueError('Invalid rollback image')
+        if not isinstance(ref,str) or not re.fullmatch('mohd777/alpha-radius-'+role+r'@sha256:[a-f0-9]{64}',ref):raise ValueError('Invalid rollback image')

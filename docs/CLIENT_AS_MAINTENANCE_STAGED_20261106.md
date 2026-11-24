@@ -2,7 +2,7 @@
 
 النطاق المفوض: نسخ الحارس المختبر وتنزيل صور Web/Core المصححة، والتحقق من تجهيزات الرجوع. **لم يبدأ التحديث أو الترحيل أو الرجوع، ولم يسلح الحارس.** لا توجد موافقة ضمنية على تنفيذ مرحلة لاحقة.
 
-المرجع المحمي `PRIVATE/client270-maintenance-stage-20261106-r1`، وعلى العميل `/var/lib/max-radius/rollouts/client270-maintenance-stage-20261106-r1`. لا تعاد stage/resume/worker/plan؛ انتهت الجولة بحالة `STAGED_VERIFIED_NOT_ARMED`. تُقرأ الإيصالات أولًا.
+المرجع المحمي `PRIVATE/client270-maintenance-stage-20261106-r1`، وعلى العميل `/var/lib/alpha-radius/rollouts/client270-maintenance-stage-20261106-r1`. لا تعاد stage/resume/worker/plan؛ انتهت الجولة بحالة `STAGED_VERIFIED_NOT_ARMED`. تُقرأ الإيصالات أولًا.
 
 ## المثبت فعليًا والمجهز
 

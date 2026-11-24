@@ -289,7 +289,7 @@
             </div>
 
             <div>
-                <h4 id="loadingTitleDb" class="text-lg font-bold text-white mb-1.5">جاري ترحيل وحقن البيانات في MAX RADIUS...</h4>
+                <h4 id="loadingTitleDb" class="text-lg font-bold text-white mb-1.5">جاري ترحيل وحقن البيانات في ALPHA RADIUS...</h4>
                 <p id="loadingDescDb" class="text-xs text-slate-400">يتم معالجة السجلات بدفعات فائقة السرعة مع المزامنة اللحظية للراديوس.</p>
             </div>
 
@@ -421,7 +421,7 @@
                             <i class="fa-solid fa-network-wired text-purple-400"></i>
                             3. مصفوفة مطابقة وتخصيص الباقات (Package Mapping Matrix)
                         </h3>
-                        <p class="text-xs text-slate-400 mt-0.5">حدد لكل باقة مكتشفة في النسخة القديمة: هل تريد إنشاء باقة جديدة في MAX RADIUS أم ربطها بباقة موجودة مسبقاً؟</p>
+                        <p class="text-xs text-slate-400 mt-0.5">حدد لكل باقة مكتشفة في النسخة القديمة: هل تريد إنشاء باقة جديدة في ALPHA RADIUS أم ربطها بباقة موجودة مسبقاً؟</p>
                     </div>
                     <button type="button" onclick="autoSetAllPackages('auto_create')" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold border border-slate-700 transition shrink-0 cursor-pointer">
                         <i class="fa-solid fa-wand-magic-sparkles text-purple-400 me-1"></i>إنشاء الكل كباقات جديدة تلقائياً
@@ -438,7 +438,7 @@
                                 <th class="py-3 px-3 text-amber-400 font-bold">سعر التكلفة ({{ currency_symbol }})</th>
                                 <th class="py-3 px-3">البيانات / التحميل</th>
                                 <th class="py-3 px-3">الصلاحية</th>
-                                <th class="py-3 px-3">الإجراء في MAX RADIUS</th>
+                                <th class="py-3 px-3">الإجراء في ALPHA RADIUS</th>
                             </tr>
                         </thead>
                         <tbody id="packageMappingTableBody" class="hub-table-body divide-y divide-slate-800/60 text-slate-300">
@@ -581,7 +581,7 @@
                     </button>
                     <button type="button" id="btnExecuteDbMigration" onclick="executeMigrationAction()" class="px-8 py-3 bg-gradient-to-r from-purple-600 via-indigo-600 to-emerald-600 hover:from-purple-500 hover:to-emerald-500 text-white rounded-xl text-xs font-bold shadow-xl shadow-purple-900/40 transition flex items-center gap-2 cursor-pointer transform active:scale-95">
                         <i class="fa-solid fa-rocket"></i>
-                        <span>بدء الترحيل واستيراد البيانات إلى MAX RADIUS</span>
+                        <span>بدء الترحيل واستيراد البيانات إلى ALPHA RADIUS</span>
                     </button>
                 </div>
             </div>
@@ -741,7 +741,7 @@
                 <div class="space-y-2">
                     <h4 class="hub-text-title text-xs font-bold text-slate-300 flex items-center gap-2">
                         <i class="fa-solid fa-box text-purple-400"></i>
-                        الباقات والبروفايلات المكتشفة (ستُنشأ لكل باقة حزمة مستقلة في MAX RADIUS)
+                        الباقات والبروفايلات المكتشفة (ستُنشأ لكل باقة حزمة مستقلة في ALPHA RADIUS)
                     </h4>
                     <div class="overflow-x-auto rounded-xl border border-slate-800 bg-[#070b14]/70">
                         <table class="w-full text-xs text-right">
@@ -1381,7 +1381,7 @@ function updateSessionRadioStyles() {
 function executeMigrationAction() {
     Swal.fire({
         title: 'تأكيد ترحيل قاعدة البيانات',
-        text: 'هل أنت متأكد من رغبتك في بدء ترحيل واستيراد هذه البيانات إلى نظام MAX RADIUS الآن؟',
+        text: 'هل أنت متأكد من رغبتك في بدء ترحيل واستيراد هذه البيانات إلى نظام ALPHA RADIUS الآن؟',
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#9333ea',
@@ -1426,7 +1426,7 @@ function executeMigrationAction() {
             const resCard = document.getElementById('executionResultCard');
             if (resCard) resCard.classList.add('hidden');
             document.getElementById('loadingOverlayDb').classList.remove('hidden');
-            document.getElementById('loadingTitleDb').innerText = 'جاري ترحيل وحقن البيانات في MAX RADIUS...';
+            document.getElementById('loadingTitleDb').innerText = 'جاري ترحيل وحقن البيانات في ALPHA RADIUS...';
             document.getElementById('loadingDescDb').innerText = 'يتم معالجة السجلات بدفعات فائقة السرعة مع المزامنة اللحظية للراديوس.';
             
             updateDbProgressUI(0, 'جاري بدء الاستيراد...', '0 سجل');

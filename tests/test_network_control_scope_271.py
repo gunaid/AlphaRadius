@@ -81,7 +81,7 @@ class NetworkControlScopeTests(unittest.TestCase):
     def kill_namespace(self, outcomes):
         execute = Mock(side_effect=outcomes)
         ns = functions('services/l2tp_service.py', {'kill_l2tp_session'},
-                       dict(re=re, time=time, L2TP_CONTAINER_NAME='max_radius_l2tp',
+                       dict(re=re, time=time, L2TP_CONTAINER_NAME='alpha_radius_l2tp',
                             _docker_exec_run=execute, query_all=Mock(return_value=[])))
         return ns, execute
 
@@ -135,7 +135,7 @@ class NetworkControlScopeTests(unittest.TestCase):
                            'sync_all_tunnels_to_vpn'}, dict(os=os, __file__=str(root / 'services/l2tp_service.py'),
                            ensure_l2tp_host_route=Mock(), query_all=lambda *a: [dict(
                                username='literal$(command)', password='quote"\\secret', tunnel_ip='192.0.2.10')],
-                           _docker_exec_run=execute, L2TP_CONTAINER_NAME='max_radius_l2tp', logger=Mock()))
+                           _docker_exec_run=execute, L2TP_CONTAINER_NAME='alpha_radius_l2tp', logger=Mock()))
             self.assertTrue(ns['sync_all_tunnels_to_vpn']())
             command = execute.call_args.args[1]
             self.assertNotIn('literal$(command)', command[2])

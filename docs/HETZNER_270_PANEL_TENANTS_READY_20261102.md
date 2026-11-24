@@ -11,7 +11,7 @@
 | الوجهة الجديدة | مصدر البيانات عند النقل اللاحق | محرك الوجهة |
 |---|---|---|
 | m.max-r.cc | m.max-r.cc على 173.212.233.5 | max-db-a |
-| max1.max-r.cc | max1.max-net.net على 199.247.3.47 | max-db-b |
+| max1.max-r.cc | max1.alpha.amtik.online على 199.247.3.47 | max-db-b |
 
 كل منظومة تستخدم schema وحساب DB وهوية وترخيصًا مستقلًا. تم التحقق من تطابق بيانات دخول مدير المنظومتين مع m المصدر دون نشر كلمة المرور. اختار المستخدم صراحة الاسم الجديد max1.max-r.cc وحدود m نفسها لكلتا المنظومتين.
 
@@ -19,8 +19,8 @@
 
 الإصدار 2.7.0، الوسم `2.7.0-20261102-r1`، مع تحقق ملكية الحاويات والصور الفعلية بالبصمة:
 
-- Web: `mohd777/max-radius-web@sha256:5455db7ca85a1d5f6c5c205fca0e171cefb28dc9f008dc56d25d4ecd090fa2ca`
-- Core: `mohd777/max-radius-core@sha256:10cc88946c5ed6310a36c4c11b7e991277137da87eb019958f2eb45c8d2eabf5`
+- Web: `mohd777/alpha-radius-web@sha256:5455db7ca85a1d5f6c5c205fca0e171cefb28dc9f008dc56d25d4ecd090fa2ca`
+- Core: `mohd777/alpha-radius-core@sha256:10cc88946c5ed6310a36c4c11b7e991277137da87eb019958f2eb45c8d2eabf5`
 - DB: `mariadb@sha256:d769e37960821dfdcf096954f6e7ac89f747e116c1bba98e48edd265dfc7deae`
 
 محركان مستقلان مشتركان؛ لا replication أو failover تلقائي بينهما. لكل محرك حد RAM 2GiB وCPU2 وMALLOC_ARENA_MAX=2، وInnoDB512MiB وAria16MiB وkey_buffer8MiB وmax_connections200. ثبتت القيم باستعلام المحرك الفعلي؛ لا نشر منافذ DB للمضيف. Web لكل منظومة بحد2GiB وCore512MiB. سياسة الحاويات unless-stopped.
@@ -70,7 +70,7 @@
 
 ## مرجع الاستئناف المحمي
 
-`C:/Users/lenovo/Documents/Codex/private/max-radius/hetzner-provision270-20261102-r1`
+`C:/Users/lenovo/Documents/Codex/private/alpha-radius/hetzner-provision270-20261102-r1`
 
 المصدر المنشور للهدف مجمد داخل deploy-pack والأرشيف hetzner-deploy.private.tar.gz وإيصال DEPLOY-MANIFEST.private.json. الملفات تتضمن تخزين اللوحة ومفاتيحه؛ لا تدخلGit أوصورDocker. المصدر المحلي للوحة مستقل في max_saas_panel_v2_local؛ تعديلات staging/issuer خاصة بنشر Hetzner محفوظة بالمرجع المحمي، وليست تعديلًا منشورًا على اللوحة القديمة.
 

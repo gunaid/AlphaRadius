@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Auto-Healing & Watchdog Management Service for MAX RADIUS.
+Auto-Healing & Watchdog Management Service for ALPHA RADIUS.
 Provides:
 1. Docker Engine Telemetry & Container Fleet Health Inspection (/var/run/docker.sock).
 2. Live Container Controls (Inspect, Logs, Healthchecks, Safe Restart).
@@ -31,11 +31,11 @@ import core.watchdog as watchdog
 
 DOCKER_SOCKET_PATH = os.environ.get('MAX_CONTROL_SOCKET', '/var/run/docker.sock')
 MONITORED_CONTAINER_NAMES = [
-    'max_radius_autoheal',
-    'max_radius_core',
-    'max_radius_web',
-    'max_radius_db',
-    'max_radius_l2tp'
+    'alpha_radius_autoheal',
+    'alpha_radius_core',
+    'alpha_radius_web',
+    'alpha_radius_db',
+    'alpha_radius_l2tp'
 ]
 
 class UnixSocketHTTPConnection(http.client.HTTPConnection):
@@ -150,35 +150,35 @@ def get_container_fleet_status():
         containers_map = {key: value for key, value in containers_map.items() if value and value.get('Labels', {}).get('com.docker.compose.project') == project}
     
     meta_info = {
-        'max_radius_autoheal': {
+        'alpha_radius_autoheal': {
             'title': 'حاوية التعافي التلقائي والمراقب الآلي',
             'desc': 'المراقب الذاتي لحالات فشل الحاويات (Auto-Heal & Watchdog Container)',
             'role': 'autoheal',
             'icon': 'fa-solid fa-heart-pulse',
             'color': 'emerald'
         },
-        'max_radius_core': {
+        'alpha_radius_core': {
             'title': 'محرك المصادقة والمحاسبة FreeRADIUS',
             'desc': 'خادم RADIUS الأساسي لمعالجة طلبات الدخول والـ Accounting والـ CoA',
             'role': 'radius',
             'icon': 'fa-solid fa-satellite-dish',
             'color': 'indigo'
         },
-        'max_radius_web': {
+        'alpha_radius_web': {
             'title': 'لوحة التحكم وبوابة المشتركين Web GUI',
             'desc': 'الواجهة البرمجية وإدارة الشبكة والمشتركين وبوابة الخدمة الذاتية',
             'role': 'web',
             'icon': 'fa-solid fa-globe',
             'color': 'blue'
         },
-        'max_radius_db': {
+        'alpha_radius_db': {
             'title': 'قاعدة البيانات المركزية MariaDB',
             'desc': 'مستودع بيانات المشتركين والكروت وجلسات الاستهلاك وفهارس RADIUS',
             'role': 'database',
             'icon': 'fa-solid fa-database',
             'color': 'cyan'
         },
-        'max_radius_l2tp': {
+        'alpha_radius_l2tp': {
             'title': 'خادم الأنفاق L2TP/PPP VPN Server',
             'desc': 'خادم الربط الآمن لراوترات MikroTik وتعيين عناوين IP الثابتة (Port 1701 UDP)',
             'role': 'vpn',
@@ -250,7 +250,7 @@ def _get_fallback_container_fleet(err_msg):
     """Fallback when Docker socket is not directly mountable."""
     return [
         {
-            'name': 'max_radius_autoheal',
+            'name': 'alpha_radius_autoheal',
             'id': 'internal',
             'title': 'حاوية التعافي التلقائي والمراقب الآلي',
             'desc': 'المراقب الذاتي لحالات فشل الحاويات (Auto-Heal & Watchdog)',
@@ -342,7 +342,7 @@ def restart_system_container(container_name):
 @_license_guarded('autoheal')
 def probe_all_network_ports():
     """
-    Actively probes network sockets and UDP ports across the MAX RADIUS fleet.
+    Actively probes network sockets and UDP ports across the ALPHA RADIUS fleet.
     Returns status and response latency in milliseconds.
     """
     results = []
@@ -449,7 +449,7 @@ def run_deep_system_diagnostic():
             'type': 'critical',
             'title': 'فشل الاتصال بقاعدة البيانات المركزية',
             'desc': 'تعذر تنفيذ استعلام الاختبار على خادم MariaDB. قد تتوقف عمليات المصادقة والفواتير.',
-            'action': 'إعادة تشغيل max_radius_db'
+            'action': 'إعادة تشغيل alpha_radius_db'
         })
     elif db_probe['latency_ms'] > 100:
         score -= 10

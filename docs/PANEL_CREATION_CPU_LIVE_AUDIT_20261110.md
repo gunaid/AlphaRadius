@@ -1,6 +1,6 @@
 ## تصحيح نطاق الدليل — 10 نوفمبر 2026، مراجعة التوثيق اللاحقة
 
-المسار NET الموصوف أدناه هو **محرك SaaS القديم** saas-manager.service، وليس مصدر واجهة https://control.max-net.net. الواجهة الفعلية max-control-v2 مستقلة ومعزولة، ولم يثبت ربط زر إنشائها بالإنتاج. وثيقة [اللوحتين والجرد الحالية](../../max_saas_panel_v2_local/docs/CONTROL_PANELS_ENVIRONMENTS_20261110.md) و[تسليم تطوير اللوحة](../../max_saas_panel_v2_local/docs/PANEL_HANDOFF_20261110.md) تتقدمان على أي مساواة بينهما في هذا التقرير. لم يُنفذ إنشاء أو تغيير defaults. Native complete=True في WSGI الحية، لا تستنتج إعدادها من قالب محلي قديم.
+المسار NET الموصوف أدناه هو **محرك SaaS القديم** saas-manager.service، وليس مصدر واجهة https://control.alpha.amtik.online. الواجهة الفعلية max-control-v2 مستقلة ومعزولة، ولم يثبت ربط زر إنشائها بالإنتاج. وثيقة [اللوحتين والجرد الحالية](../../max_saas_panel_v2_local/docs/CONTROL_PANELS_ENVIRONMENTS_20261110.md) و[تسليم تطوير اللوحة](../../max_saas_panel_v2_local/docs/PANEL_HANDOFF_20261110.md) تتقدمان على أي مساواة بينهما في هذا التقرير. لم يُنفذ إنشاء أو تغيير defaults. Native complete=True في WSGI الحية، لا تستنتج إعدادها من قالب محلي قديم.
 
 # تدقيق الإنشاء الحي في اللوحتين واعتماد CPU — 10 نوفمبر 2026
 
@@ -8,7 +8,7 @@
 
 ## لوحةNET
 
-الخدمةالحيةsaas-manager.serviceتشغلserve.pyمن `/opt/saas-manager-next`؛app.pyيستوردcentral_provision.المسارالفعالcentral_provision.composeيبنيWebمنconfig.DOCKER_IMAGE_WEB،والقيمةالحية **mohd777/max-radius-web:latest**.prepare_creation_imagesفيtenant_releaseينفذpullثميسجلبصمةRegistryويثبتهافيComposeوcreation-release.json؛لايجوزاستنتاجالإصدارالفعليالمستقبليمنلفظlatestأومنالكاشالحالي.لمتُسحبالصورةأوتنشأمنظومةلتحديدAPP_VERSION.
+الخدمةالحيةsaas-manager.serviceتشغلserve.pyمن `/opt/saas-manager-next`؛app.pyيستوردcentral_provision.المسارالفعالcentral_provision.composeيبنيWebمنconfig.DOCKER_IMAGE_WEB،والقيمةالحية **mohd777/alpha-radius-web:latest**.prepare_creation_imagesفيtenant_releaseينفذpullثميسجلبصمةRegistryويثبتهافيComposeوcreation-release.json؛لايجوزاستنتاجالإصدارالفعليالمستقبليمنلفظlatestأومنالكاشالحالي.لمتُسحبالصورةأوتنشأمنظومةلتحديدAPP_VERSION.
 
 خطالإنشاءيجهزالقناةprepare_new_domain_updatesويشغلوحدةmax-panel-fleet@اسم.socket.إعدادnew-domain-updates.jsonيخصمساراتالتسجيلوالثقة؛ليسفيهصورةCPUالتجريبيةأوإصدارافتراضيبديل.المساريضيفوصلةالتحديثلكنه **لايضبطMAX_RESOURCE_METRICSولايثبتقارئCPUلكلمستأجر**.تجاوزmax1الفرديلايُورَّثلأسماءجديدة،والملفالمشتركللوسيطلميتغيرفيالتجربة.
 

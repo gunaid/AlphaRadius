@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Jinja Filters and UI Utility Helpers for MAX RADIUS Web Application.
+Jinja Filters and UI Utility Helpers for ALPHA RADIUS Web Application.
 """
 
 from services.user_portal_service import format_mb_or_gb

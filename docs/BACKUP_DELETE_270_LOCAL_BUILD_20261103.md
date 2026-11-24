@@ -1,4 +1,4 @@
-> تحديث لاحق: طبق الزوج على m.max-net.net وحدها بطلب الإنسان؛ [إيصال التطبيق](M_NET_270_BACKUP_DELETE_DIRECT_20261103.md). وصف «محلي فقط» أدناه حالة البناء قبل تفويض التركيب.
+> تحديث لاحق: طبق الزوج على m.alpha.amtik.online وحدها بطلب الإنسان؛ [إيصال التطبيق](M_NET_270_BACKUP_DELETE_DIRECT_20261103.md). وصف «محلي فقط» أدناه حالة البناء قبل تفويض التركيب.
 
 # بناء إصلاح 2.7.0 محليًا — 3 نوفمبر 2026
 
@@ -6,8 +6,8 @@
 
 | الصورة | الوسم المحلي | معرف الصورة |
 | --- | --- | --- |
-| Web | `max-radius-web:2.7.0-backup-delete-local-20261103-r1` | `sha256:a5ea9b6448cb8c9307158a9ae9644d8b5f19fffead89f1ea259edb7661dfdc0b` |
-| Core | `max-radius-core:2.7.0-backup-delete-local-20261103-r1` | `sha256:04fd43b4e13f6842d8d26d99250f5825eb3bb0bf67df58f5c35f125909f55f83` |
+| Web | `alpha-radius-web:2.7.0-backup-delete-local-20261103-r1` | `sha256:a5ea9b6448cb8c9307158a9ae9644d8b5f19fffead89f1ea259edb7661dfdc0b` |
+| Core | `alpha-radius-core:2.7.0-backup-delete-local-20261103-r1` | `sha256:04fd43b4e13f6842d8d26d99250f5825eb3bb0bf67df58f5c35f125909f55f83` |
 
 ## المحتويات
 

@@ -1,4 +1,4 @@
-# MAX RADIUS
+# ALPHA RADIUS
 
 منظومة لإدارة شبكات WISP/ISP والمشتركين والكروت والموزعين، مع FreeRADIUS للمصادقة والمحاسبة وتكامل MikroTik.
 
@@ -25,8 +25,8 @@ python scripts/project_tools.py check-docs
 يثبت `install.sh` الإصدار **20261115-v2.7.1-summary-efficiency-r38 — Linux amd64** من [بيان الإصدار](release.json). صورة Web هي r38 المختبرة، وبقية الصور ثابتة، مع تثبيت التشغيل بالبصمات. يتضمن الإنشاء فهرس الحجوزات، وتضمنه الصورة عند التهيئة، وتنتظر مهام التلخيص والحذف قفل الصيانة ضمن مدة محدودة قبل بدء العمل. لا يغيّر نشر الصورة حاويات الدومينات القائمة تلقائيًا. [النشر والبصمات وحدود التغطية](docs/RELEASE_271_SUMMARY_EFFICIENCY_20261115.md).
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/mohd-1992/MAX-RADIUS/main/install.sh -o /tmp/max-radius-install.sh
-sudo bash /tmp/max-radius-install.sh
+curl -fsSL https://raw.githubusercontent.com/gunaid/AlphaRadius/main/install.sh -o /tmp/alpha-radius-install.sh
+sudo bash /tmp/alpha-radius-install.sh
 ```
 
 الحزمة تحتوي إعدادات التشغيل والمخطط والمفتاح العام وأدوات الساعة الاختيارية، ولا تحتوي مصدر التطبيق أو اعتمادًا خاصًا. صور MariaDB وL2TP وAutoheal محفوظة ببصماتها السابقة. إعداد توفير RAM للمحرك منفصل ولا يطبق تلقائيًا. المثبت العام للتركيب المحلي المستقل؛ إعداد المحرك المشترك والدومينات يتم عبر لوحة الاستضافة.
@@ -35,7 +35,7 @@ sudo bash /tmp/max-radius-install.sh
 
 ## لقطة المختبر السابقة — مرجع تاريخي
 
-**20261022-lab-v2.6.3-limit45 — Linux amd64**: صور التجارب المعتمدة للخدمات الخمس، مع حد Telegram البالغ 45,000,000 بايت وسياسة هوية المحاسبة. [الإصدار](https://github.com/mohd-1992/MAX-RADIUS/releases/tag/20261022-lab-v2.6.3-limit45) · [بيان الصور المثبتة](releases/release-20261022-lab-v2.6.3-limit45.json) · [الفحوص والحدود](docs/RELEASE_20261022_LAB.md).
+**20261022-lab-v2.6.3-limit45 — Linux amd64**: صور التجارب المعتمدة للخدمات الخمس، مع حد Telegram البالغ 45,000,000 بايت وسياسة هوية المحاسبة. [الإصدار](https://github.com/gunaid/AlphaRadius/releases/tag/20261022-lab-v2.6.3-limit45) · [بيان الصور المثبتة](releases/release-20261022-lab-v2.6.3-limit45.json) · [الفحوص والحدود](docs/RELEASE_20261022_LAB.md).
 
 هذه لقطة سابقة؛ لا تستخدمها للحصول على 2.6.5. مسار التحديث المدمج Web فقط؛ ترقية Core والمخطط تحتاج نشرًا محدد النطاق وتحققًا من أحدث المحاسبة.
 
@@ -55,20 +55,20 @@ sudo bash /tmp/max-radius-install.sh
 - فصل الجلسات المنتهية لا يتطلب تجميد حركة FastTrack؛ لا تختلق المحاسبة النهائية عند غياب Stop.
 - يتضمن الإصلاحات السابقة للترخيص واعتماد مفتاح النسخة والاستيراد وسياسة أول استخدام.
 
-[حزمة التشغيل الحالية](releases/runtime-20261115-v2.7.1-summary-efficiency-r38.tar.gz) · [بيان الإصدار الافتراضي](release.json) · [الموقع الرسمي](https://max-net.net)
+[حزمة التشغيل الحالية](releases/runtime-20261115-v2.7.1-summary-efficiency-r38.tar.gz) · [بيان الإصدار الافتراضي](release.json) · [الموقع الرسمي](https://alpha.amtik.online)
 
 ## التثبيت على Ubuntu / Debian
 
 المتطلبات: خادم Linux بمعمارية x86_64/amd64، وصلاحية sudo، واتصال GitHub وDocker Hub. يثبت السكربت Docker إن لم يكن موجودًا؛ انتظار تنزيل حزمه يعتمد على سرعة الاتصال.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/mohd-1992/MAX-RADIUS/main/install.sh -o /tmp/max-radius-install.sh
-sudo bash /tmp/max-radius-install.sh
+curl -fsSL https://raw.githubusercontent.com/gunaid/AlphaRadius/main/install.sh -o /tmp/alpha-radius-install.sh
+sudo bash /tmp/alpha-radius-install.sh
 ```
 
 بعد نجاح الفحص، افتح `http://SERVER_IP:5090`. يُجهز المنفذ 80 أيضًا إذا كان موقع Nginx الافتراضي متاحًا للنظام. في قاعدة جديدة فقط، حساب البداية `admin` وكلمة مروره `admin`؛ غيّرها عند أول دخول. حسابات النسخ القائمة لا يعاد تعيينها.
 
-ملفات التشغيل في `/opt/max-radius`، والبيانات والمفاتيح والنسخ الاحتياطية في `storage` وvolume قاعدة البيانات. لا تحذفها عند التحديث.
+ملفات التشغيل في `/opt/alpha-radius`، والبيانات والمفاتيح والنسخ الاحتياطية في `storage` وvolume قاعدة البيانات. لا تحذفها عند التحديث.
 
 ## التحديث
 
@@ -79,9 +79,9 @@ sudo bash /tmp/max-radius-install.sh
 للإدارة اليدوية بعد التثبيت:
 
 ```bash
-cd /opt/max-radius
+cd /opt/alpha-radius
 docker compose --env-file .env --env-file runtime-release.env -f docker-compose.production.yml ps
-docker exec max_radius_web python /opt/max-protection/verify.py
+docker exec alpha_radius_web python /opt/max-protection/verify.py
 ```
 
 تستخدم `runtime-release.env` معرفات الصور الثابتة بالإصدار، حتى لا يتبدل المحتوى اعتمادًا على اسم `latest` وحده. عند اعتماد إصدار أحدث استخدم المثبت لتحديث البيان وملف الصور معًا.

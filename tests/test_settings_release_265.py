@@ -180,11 +180,11 @@ class SettingsReleaseTests(unittest.TestCase):
         source=(ROOT/'web/routes/system.py').read_text(encoding='utf-8-sig')
         node=next(n for n in ast.parse(source).body if isinstance(n,ast.FunctionDef) and n.name=='verified_branding_context')
         node.decorator_list=[]
-        namespace={'APP_NAME':'MAX RADIUS'}
+        namespace={'APP_NAME':'ALPHA RADIUS'}
         exec(compile(ast.Module(body=[node],type_ignores=[]),'branding-context','exec'),namespace)
         self.license.return_value={'valid':True,'features':{'white_label':False}}
         result=namespace['verified_branding_context']()
-        self.assertEqual(result['network_name'],'MAX RADIUS')
+        self.assertEqual(result['network_name'],'ALPHA RADIUS')
         self.assertIsNone(result['logo_url'])
         self.license.return_value={'valid':True,'features':{'white_label':True}}
         self.assertEqual(namespace['verified_branding_context'](),{})

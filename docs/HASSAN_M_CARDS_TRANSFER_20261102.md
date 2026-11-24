@@ -1,6 +1,6 @@
 # نقل كروت الموزع المستهدف إلى m الجديدة — 2 نوفمبر 2026
 
-اكتمل النقل من m.max-net.net على 199.247.3.47 إلى m.max-r.cc على Hetzner 2.31.161.122. الجرد الفعلي أثبت **4 كروت جديدة**، وليس التقدير الأولي 5–6. هذه متابعة منفصلة بعد [نقل m الرئيسي](M_HETZNER_270_CUTOVER_20261102.md)، وليست استعادة أخرى لقاعدة الإنتاج.
+اكتمل النقل من m.alpha.amtik.online على 199.247.3.47 إلى m.max-r.cc على Hetzner 2.31.161.122. الجرد الفعلي أثبت **4 كروت جديدة**، وليس التقدير الأولي 5–6. هذه متابعة منفصلة بعد [نقل m الرئيسي](M_HETZNER_270_CUTOVER_20261102.md)، وليست استعادة أخرى لقاعدة الإنتاج.
 
 ## مطابقة البيانات والمالية
 
@@ -20,4 +20,4 @@
 
 ## أدلة الاستئناف
 
-المرجع المحمي المحلي `C:/Users/lenovo/Documents/Codex/private/max-radius/hassan-m-transfer-20261102-r1`، والبعيد `/var/lib/max-hassan-m-transfer-20261102-r1` على المصدر والهدف. الإيصالات: TESTS-PASSED وSOURCE-FENCED وTARGET-COMMITTED وTARGET-VERIFIED وSOURCE-FINISHED. إيصال التدقيق `hassan-m-max-net-to-new-20261102-r1`، audit الوجهة 417. **لا تعاد مشغلات fence/import/finish** عند تعثر اتصال SSH؛ اقرأ الإيصال أولًا. أي إعادة إتاحة للكروت القديمة تحتاج معالجة صريحة لمنع الاستخدام المزدوج.
+المرجع المحمي المحلي `C:/Users/lenovo/Documents/Codex/private/alpha-radius/hassan-m-transfer-20261102-r1`، والبعيد `/var/lib/max-hassan-m-transfer-20261102-r1` على المصدر والهدف. الإيصالات: TESTS-PASSED وSOURCE-FENCED وTARGET-COMMITTED وTARGET-VERIFIED وSOURCE-FINISHED. إيصال التدقيق `hassan-m-max-net-to-new-20261102-r1`، audit الوجهة 417. **لا تعاد مشغلات fence/import/finish** عند تعثر اتصال SSH؛ اقرأ الإيصال أولًا. أي إعادة إتاحة للكروت القديمة تحتاج معالجة صريحة لمنع الاستخدام المزدوج.

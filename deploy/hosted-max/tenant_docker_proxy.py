@@ -220,9 +220,9 @@ class Scope:
         if not match:
             raise Denied('Operation outside tenant control scope')
         reference, operation = match.groups()
-        aliases = {'max_radius_web': 'web', 'wisp_web_v2': 'web', 'max-radius-wisp-web': 'web',
-                   'max_radius_core': 'core', 'wisp_freeradius_v2': 'core', 'max-radius-freeradius': 'core',
-                   'max_radius_db': 'db', 'wisp_mariadb_v2': 'db'}
+        aliases = {'alpha_radius_web': 'web', 'wisp_web_v2': 'web', 'alpha-radius-wisp-web': 'web',
+                   'alpha_radius_core': 'core', 'wisp_freeradius_v2': 'core', 'alpha-radius-freeradius': 'core',
+                   'alpha_radius_db': 'db', 'wisp_mariadb_v2': 'db'}
         role = aliases.get(reference)
         if role is None:
             found = [k for k, c in rows.items() if reference in (c['Id'], c['Name'].lstrip('/'))]

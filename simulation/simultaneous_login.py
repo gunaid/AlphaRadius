@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-MAX RADIUS - 5 Concurrent Clients Live Session & Traffic Simulator (300s)
+ALPHA RADIUS - 5 Concurrent Clients Live Session & Traffic Simulator (300s)
 Sends standard RADIUS RFC 2865 Auth + RFC 2866 Acct Start + Interim Heartbeats for 5 minutes.
 """
 
@@ -118,7 +118,7 @@ class ConcurrentHotspotClient:
                 # 2. Accounting-Start
                 sock.sendto(self._acct_packet(random.randint(1, 255), ACCT_STATUS_START), (RADIUS_SERVER_IP, ACCT_PORT))
                 sock.recvfrom(4096)
-                print(f"[+] [{self.username}] Accounting Session STARTED in MAX RADIUS radacct.")
+                print(f"[+] [{self.username}] Accounting Session STARTED in ALPHA RADIUS radacct.")
                 
                 # 3. Live traffic & Interim-Update loop
                 start_t = time.time()
@@ -163,7 +163,7 @@ def main():
     ]
     
     print(f"\n=======================================================================")
-    print(f"  MAX RADIUS & MIKROTIK - 5-CLIENT CONCURRENT SIMULATION")
+    print(f"  ALPHA RADIUS & MIKROTIK - 5-CLIENT CONCURRENT SIMULATION")
     print(f"  Duration: {duration} Seconds (5 Minutes) | Target: {RADIUS_SERVER_IP}:{AUTH_PORT}/{ACCT_PORT}")
     print(f"=======================================================================\n")
     
@@ -176,7 +176,7 @@ def main():
         time.sleep(0.2)
         
     print(f"\n[+] All 5 clients started concurrently!")
-    print(f"[i] Open MAX RADIUS Dashboard (http://localhost:5090) to see Live Active Sessions.")
+    print(f"[i] Open ALPHA RADIUS Dashboard (http://localhost:5090) to see Live Active Sessions.")
     print(f"[i] Press Ctrl+C to stop early.\n")
     
     try:

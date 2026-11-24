@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-MAX RADIUS - Active Hotspot Client Simulator
+ALPHA RADIUS - Active Hotspot Client Simulator
 --------------------------------------------
 Simulates multiple concurrent Hotspot users:
 1. Performs HTTP / RADIUS Access-Request authentication.
@@ -184,7 +184,7 @@ class MockHotspotClient:
             sock.sendto(pkt, (RADIUS_SERVER_IP, ACCT_PORT))
             resp, _ = sock.recvfrom(4096)
             if resp[0] == ACCOUNTING_RESPONSE:
-                print(f"[+] [Client {self.username}] [ACCT-START] Session started in MAX RADIUS radacct.")
+                print(f"[+] [Client {self.username}] [ACCT-START] Session started in ALPHA RADIUS radacct.")
         except Exception as e:
             print(f"[!] [Client {self.username}] Acct Start Error: {e}")
         finally:
@@ -257,7 +257,7 @@ def run_simulation(vouchers, duration=120):
     """Run multiple concurrent clients."""
     clients = []
     print(f"\n=================================================================")
-    print(f"  MAX RADIUS - LIVE ACTIVE CLIENT SIMULATOR STARTED")
+    print(f"  ALPHA RADIUS - LIVE ACTIVE CLIENT SIMULATOR STARTED")
     print(f"  Target RADIUS: {RADIUS_SERVER_IP}:{AUTH_PORT}/{ACCT_PORT}")
     print(f"  Simulated Duration: {duration} seconds | Clients: {len(vouchers)}")
     print(f"=================================================================\n")
@@ -272,7 +272,7 @@ def run_simulation(vouchers, duration=120):
         time.sleep(0.5)
 
     print(f"\n[+] {len(clients)} clients actively connected and generating live traffic...")
-    print(f"[i] Open MAX RADIUS Dashboard (http://localhost:5090) to observe Live Sessions & Traffic Graphs!")
+    print(f"[i] Open ALPHA RADIUS Dashboard (http://localhost:5090) to observe Live Sessions & Traffic Graphs!")
     print(f"[i] Press Ctrl+C at any time to gracefully disconnect all clients.\n")
     
     try:

@@ -2,8 +2,8 @@
   "version": "2.7.0",
   "tag": "2.7.0-20261102-r1",
   "refs": {
-    "web": "mohd777/max-radius-web:2.7.0-20261102-r1",
-    "core": "mohd777/max-radius-core:2.7.0-20261102-r1"
+    "web": "mohd777/alpha-radius-web:2.7.0-20261102-r1",
+    "core": "mohd777/alpha-radius-core:2.7.0-20261102-r1"
   },
   "digests": {
     "web": "sha256:5455db7ca85a1d5f6c5c205fca0e171cefb28dc9f008dc56d25d4ecd090fa2ca",

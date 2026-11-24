@@ -187,9 +187,9 @@ def resolve(reference, require_id=False):
 
 
 def container_info(candidates):
-    aliases = {'max_radius_web': 'web', 'wisp_web_v2': 'web', 'max-radius-wisp-web': 'web',
-               'max_radius_core': 'core', 'wisp_freeradius_v2': 'core', 'max-radius-freeradius': 'core',
-               'max_radius_db': 'db', 'wisp_mariadb_v2': 'db'}
+    aliases = {'alpha_radius_web': 'web', 'wisp_web_v2': 'web', 'alpha-radius-wisp-web': 'web',
+               'alpha_radius_core': 'core', 'wisp_freeradius_v2': 'core', 'alpha-radius-freeradius': 'core',
+               'alpha_radius_db': 'db', 'wisp_mariadb_v2': 'db'}
     candidates = [candidates] if isinstance(candidates, str) else list(candidates)
     rows = state()['services']
     for name in candidates:

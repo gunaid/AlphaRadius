@@ -4,7 +4,7 @@ Human authorized urgent service recovery. Initial SSH connections timed out/rese
 
 ## Confirmed cause and recovery
 
-Kernel journal at 18:31:24 UTC (21:31:24 Asia/Aden) records global OOM and killing Chromium PID3523197 with 5,902,632 KiB anonymous RSS (~5.63 GiB). Its cgroup maps exactly to `max_radius_m_web`, image c5ab9fe42359. This was real RAM/swap pressure, not merely Linux cache or disk fullness. Web remained running with restart count0; OOMKilled=true indicates the child-process event, not a full Web restart. All hosted production containers inspected were healthy. An older isolated lab Web was unhealthy separately and was left untouched.
+Kernel journal at 18:31:24 UTC (21:31:24 Asia/Aden) records global OOM and killing Chromium PID3523197 with 5,902,632 KiB anonymous RSS (~5.63 GiB). Its cgroup maps exactly to `alpha_radius_m_web`, image c5ab9fe42359. This was real RAM/swap pressure, not merely Linux cache or disk fullness. Web remained running with restart count0; OOMKilled=true indicates the child-process event, not a full Web restart. All hosted production containers inspected were healthy. An older isolated lab Web was unhealthy separately and was left untouched.
 
 Chromium appears in the source PDF renderer in services/batch_export_service.py. The precise triggering user/export payload has not been established. No claim that all 2.6.9 processes leak or that an update installation itself caused the event.
 

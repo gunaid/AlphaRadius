@@ -4,8 +4,8 @@
 
 | الدور | مرجع Docker Hub المثبت |
 |---|---|
-| Core المصححة | `mohd777/max-radius-core@sha256:6e71f1e291a90d8c45df79a3f88c5886193bb774054ec3d7e30e72d470b928af` |
-| Web دون تغيير | `mohd777/max-radius-web@sha256:db5c36f5e93fb842b97c6c3de59b703994933184594b2476d346a6552e7378cc` |
+| Core المصححة | `mohd777/alpha-radius-core@sha256:6e71f1e291a90d8c45df79a3f88c5886193bb774054ec3d7e30e72d470b928af` |
+| Web دون تغيير | `mohd777/alpha-radius-web@sha256:db5c36f5e93fb842b97c6c3de59b703994933184594b2476d346a6552e7378cc` |
 
 تم التحقق من السحب العام دون اعتماد مستخدم، ومطابقة إعداد الصورة وطبقاتها للصورة المختبرة، والسحب بالـdigest. Core السابقة `8c5594cf7a89` لم تعد هدف الوسم أو المثبت؛ رفضها السابق في المختبر يبقى محفوظًا. لا يستخدم اسم الوسم وحده لإثبات الهوية.
 
@@ -20,8 +20,8 @@
 أمر التثبيت الجديد على خادم جديد يبقى:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/mohd-1992/MAX-RADIUS/main/install.sh -o /tmp/max-radius-install.sh
-sudo bash /tmp/max-radius-install.sh
+curl -fsSL https://raw.githubusercontent.com/gunaid/AlphaRadius/main/install.sh -o /tmp/alpha-radius-install.sh
+sudo bash /tmp/alpha-radius-install.sh
 ```
 
 الأمر يقرأ manifest الجديد ويثبت الصور بالبصمة. ليس هذا أمر ترقية للعميل القائم، ولم ينفذ على أي خادم في هذه الجولة.

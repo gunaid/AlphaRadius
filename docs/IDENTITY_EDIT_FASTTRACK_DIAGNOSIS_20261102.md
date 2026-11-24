@@ -24,4 +24,4 @@
 
 لا يعطلFastTrackللشبكةكلها تلقائيًا ولا يحذفالحماية. يمكن تطويرمسارللجلسةالمعنيةيتحققمنفصلهاوينتظرAccounting-Stopحقيقيًاوعداداته، معمنعsealبعداداتNASغيرمثبتةتحتFastTrack. يحتاجاختبارتعددالجلسات، توقفStopأوتأخره، الوصولالجزئي، rollback، والرصيدوالملكيةقبلالنشر. لمينفذتصحيححيأومحليبطلَبالجردالحالي.
 
-الأدلةالمحمية LOCAL `C:/Users/lenovo/Documents/Codex/private/max-radius/identity-live-m-20261102-r2` وREMOTE `/var/lib/max-identity-live-m-20261102-r2`؛ DIAG وLOG-DIAG وNAS-DIAG وCHECKPOINT وFREEZE-READ-GUARD. لا تنشرالبياناتالخامأوالأسرارفيGit. لاreplayللحفظلأغراضالتشخيص.
+الأدلةالمحمية LOCAL `C:/Users/lenovo/Documents/Codex/private/alpha-radius/identity-live-m-20261102-r2` وREMOTE `/var/lib/max-identity-live-m-20261102-r2`؛ DIAG وLOG-DIAG وNAS-DIAG وCHECKPOINT وFREEZE-READ-GUARD. لا تنشرالبياناتالخامأوالأسرارفيGit. لاreplayللحفظلأغراضالتشخيص.

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Hardware Fingerprint Extractor for MAX RADIUS Client:
+Hardware Fingerprint Extractor for ALPHA RADIUS Client:
 Generates a 100% stable, persistent, and tamper-resistant Machine ID.
 Uses Host Hardware DMI UUID, CPU Model, System Architecture, and persistent storage caching.
 Guaranteed to remain 100% constant across container recreates, reboots, and network changes.
@@ -128,8 +128,8 @@ def get_instance_uuid():
     except Exception:
         pass
 
-    # 3. Check /etc/max-radius/instance.id
-    system_path = Path('/etc/max-radius/instance.id')
+    # 3. Check /etc/alpha-radius/instance.id
+    system_path = Path('/etc/alpha-radius/instance.id')
     try:
         if system_path.exists():
             sys_uuid = system_path.read_text(encoding='utf-8').strip().upper()

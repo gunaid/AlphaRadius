@@ -6,12 +6,12 @@
 
 | الخدمة | المرجع |
 |---|---|
-| Web المصححة | `mohd777/max-radius-web:2.6.9-restore-fix-20261101-r1` |
-| Web المثبتة | `mohd777/max-radius-web@sha256:886f3786bb9a0415e724f2df41edc3a179606135364f7733a85be6e9469c055b` |
-| Core الثابتة | `mohd777/max-radius-core@sha256:9786df38bb3ce725c7a1f87a52b2db34ee90a0a221df29dd0331d95684a0a067` |
-| Web السابقة | `mohd777/max-radius-web@sha256:eab5cd4ff44303a44110b94c843a64045add3db6cccbfab843084d61109f94cc` |
+| Web المصححة | `mohd777/alpha-radius-web:2.6.9-restore-fix-20261101-r1` |
+| Web المثبتة | `mohd777/alpha-radius-web@sha256:886f3786bb9a0415e724f2df41edc3a179606135364f7733a85be6e9469c055b` |
+| Core الثابتة | `mohd777/alpha-radius-core@sha256:9786df38bb3ce725c7a1f87a52b2db34ee90a0a221df29dd0331d95684a0a067` |
+| Web السابقة | `mohd777/alpha-radius-web@sha256:eab5cd4ff44303a44110b94c843a64045add3db6cccbfab843084d61109f94cc` |
 
-النسخة داخل التطبيق ما زالت **2.6.9**. البنية النهائية المحلية وحدها هي `max-radius-web:2.6.9-restore-definer-local-20261101-r4`. الوسم المنشور `r1` يخص نشر هذه الرقعة؛ لا يعني اختيار البنية المحلية الأولى.
+النسخة داخل التطبيق ما زالت **2.6.9**. البنية النهائية المحلية وحدها هي `alpha-radius-web:2.6.9-restore-definer-local-20261101-r4`. الوسم المنشور `r1` يخص نشر هذه الرقعة؛ لا يعني اختيار البنية المحلية الأولى.
 
 تحققت مطابقة Registry للصورة المختبرة وطبقاتها وإعداد تشغيلها. توقيع runtime صالح ومفتاح الناشر ثابت، و**216 ملف runtime سابقًا دون تغيير**. الاختلاف: وحدة `backup_service` المعدلة وإضافة وحدة `mysql_restore_stream`. طبقات الأصل وإعدادات التشغيل محفوظة؛ بقي Web/Core `latest` كما كانا قبل الرفع.
 

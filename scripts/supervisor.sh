@@ -22,7 +22,7 @@ done
 
 /usr/vpnserver/vpncmd localhost /SERVER /CSV /PASSWORD:maxpass123 /CMD HubCreate DEFAULT /PASSWORD:maxpass123 2>/dev/null || true
 /usr/vpnserver/vpncmd localhost /SERVER /CSV /HUB:DEFAULT /PASSWORD:maxpass123 /CMD SecureNatDisable 2>/dev/null || true
-/usr/vpnserver/vpncmd localhost /SERVER /CSV /PASSWORD:maxpass123 /CMD IPsecEnable /L2TP:yes /L2TPv3:no /IPSEC:yes /ETHERIP:no /PSK:maxradius123 /DEFAULTHUB:DEFAULT 2>/dev/null || true
+/usr/vpnserver/vpncmd localhost /SERVER /CSV /PASSWORD:maxpass123 /CMD IPsecEnable /L2TP:yes /L2TPv3:no /IPSEC:yes /ETHERIP:no /PSK:alpharadius123 /DEFAULTHUB:DEFAULT 2>/dev/null || true
 /usr/vpnserver/vpncmd localhost /SERVER /CSV /PASSWORD:maxpass123 /CMD BridgeCreate DEFAULT /DEVICE:vpn /TAP:yes 2>/dev/null || true
 
 while true; do

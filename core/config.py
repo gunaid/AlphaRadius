@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Central Configuration Module for MAX RADIUS & MikroTik Manager (MySQL Edition).
+Central Configuration Module for ALPHA RADIUS & MikroTik Manager (MySQL Edition).
 """
 
 import os

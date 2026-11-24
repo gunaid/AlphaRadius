@@ -15,14 +15,14 @@
 التفعيل الصريح بعد فحص توافق المضيف:
 
 ```bash
-sudo python3 /opt/max-radius/host/clock-guard/manage.py status
-sudo python3 /opt/max-radius/host/clock-guard/manage.py enable --journal /var/lib/max-radius-clock-guard/r13-local
+sudo python3 /opt/alpha-radius/host/clock-guard/manage.py status
+sudo python3 /opt/alpha-radius/host/clock-guard/manage.py enable --journal /var/lib/alpha-radius-clock-guard/r13-local
 ```
 
 للتراجع استخدم نفس journal، ولا تحذف helper يدويًا قبل نسيان systemd له:
 
 ```bash
-sudo python3 /opt/max-radius/host/clock-guard/manage.py disable --journal /var/lib/max-radius-clock-guard/r13-local
+sudo python3 /opt/alpha-radius/host/clock-guard/manage.py disable --journal /var/lib/alpha-radius-clock-guard/r13-local
 ```
 
 يحفظ التراجع الملفات المؤرشفة، ويزيل drop-in ثم يعيد تحميل التعريف ويتحقق منه قبل أرشفة helper. يرفض الملفات التي عدلها مسؤول آخر ويحفظ الحالة عند فشل reload. لا يعيد تشغيل خدمة ولا يستعيد DB قديمة. لا تعد استخدام journal مكتملة لجولة جديدة.

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-MAX RADIUS Web - Subscriber Self-Service Portal Routes Module.
+ALPHA RADIUS Web - Subscriber Self-Service Portal Routes Module.
 """
 
 import os

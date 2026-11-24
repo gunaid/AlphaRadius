@@ -1,11 +1,11 @@
 #!/bin/bash
 # ==============================================================================
-# MAX RADIUS - Concurrent 5-Voucher Hotspot & RADIUS Login Simulator
+# ALPHA RADIUS - Concurrent 5-Voucher Hotspot & RADIUS Login Simulator
 # ==============================================================================
 echo "======================================================================="
 echo "  🚀 Starting Simultaneous 5-Client Hotspot Login Simulation..."
 echo "  ⏱️  Session Hold Duration: 300 Seconds (5 Minutes)"
-echo "  🎯 Target MikroTik & MAX RADIUS System"
+echo "  🎯 Target MikroTik & ALPHA RADIUS System"
 echo "======================================================================="
 
 ROUTER_IP="127.0.0.1:8088"
@@ -45,7 +45,7 @@ echo ""
 echo "-----------------------------------------------------------------------"
 echo "[+] All 5 clients (test1 to test5) sent concurrent login requests!"
 echo "[i] Check Winbox: IP -> Hotspot -> (Active & Hosts tabs)"
-echo "[i] Check MAX RADIUS Dashboard: http://localhost:5090 (Live Sessions)"
+echo "[i] Check ALPHA RADIUS Dashboard: http://localhost:5090 (Live Sessions)"
 echo "-----------------------------------------------------------------------"
 echo "Holding sessions active for 5 minutes (300 seconds)..."
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-MAX RADIUS Web - Live Metrics, Dashboard, and Coverage Map Routes Module.
+ALPHA RADIUS Web - Live Metrics, Dashboard, and Coverage Map Routes Module.
 """
 
 import os

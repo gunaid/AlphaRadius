@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Import Service for MAX RADIUS:
+Import Service for ALPHA RADIUS:
 Bulk import of Vouchers and Subscribers from Excel (.xlsx / .xls) files.
 Features:
 1. Strict Zero-Tolerance Validation (All-or-Nothing).

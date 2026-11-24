@@ -53,7 +53,7 @@ def summarize_dump(stream, snapshot_at, work_parent=None):
     receipt = dict(format=1,scope='backup_only',eligible_cards=0,summarized_sessions=0,
                    summary_rows=0,protected_cards=0,financial_records='complete')
     with tempfile.TemporaryDirectory(prefix='max-backup-sort-',dir=work_parent) as folder:
-        (Path(folder)/'.max-backup-owner').write_bytes(b'max-radius-backup-work-v1\n')
+        (Path(folder)/'.max-backup-owner').write_bytes(b'alpha-radius-backup-work-v1\n')
         db = sqlite3.connect(str(Path(folder)/'summary.sqlite'))
         try:
             db.executescript('''PRAGMA cache_size=-4096; PRAGMA temp_store=FILE; PRAGMA mmap_size=0;

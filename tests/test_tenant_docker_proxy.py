@@ -54,7 +54,7 @@ class ProxyTests(unittest.TestCase):
         self.assertEqual({r['Labels']['com.docker.compose.project'] for r in json.loads(raw)}, {'mrcc-tenant1'})
 
     def test_inspect_alias_is_scoped_and_redacted(self):
-        status, raw = self.scope.handle('GET', '/containers/max_radius_core/json')
+        status, raw = self.scope.handle('GET', '/containers/alpha_radius_core/json')
         self.assertEqual(json.loads(raw)['Id'], '2' * 64)
         self.assertNotIn(b'secret', raw)
         self.assertNotIn(b'Mounts', raw)
@@ -69,17 +69,17 @@ class ProxyTests(unittest.TestCase):
         self.assertNotIn(b'secret', raw)
 
     def test_shared_engine_readable_but_never_mutable(self):
-        self.assertEqual(self.scope.handle('GET', '/containers/max_radius_db/json')[0], 200)
+        self.assertEqual(self.scope.handle('GET', '/containers/alpha_radius_db/json')[0], 200)
         for action in ('restart', 'start', 'stop', 'kill', 'exec'):
             with self.subTest(action=action), self.assertRaises(p.Denied):
-                self.scope.handle('POST', '/containers/max_radius_db/' + action)
+                self.scope.handle('POST', '/containers/alpha_radius_db/' + action)
         self.assertEqual(self.effects, [])
 
     def test_foreign_container_and_prefix_and_host_api_denied(self):
         for path in ('/containers/foreign/json', '/containers/' + '2' * 12 + '/json',
                      '/containers/json?filters=all', '/containers/create', '/images/json',
                      '/containers/../json', '/containers/%2e%2e/json', 'http://remote/containers/json',
-                     '/containers/max_radius_core/exec', '/containers/max_radius_core/logs?tail=all'):
+                     '/containers/alpha_radius_core/exec', '/containers/alpha_radius_core/logs?tail=all'):
             with self.subTest(path=path), self.assertRaises(p.Denied):
                 self.scope.handle('GET', path)
         self.assertEqual(self.effects, [])
@@ -104,7 +104,7 @@ class ProxyTests(unittest.TestCase):
             self.scope.handle('GET', '/containers/json')
 
     def test_restart_resolves_full_owned_id(self):
-        self.assertEqual(self.scope.handle('POST', '/containers/max_radius_core/restart?t=5')[0], 204)
+        self.assertEqual(self.scope.handle('POST', '/containers/alpha_radius_core/restart?t=5')[0], 204)
         self.assertEqual(self.effects, ['/containers/' + '2' * 64 + '/restart?t=5'])
 
     def test_identity_race_before_action_denied(self):
@@ -116,7 +116,7 @@ class ProxyTests(unittest.TestCase):
             return self.api(method, path)
         self.scope.api = racing
         with self.assertRaises(p.Denied):
-            self.scope.handle('POST', '/containers/max_radius_core/restart')
+            self.scope.handle('POST', '/containers/alpha_radius_core/restart')
         self.assertEqual(self.effects, [])
 
     def test_unavailable_host_has_no_substitute(self):
@@ -124,7 +124,7 @@ class ProxyTests(unittest.TestCase):
             raise p.Denied('Unavailable')
         self.scope.api = unavailable
         with self.assertRaises(p.Denied):
-            self.scope.handle('GET', '/containers/max_radius_core/json')
+            self.scope.handle('GET', '/containers/alpha_radius_core/json')
 
 
 if __name__ == '__main__':

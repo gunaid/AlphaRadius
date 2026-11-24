@@ -1,0 +1,15 @@
+[Unit]
+Description=ALPHA RADIUS First Boot IP Configuration Wizard
+After=network.target alpha-radius.service
+ConditionPathExists=!/etc/alpha_radius_configured
+
+[Service]
+Type=oneshot
+ExecStart=/opt/alpha-radius/deploy/ubuntu/firstboot_alphaip.sh
+StandardInput=tty
+StandardOutput=tty
+TTYPath=/dev/tty1
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

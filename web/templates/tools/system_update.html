@@ -125,7 +125,7 @@
                             <span class="px-2.5 py-0.5 rounded-md bg-purple-500/20 text-purple-300 font-bold text-xs border border-purple-500/30">إصدار جديد متاح 🎉</span>
                             <span class="text-xs text-slate-400" id="releaseDateDisplay">—</span>
                         </div>
-                        <h2 class="text-lg font-bold text-white mt-1" id="newVerTitle">تحديث MAX RADIUS v2.1.0</h2>
+                        <h2 class="text-lg font-bold text-white mt-1" id="newVerTitle">تحديث ALPHA RADIUS v2.1.0</h2>
                     </div>
                     <div class="text-left sm:text-right">
                         <span class="text-2xl font-black text-emerald-400 font-mono" id="newVerBadge">v2.1.0</span>
@@ -292,7 +292,7 @@ function renderUpdateData(data) {
         if (availBox) availBox.classList.remove('hidden');
         if (upToDateBox) upToDateBox.classList.add('hidden');
 
-        document.getElementById('newVerTitle').innerText = data.title || `تحديث MAX RADIUS v${data.latest_version}`;
+        document.getElementById('newVerTitle').innerText = data.title || `تحديث ALPHA RADIUS v${data.latest_version}`;
         document.getElementById('newVerBadge').innerText = `v${data.latest_version}`;
         document.getElementById('releaseDateDisplay').innerText = `تاريخ الإصدار: ${data.release_date || 'اليوم'}`;
 
@@ -322,7 +322,7 @@ function startSystemUpdate() {
         title: 'تأكيد ترقية وتحديث النظام',
         html: `
             <div class="text-right text-xs space-y-2 text-slate-300">
-                <p>هل أنت متأكد من رغبتك في ترقية MAX RADIUS إلى الإصدار <b>v${g_latestVersion || 'الجديد'}</b> الآن؟</p>
+                <p>هل أنت متأكد من رغبتك في ترقية ALPHA RADIUS إلى الإصدار <b>v${g_latestVersion || 'الجديد'}</b> الآن؟</p>
                 <p class="text-emerald-400">🛡️ سيتم أخذ نسخة احتياطية كاملة لقاعدة البيانات تلقائياً قبل البدء.</p>
                 <p class="text-slate-400">تُحدَّث المكونات المحددة في الإصدار مع التحقق من الجاهزية والترخيص وحفظ المحاسبة. قد تتوقف الواجهة أو جلسات الدخول مؤقتًا أثناء التبديل. يُحفظ الإصدار السابق للرجوع دون إعادة قاعدة قديمة.</p>
             </div>

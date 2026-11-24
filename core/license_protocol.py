@@ -101,7 +101,7 @@ def exchange(server_url, payload, storage, public_pem):
     key = instance_key(storage)
     body = {'payload': request_payload, 'signature': base64.b64encode(key.sign(canonical(request_payload))).decode('ascii'),
             'public_key': instance_public_key(storage)}
-    req = urllib.request.Request(url, data=canonical(body), headers={'Content-Type':'application/json','User-Agent':'MAX-RADIUS-License/2.0'}, method='POST')
+    req = urllib.request.Request(url, data=canonical(body), headers={'Content-Type':'application/json','User-Agent':'ALPHA-RADIUS-License/2.0'}, method='POST')
     opener = urllib.request.build_opener(SecureRedirect())
     try:
         response = opener.open(req, timeout=6)

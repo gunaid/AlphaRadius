@@ -468,11 +468,11 @@
                     <input type="text" id="customRadiusIp" value="{{ radius_server_ip }}" oninput="updateRouterScriptLive()" class="bg-[#070b14] border border-slate-700 rounded-lg px-2 py-1 text-xs text-cyan-400 font-mono text-center w-36 focus:border-blue-500 font-bold" title="يمكنك تعديل الآيبي هنا ويتحدث الكود تلقائياً">
                 </div>
                 <p class="text-[11px] text-slate-400 leading-relaxed">
-                    انسخ الأوامر التالية والصقها في Terminal الراوتر لتفعيل التوثيق مع سيرفر MAX RADIUS ومنفذ الفصل السريع CoA:
+                    انسخ الأوامر التالية والصقها في Terminal الراوتر لتفعيل التوثيق مع سيرفر ALPHA RADIUS ومنفذ الفصل السريع CoA:
                 </p>
                 <div class="bg-[#070b14] rounded-xl p-3 text-[11px] font-mono text-emerald-400 overflow-x-auto border border-slate-800 leading-relaxed select-all" id="routerCliCode">
 /radius incoming set accept=yes port={{ device.coa_port or 3799 }}
-/radius add address={{ radius_server_ip }} secret="{{ device.secret }}" service=hotspot,ppp,login authentication-port=1812 accounting-port=1813 timeout=3000ms comment="MAX_RADIUS"
+/radius add address={{ radius_server_ip }} secret="{{ device.secret }}" service=hotspot,ppp,login authentication-port=1812 accounting-port=1813 timeout=3000ms comment="ALPHA_RADIUS"
 /ip hotspot profile set [find default=yes] use-radius=yes radius-accounting=yes radius-interim-update=1m
 /ppp aaa set use-radius=yes interim-update=1m
 /system clock set time-zone-name="{{ settings.get('timezone', 'Asia/Riyadh') }}"
@@ -527,7 +527,7 @@
         const codeEl = document.getElementById('routerCliCode');
         if (codeEl) {
             codeEl.innerText = `/radius incoming set accept=yes port=${coaPort}
-/radius add address=${ip} secret="${secret}" service=hotspot,ppp,login authentication-port=1812 accounting-port=1813 timeout=3000ms comment="MAX_RADIUS"
+/radius add address=${ip} secret="${secret}" service=hotspot,ppp,login authentication-port=1812 accounting-port=1813 timeout=3000ms comment="ALPHA_RADIUS"
 /ip hotspot profile set [find default=yes] use-radius=yes radius-accounting=yes radius-interim-update=1m
 /ppp aaa set use-radius=yes interim-update=1m
 /system clock set time-zone-name="${tzName}"

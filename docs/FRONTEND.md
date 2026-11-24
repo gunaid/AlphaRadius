@@ -24,7 +24,7 @@
 
 ## 3 نوفمبر 2026 — إصلاح قالب الصيانة بعد خطأ Jinja
 
-[السبب والتصحيح والتحقق](MAINTENANCE_TEMPLATE_REPAIR_270_20261103.md): CSSاحتوى{#ففشلJinja؛ صُحح القالب وأضيف حارس تحليل قبل التضمين واختبار ارتداد. Web4db9342fd1fe بالصورة2489716712d2 علىm.max-net.netفقط،2.7.0ثابت. الصفحة الكاملة المسجلة بالدخول وAPIالإحصاء/المهمة200محليًا وعلىالدومين؛25جدولًا و84حاويةأخرى مطابقة.10اختباراتمركزةناجحة؛ لا حذف/نسخ/استعادةأوNASأوRegistry/Git. PRIVATE/maintenance-template270-20261103-r1؛ لاreplay. فحص فتح الصفحة السابق لم يكن كافيًا، وهذه اللقطة أحدث.
+[السبب والتصحيح والتحقق](MAINTENANCE_TEMPLATE_REPAIR_270_20261103.md): CSSاحتوى{#ففشلJinja؛ صُحح القالب وأضيف حارس تحليل قبل التضمين واختبار ارتداد. Web4db9342fd1fe بالصورة2489716712d2 علىm.alpha.amtik.onlineفقط،2.7.0ثابت. الصفحة الكاملة المسجلة بالدخول وAPIالإحصاء/المهمة200محليًا وعلىالدومين؛25جدولًا و84حاويةأخرى مطابقة.10اختباراتمركزةناجحة؛ لا حذف/نسخ/استعادةأوNASأوRegistry/Git. PRIVATE/maintenance-template270-20261103-r1؛ لاreplay. فحص فتح الصفحة السابق لم يكن كافيًا، وهذه اللقطة أحدث.
 
 ## 3 نوفمبر 2026 — النسخ والحذف والإلغاء
 
@@ -76,7 +76,7 @@ Subscriber/card details show all sessions through50-row pages, keep the sessions
 
 ## Approved product brand —26October2026
 
-Current horizontal artwork is the human-selected bilingual aligned revision (MAX RADIUS / ماكس راديوس), viewBox1093×245; shared macro dimensions and aligned-r3 cache revision follow it.
+Current horizontal artwork is the human-selected bilingual aligned revision (ALPHA RADIUS / آلفا راديوس), viewBox1093×245; shared macro dimensions and aligned-r3 cache revision follow it.
 
 [Display contract and verification](PRODUCT_BRAND_DEV_20261026.md): use shared `components/product_brand.html` and its head include. Release-owned assets are outside tenant uploads; light/dark SVGs follow `theme-light`, print uses light variant, browser icons follow browser color preference. Preserve tenant logo slots and independent publisher credits. License card logo is left on desktop and above text on mobile.
 

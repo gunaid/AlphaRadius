@@ -17,9 +17,9 @@ class BridgeTests(unittest.TestCase):
             spec=importlib.util.spec_from_file_location('pilot_bridge',PATH);self.m=importlib.util.module_from_spec(spec);spec.loader.exec_module(self.m)
     def test_no_flask_request_name_export(self):self.assertNotIn('request',{k for k in vars(self.m) if not k.startswith('_')})
     def test_only_scoped_manifest_is_available(self):
-        response=dict(success=True,has_update=True,latest_version='2.6.3',target_domain='4k.max-net.net',components=['web','core'])
+        response=dict(success=True,has_update=True,latest_version='2.6.3',target_domain='4k.alpha.amtik.online',components=['web','core'])
         with patch.object(self.m,'_request',return_value=response):self.assertTrue(self.m.check_for_updates()['has_update'])
-        for field,value in [('target_domain','max.max-net.net'),('components',['web','core','l2tp'])]:
+        for field,value in [('target_domain','max.alpha.amtik.online'),('components',['web','core','l2tp'])]:
             with patch.object(self.m,'_request',return_value={**response,field:value}):self.assertFalse(self.m.check_for_updates()['success'])
     def test_controller_failure_never_means_up_to_date(self):
         with patch.object(self.m,'_request',side_effect=OSError()):

@@ -95,10 +95,10 @@ INSERT INTO wisp_packages VALUES(1,'fixture',10,2,100,'4M','2M');''')
                'UPDATE wisp_vouchers SET snap_rate_limit_str=NULL WHERE id=1;',
                "SELECT COALESCE(snap_rate_limit_str,'0/0') FROM wisp_vouchers WHERE id=1", '0/0')
         expect('restored active blank survives insert trigger',
-               "SET @max_radius_import=1; INSERT INTO wisp_vouchers(id,username,package_id,status,snap_rate_limit_str) VALUES(2,'restore-fixture',1,'active','');",
+               "SET @alpha_radius_import=1; INSERT INTO wisp_vouchers(id,username,package_id,status,snap_rate_limit_str) VALUES(2,'restore-fixture',1,'active','');",
                "SELECT snap_rate_limit_str='' FROM wisp_vouchers WHERE id=2", '1')
         expect('blank legacy group rate refuses first acceptance without freezing',
-               "SET @max_radius_import=0; INSERT INTO radgroupreply VALUES(1,'fixture','MikroTik-Rate-Limit',''); INSERT INTO wisp_vouchers(id,username,package_id,status) VALUES(3,'legacy-fixture',1,'unused'); DO fn_freeze_voucher_policy('legacy-fixture');",
+               "SET @alpha_radius_import=0; INSERT INTO radgroupreply VALUES(1,'fixture','MikroTik-Rate-Limit',''); INSERT INTO wisp_vouchers(id,username,package_id,status) VALUES(3,'legacy-fixture',1,'unused'); DO fn_freeze_voucher_policy('legacy-fixture');",
                "SELECT policy_frozen_at IS NULL FROM wisp_vouchers WHERE id=3", '1')
         print(json.dumps({'image': image, 'cases_passed': len(cases), 'cases': cases,
                           'scope': 'native MariaDB objects; no RADIUS/NAS authentication'}, indent=2))

@@ -1,7 +1,7 @@
 {
   "version": "2.6.5",
   "scope": "local build and isolated test only; not published",
-  "tag": "max-radius-web:full-2.6.5-local-20261023-r1",
+  "tag": "alpha-radius-web:full-2.6.5-local-20261023-r1",
   "image": "sha256:c61766679bbcaf349d1301d7e45dc1d7f329461f2fb40cbf3d9b465c36b61096",
   "frozen_source_files": 248,
   "signed_files": 169,

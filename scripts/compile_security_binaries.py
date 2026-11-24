@@ -64,7 +64,7 @@ def compile_binaries(remove_sources=False):
     build_dir = os.path.join(base_dir, "build_temp")
     try:
         setup(
-            name="max_radius_security_core",
+            name="alpha_radius_security_core",
             ext_modules=cythonize(
                 extensions,
                 compiler_directives={
@@ -119,7 +119,7 @@ def compile_binaries(remove_sources=False):
     return all_compiled
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Compile MAX RADIUS security modules into native binaries.")
+    parser = argparse.ArgumentParser(description="Compile ALPHA RADIUS security modules into native binaries.")
     parser.add_argument("--remove-sources", action="store_true", help="Remove original .py source files after successful compilation (keeps .bak)")
     args = parser.parse_args()
 

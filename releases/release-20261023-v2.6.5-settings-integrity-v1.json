@@ -5,14 +5,14 @@
   "platform": "linux/amd64",
   "based_on": "20261022-v2.6.4-control-v1",
   "images": {
-    "web": "mohd777/max-radius-web@sha256:be1b5a0319803ea8f3e51798b9622aa29ad7016e591a3162226d649865181c77"
+    "web": "mohd777/alpha-radius-web@sha256:be1b5a0319803ea8f3e51798b9622aa29ad7016e591a3162226d649865181c77"
   },
   "web_latest_updated": true,
   "core_l2tp_latest_unchanged": true,
   "channel_audiences": [
-    "m.max-net.net",
-    "max1.max-net.net",
-    "shn.max-net.net"
+    "m.alpha.amtik.online",
+    "max1.alpha.amtik.online",
+    "shn.alpha.amtik.online"
   ],
   "public_channel_release": false,
   "local_channel_release": false,

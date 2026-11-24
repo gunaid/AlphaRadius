@@ -2,7 +2,7 @@
   "version": "2.7.0",
   "candidate": "r6",
   "web": {
-    "tag": "max-radius-web:2.7.0-rc-local-20261102-r6",
+    "tag": "alpha-radius-web:2.7.0-rc-local-20261102-r6",
     "id": "sha256:1c797dc9baf7b1ed25fd45a4cb59fcc3ba984dd26a1c5d127fa72de429848d44"
   },
   "core_unchanged": "sha256:10cc88946c5ed6310a36c4c11b7e991277137da87eb019958f2eb45c8d2eabf5",

@@ -1,10 +1,10 @@
 # Product brand point5 —26October2026
 
-Human approved the supplied MAX RADIUS mark and local implementation. Development5122 only; no image rebuild, release signing, customer/domain provisioning or remote deployment in this step. Point6 session-log changes remain separate.
+Human approved the supplied ALPHA RADIUS mark and local implementation. Development5122 only; no image rebuild, release signing, customer/domain provisioning or remote deployment in this step. Point6 session-log changes remain separate.
 
 ## Bilingual aligned asset follow-up
 
-Human replaced the initial mark with the supplied bilingual aligned package, superseding the intermediate bilingual revision. Both horizontal transparent SVGs now contain MAX RADIUS / ماكس راديوس; their native viewBox is1093×245 and shared markup preserves that ratio. Icon/favicon/Apple/PWA files match the aligned package byte-for-byte and remain the same symbols. Shared image URLs carry aligned-r3 cache revision so existing browsers request the updated artwork. No font dependencies or embedded raster/script elements were introduced.
+Human replaced the initial mark with the supplied bilingual aligned package, superseding the intermediate bilingual revision. Both horizontal transparent SVGs now contain ALPHA RADIUS / آلفا راديوس; their native viewBox is1093×245 and shared markup preserves that ratio. Icon/favicon/Apple/PWA files match the aligned package byte-for-byte and remain the same symbols. Shared image URLs carry aligned-r3 cache revision so existing browsers request the updated artwork. No font dependencies or embedded raster/script elements were introduced.
 
 Ten isolated product checks and eight existing HTTP/render checks pass again. Real admin login reviewed at desktop and390px mobile in light/dark; the horizontal macro also supplies portal login/register and the license publisher card. Existing tenant replacement checks pass. Previous PDF credit check remains applicable to the unchanged icon; PDF layout was not rerun merely for a horizontal logo asset replacement. Local5122 only. Screenshot BRAND-ALIGNED-LIGHT.private.png records the new artwork; no business/settings writes, customer access or release build.
 
@@ -31,8 +31,8 @@ Publisher logo/text block is now vertically centered against the entire rights/c
 
 ## Official website link in UI credits
 
-Human approved the existing official website link in administration/portal footers and the administration login credit. Those three callers pass the release-owned product website into the shared optional credit macro; visible attribution text is طُوّر بواسطة ماكس راديوس (the URL is not printed), opens a separate tab with noopener/noreferrer. Default report/PDF/standalone-license credit stays unchanged, existing license contact card is untouched, and card artwork/exports are untouched. Ten isolated product checks and scoped macro rendering pass.
+Human approved the existing official website link in administration/portal footers and the administration login credit. Those three callers pass the release-owned product website into the shared optional credit macro; visible attribution text is طُوّر بواسطة آلفا راديوس (the URL is not printed), opens a separate tab with noopener/noreferrer. Default report/PDF/standalone-license credit stays unchanged, existing license contact card is untouched, and card artwork/exports are untouched. Ten isolated product checks and scoped macro rendering pass.
 
 ## Installer-source default name
 
-Human limited this change to installation source only, leaving domain provisioning unchanged. MySQL settings seed network_name/company_name/isp_name and SQLite isp_name default use ماكس راديوس | MAX RADIUS. Runtime fallbacks/current settings are untouched. Isolated settings-only SQLite seeding verifies default and preservation of a customized existing name; no database initialization or installation was run.
+Human limited this change to installation source only, leaving domain provisioning unchanged. MySQL settings seed network_name/company_name/isp_name and SQLite isp_name default use آلفا راديوس | ALPHA RADIUS. Runtime fallbacks/current settings are untouched. Isolated settings-only SQLite seeding verifies default and preservation of a customized existing name; no database initialization or installation was run.

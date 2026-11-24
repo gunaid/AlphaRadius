@@ -32,7 +32,7 @@ def provision(directory, project, private_root, socket_root, enrollment=None, ki
     roles={'web':'web','core':'radius_core','db':'db'} if kind=='domain' else {'web':'wisp-web','core':'freeradius','db':'mariadb'}
     if not set(roles.values()) <= set(services): raise ValueError('Unsupported Compose service layout')
     web=services[roles['web']];image=web['image']
-    if not re.fullmatch(r'mohd777/max-radius-web@sha256:[0-9a-f]{64}',image):
+    if not re.fullmatch(r'mohd777/alpha-radius-web@sha256:[0-9a-f]{64}',image):
         raise ValueError('Pin the Web Registry digest before provisioning')
     if root.exists() and any(root.iterdir()): raise ValueError('Private controller root already initialized')
     root.mkdir(mode=0o700,parents=True,exist_ok=True);sockets.mkdir(mode=0o750,parents=True,exist_ok=True)
@@ -40,7 +40,7 @@ def provision(directory, project, private_root, socket_root, enrollment=None, ki
             {'Type':'bind','Source':'/var/run/docker.sock','Target':'/var/run/docker.sock','ReadOnly':False},
             {'Type':'bind','Source':str(path),'Target':'/max-update-compose','ReadOnly':False},
             {'Type':'bind','Source':str(sockets),'Target':'/max-update-socket','ReadOnly':False}]
-    config=dict(TRUST,channel='https://control.max-net.net',kind='public',executor='host' if kind=='domain' else 'local',
+    config=dict(TRUST,channel='https://control.alpha.amtik.online',kind='public',executor='host' if kind=='domain' else 'local',
                 project=project,services=roles,compose_path='/max-update-compose/'+compose_name,controller_mounts=mounts)
     if enrollment:
         allowed={'kind','identity','reader_id','token'}

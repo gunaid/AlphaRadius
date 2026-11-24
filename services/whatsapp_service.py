@@ -2,7 +2,7 @@
 """
 services/whatsapp_service.py
 ----------------------------
-Centralized WhatsApp Engine & Interactive Bot Service for MAX RADIUS.
+Centralized WhatsApp Engine & Interactive Bot Service for ALPHA RADIUS.
 Provides:
 1. Multi-Gateway Connectivity (Evolution API, WPPConnect, Meta Cloud API, Local Simulator).
 2. Live QR-Code Generator and Connection Watchdog.
@@ -105,7 +105,7 @@ def seed_default_whatsapp_data():
             execute_write(
                 """INSERT INTO wisp_whatsapp_settings 
                 (gateway_provider, api_endpoint, instance_name, is_bot_enabled, is_notifications_enabled, status)
-                VALUES ('simulator', 'http://localhost:8080', 'max_radius_bot', 1, 1, 'connected')"""
+                VALUES ('simulator', 'http://localhost:8080', 'alpha_radius_bot', 1, 1, 'connected')"""
             )
             logger.info("Default WhatsApp settings initialized.")
 
@@ -130,14 +130,14 @@ def get_whatsapp_settings():
             'gateway_provider': 'simulator',
             'api_endpoint': 'http://localhost:8080',
             'api_key': '',
-            'instance_name': 'max_radius_bot',
+            'instance_name': 'alpha_radius_bot',
             'phone_number': '+967777000000',
             'is_bot_enabled': 1,
             'is_notifications_enabled': 1,
             'meta_app_id': '',
             'meta_phone_number_id': '',
             'meta_access_token': '',
-            'meta_webhook_verify_token': 'max_radius_whatsapp_token_2026',
+            'meta_webhook_verify_token': 'alpha_radius_whatsapp_token_2026',
             'status': 'connected',
             'qr_code_raw': None,
             'last_connected_at': get_system_now_str()
@@ -152,14 +152,14 @@ def update_whatsapp_settings(data):
     gateway_provider = data.get('gateway_provider', settings.get('gateway_provider', 'simulator'))
     api_endpoint = data.get('api_endpoint', settings.get('api_endpoint', 'http://localhost:8080')).strip()
     api_key = data.get('api_key', settings.get('api_key', '')).strip()
-    instance_name = data.get('instance_name', settings.get('instance_name', 'max_radius_bot')).strip()
+    instance_name = data.get('instance_name', settings.get('instance_name', 'alpha_radius_bot')).strip()
     phone_number = data.get('phone_number', settings.get('phone_number', '')).strip()
     is_bot_enabled = 1 if str(data.get('is_bot_enabled', '1')).lower() in ('1', 'true', 'on') else 0
     is_notifications_enabled = 1 if str(data.get('is_notifications_enabled', '1')).lower() in ('1', 'true', 'on') else 0
     meta_app_id = data.get('meta_app_id', '').strip()
     meta_phone_number_id = data.get('meta_phone_number_id', '').strip()
     meta_access_token = data.get('meta_access_token', '').strip()
-    meta_webhook_verify_token = data.get('meta_webhook_verify_token', 'max_radius_whatsapp_token_2026').strip()
+    meta_webhook_verify_token = data.get('meta_webhook_verify_token', 'alpha_radius_whatsapp_token_2026').strip()
 
     status = 'connected' if gateway_provider == 'simulator' else settings.get('status', 'disconnected')
 
@@ -184,7 +184,7 @@ def get_evolution_qr_code():
     settings = get_whatsapp_settings()
     endpoint = settings.get('api_endpoint', '').rstrip('/')
     api_key = settings.get('api_key', '')
-    instance = settings.get('instance_name', 'max_radius_bot')
+    instance = settings.get('instance_name', 'alpha_radius_bot')
 
     endpoints_to_try = [endpoint, 'http://max_evolution_whatsapp:8080', 'http://localhost:3010']
     for ep in endpoints_to_try:
@@ -222,7 +222,7 @@ def get_evolution_connection_state():
     settings = get_whatsapp_settings()
     endpoint = settings.get('api_endpoint', '').rstrip('/')
     api_key = settings.get('api_key', '')
-    instance = settings.get('instance_name', 'max_radius_bot')
+    instance = settings.get('instance_name', 'alpha_radius_bot')
 
     endpoints_to_try = [endpoint, 'http://max_evolution_whatsapp:8080', 'http://localhost:3010']
     for ep in endpoints_to_try:
@@ -252,7 +252,7 @@ def restart_evolution_instance():
     settings = get_whatsapp_settings()
     endpoint = settings.get('api_endpoint', '').rstrip('/')
     api_key = settings.get('api_key', '')
-    instance = settings.get('instance_name', 'max_radius_bot')
+    instance = settings.get('instance_name', 'alpha_radius_bot')
 
     endpoints_to_try = [endpoint, 'http://max_evolution_whatsapp:8080', 'http://localhost:3010']
     for ep in endpoints_to_try:
@@ -376,7 +376,7 @@ def send_whatsapp_message(phone_number, message_text, event_type='manual', messa
 
     elif provider == 'evolution':
         api_key = settings.get('api_key', '')
-        instance = settings.get('instance_name', 'max_radius_bot')
+        instance = settings.get('instance_name', 'alpha_radius_bot')
         payload = {
             "number": phone,
             "text": message_text,

@@ -3,7 +3,7 @@
   "acceptance_id": "accounting-events-local-20261030-r1",
   "report": "docs/ACCOUNTING_EVENTS_FIX_269_LOCAL_20261030.md",
   "Web_image_id": "sha256:3f2b7ddb285e333d40460049de59c8bdf7fe019fb43e4a01411a816728cfede8",
-  "Core_image_tag": "max-radius-core:2.6.9-accounting-events-local-20261030-r1",
+  "Core_image_tag": "alpha-radius-core:2.6.9-accounting-events-local-20261030-r1",
   "image_audit": {
     "image_id": "sha256:7ffa03b73990e25f8e10b72eb8e29dd446e2ffb2942ec8df2599e539f37cb7c5",
     "base_image": "sha256:bc4d4644108018c7f67188e639bfeea9a4d12deedc01602bc15e219406ac4932",

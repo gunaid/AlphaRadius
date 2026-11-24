@@ -7,7 +7,7 @@ class RequirementTests(unittest.TestCase):
     def setUp(self):
         self.value={'engine_protocol':2,'platforms':['linux/amd64'],'schema_revisions':['schema265'],
             'release_kind':'preparation','prepares_engine_protocol':2,'migration_plan':None,
-            'rollback':{'policy':'compatible','images':{'web':'mohd777/max-radius-web@sha256:'+'a'*64}}}
+            'rollback':{'policy':'compatible','images':{'web':'mohd777/alpha-radius-web@sha256:'+'a'*64}}}
         self.config={'schema_revision':'schema265'}
     def validate(self):
         with patch.object(r.platform,'system',return_value='Linux'),patch.object(r.platform,'machine',return_value='x86_64'):
@@ -32,7 +32,7 @@ class RequirementTests(unittest.TestCase):
         self.value['prepares_engine_protocol']=r.ENGINE_PROTOCOL+1
         with self.assertRaises(ValueError):self.validate()
     def test_rollback_repositories_are_role_scoped(self):
-        self.value['rollback']['images']['web']='mohd777/max-radius-core@sha256:'+'a'*64
+        self.value['rollback']['images']['web']='mohd777/alpha-radius-core@sha256:'+'a'*64
         with self.assertRaises(ValueError):self.validate()
 
 if __name__=='__main__':unittest.main()

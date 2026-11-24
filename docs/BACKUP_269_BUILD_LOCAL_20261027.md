@@ -5,8 +5,8 @@
 ## هوية البناء ومصدره
 
 - المرجع المثبت: Web 2.6.9 السابقة `sha256:4bddb43f8cfbc972556f1e02dfc011f0f07be4c81dc16ebc6c52a3875040343e`.
-- المرشح: `max-radius-web:2.6.9-backup-candidate-local-20261027-r3`، بمعرّف `sha256:c5ab9fe42359c867c6dedabaf607ff492b2652e8160fa5df987e34e645db098b`.
-- الرجوع المتوافق: `max-radius-web:2.6.9-backup-rollback-local-20261027-r3`، بمعرّف `sha256:f8cde0e7bfaa0b63aade6a5fed9e51fb921453ee674ba70e8202088c4b6c1a14`.
+- المرشح: `alpha-radius-web:2.6.9-backup-candidate-local-20261027-r3`، بمعرّف `sha256:c5ab9fe42359c867c6dedabaf607ff492b2652e8160fa5df987e34e645db098b`.
+- الرجوع المتوافق: `alpha-radius-web:2.6.9-backup-rollback-local-20261027-r3`، بمعرّف `sha256:f8cde0e7bfaa0b63aade6a5fed9e51fb921453ee674ba70e8202088c4b6c1a14`.
 - Core ثابتة: `sha256:bc4d4644108018c7f67188e639bfeea9a4d12deedc01602bc15e219406ac4932`؛ لا بناء لصورة Core أو DB.
 - [إيصال المصدر والصور والفحوص](../releases/build-20261027-v2.6.9-backup-patch-r3.json).
 

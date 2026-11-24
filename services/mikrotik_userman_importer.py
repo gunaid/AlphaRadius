@@ -644,7 +644,7 @@ def fetch_userman_via_api(host, username, password, port=8728, use_ssl=False, ti
 
 
 # -------------------------------------------------------------
-# 3. Execution Engine: Insert into MAX RADIUS
+# 3. Execution Engine: Insert into ALPHA RADIUS
 # -------------------------------------------------------------
 @_license_guarded('userman_import')
 def execute_userman_import(parsed_data, target_type='vouchers', fallback_package=None, duplicate_action='skip', ignore_expired=True, import_consumption=False, admin_user='admin', profile_costs=None, chunk_index=None, total_chunks=None, state_cache=None, check_cancel=None, operation_id=None):
@@ -705,7 +705,7 @@ def execute_userman_import(parsed_data, target_type='vouchers', fallback_package
         cur.execute('SET SESSION innodb_lock_wait_timeout=3')
         cur.execute('SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ')
         db.begin()
-        cur.execute('SET @max_radius_import=1')
+        cur.execute('SET @alpha_radius_import=1')
         journal.lock_writers(db)
         journal.batch_receipt(db, operation_id, chunk_index or 0, parsed_data)
         account_before = {u['username'].strip(): journal.account_image(db, u['username'].strip())
@@ -1122,7 +1122,7 @@ def execute_userman_import(parsed_data, target_type='vouchers', fallback_package
         }
     finally:
         try:
-            cur.execute('SET @max_radius_import=0')
+            cur.execute('SET @alpha_radius_import=0')
         except Exception:
             pass
         cur.close()

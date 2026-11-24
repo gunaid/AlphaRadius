@@ -4,7 +4,7 @@
   "scope": "local-only account row-lock fix",
   "image": {
     "base": "sha256:3f2b7ddb285e333d40460049de59c8bdf7fe019fb43e4a01411a816728cfede8",
-    "tag": "max-radius-web:2.6.9-locks-local-20261031-r2",
+    "tag": "alpha-radius-web:2.6.9-locks-local-20261031-r2",
     "image": "sha256:ddce804366a6d14de6519a47bc456597fe145404a451fdfe10a3ca286ae7a06c",
     "source_sha256": "bbbf3fdd335501b5fd64131c8e0330fde8a0d7b8d8efd1634c36bf0cbde41c21",
     "changed_module": "services.online_policy_service",

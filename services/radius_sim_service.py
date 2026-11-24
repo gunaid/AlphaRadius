@@ -1,7 +1,7 @@
 """
 services/radius_sim_service.py
 ------------------------------
-Live RADIUS Protocol Lab & Simulator Service for MAX RADIUS.
+Live RADIUS Protocol Lab & Simulator Service for ALPHA RADIUS.
 Provides direct Access-Request and CoA packet testing, attribute validation, and timing analysis.
 """
 
@@ -59,7 +59,7 @@ def simulate_radius_auth(username, password, nas_ip='127.0.0.1', nas_secret='tes
                                                radius_server, radius_port)
             raw_output, exit_code = result['output'], result['exit_code']
         else:
-            core = get_container_info(['max_radius_core'])
+            core = get_container_info(['alpha_radius_core'])
             ident = core.get('container_id', '')
             if not core.get('is_running') or not re.fullmatch(r'[a-f0-9]{64}', ident):
                 raise RuntimeError('No unique running owned RADIUS container')

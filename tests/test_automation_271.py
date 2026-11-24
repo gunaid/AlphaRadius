@@ -197,7 +197,7 @@ class TaskContracts(unittest.TestCase):
             value=dict(self.definition('report'),params={'period':'day'})
             self.actions.perform_action(value,lambda r:events.append('recorded'),lambda:False,'id','run')
         text=bot.send_telegram_alert.call_args.args[0]
-        self.assertTrue(text.startswith('📊 <b>التقرير المالي والمبيعات اليومي - MAX RADIUS</b>'))
+        self.assertTrue(text.startswith('📊 <b>التقرير المالي والمبيعات اليومي - ALPHA RADIUS</b>'))
         self.assertIn('11.75 ريال',text)
         self.assertIn('95 جلسة',text)
         self.assertLess(events.index('recorded'),events.index('sent'))

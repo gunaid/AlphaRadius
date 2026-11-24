@@ -33,7 +33,7 @@ class Dispatcher:
         self.root=Path(root).resolve();self.lab=lab
         self.binding=json.loads((self.root/'binding.private.json').read_text())
         if bool(self.binding.get('lab_mode'))!=lab:raise RuntimeError('Host mode mismatch')
-        if not lab and str(self.root)!='/var/lib/max-radius-rollout/20261017-clock-record-repair-v1':
+        if not lab and str(self.root)!='/var/lib/alpha-radius-rollout/20261017-clock-record-repair-v1':
             raise RuntimeError('Unexpected incident root')
         self.bundle=json.loads((self.root/'source-manifest.json').read_text())
         for name in (*MODULES,'host_dispatch'):

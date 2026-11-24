@@ -23,7 +23,7 @@ class ManagerTests(unittest.TestCase):
 
     def reload(self):
         self.reloads += 1
-        dropin = self.root / 'etc/systemd/system/docker.service.d/99-max-radius-clock-ready.conf'
+        dropin = self.root / 'etc/systemd/system/docker.service.d/99-alpha-radius-clock-ready.conf'
         self.loaded = m.active_files.HELPER if dropin.exists() else ''
 
     def enable(self, check=lambda: None):
@@ -54,7 +54,7 @@ class ManagerTests(unittest.TestCase):
 
     def test_modified_active_helper_is_preserved(self):
         self.enable()
-        helper = self.root / 'usr/local/libexec/max-radius-clock-ready.py'
+        helper = self.root / 'usr/local/libexec/alpha-radius-clock-ready.py'
         helper.write_text('new administrator content')
         with self.assertRaises(ValueError):
             m.disable(self.journal, self.root, self.reload, lambda: self.loaded)

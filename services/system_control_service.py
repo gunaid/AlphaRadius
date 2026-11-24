@@ -89,10 +89,10 @@ def get_container_info(container_names):
             return {'exists': False, 'name': 'hosted-service', 'status': 'unknown', 'is_running': False, 'uptime': 'غير متحقق', 'read_only': True}
     candidates = [container_names] if isinstance(container_names, str) else list(container_names)
     roles = {
-        'max_radius_core': 'radius', 'wisp_freeradius_v2': 'radius', 'max-radius-freeradius': 'radius',
-        'max_radius_web': 'web', 'wisp_web_v2': 'web', 'max-radius-wisp-web': 'web',
-        'max_radius_db': 'database', 'wisp_mariadb_v2': 'database',
-        'max_radius_autoheal': 'autoheal', 'wisp_autoheal_v2': 'autoheal',
+        'alpha_radius_core': 'radius', 'wisp_freeradius_v2': 'radius', 'alpha-radius-freeradius': 'radius',
+        'alpha_radius_web': 'web', 'wisp_web_v2': 'web', 'alpha-radius-wisp-web': 'web',
+        'alpha_radius_db': 'database', 'wisp_mariadb_v2': 'database',
+        'alpha_radius_autoheal': 'autoheal', 'wisp_autoheal_v2': 'autoheal',
     }
     unknown = dict(exists=False, name=candidates[0] if candidates else 'unknown',
                    status='unknown', is_running=False, uptime='غير متحقق', read_only=True)
@@ -196,7 +196,7 @@ def get_all_services_status():
     
     # 1. Web Server Info
     web_uptime_sec = int(time.time() - SERVER_START_TIME)
-    web_container = get_container_info(['max_radius_web', 'wisp_web_v2', 'max-radius-wisp-web'])
+    web_container = get_container_info(['alpha_radius_web', 'wisp_web_v2', 'alpha-radius-wisp-web'])
     web_status = {
         'id': 'web',
         'name': 'خادم النظام الرئيسي ولوحة التحكم',
@@ -213,7 +213,7 @@ def get_all_services_status():
     }
 
     # 2. FreeRADIUS 3.x Info
-    fr_container = get_container_info(['max_radius_core', 'wisp_freeradius_v2', 'max-radius-freeradius'])
+    fr_container = get_container_info(['alpha_radius_core', 'wisp_freeradius_v2', 'alpha-radius-freeradius'])
     fr_probe = check_freeradius_probe()
     
     fr_is_running = fr_container.get('is_running', False) if fr_container.get('exists') else fr_probe
@@ -237,7 +237,7 @@ def get_all_services_status():
 
     # 3. MariaDB Database Info
     db_metrics = get_database_metrics()
-    db_container = get_container_info(['max_radius_db', 'wisp_mariadb_v2'])
+    db_container = get_container_info(['alpha_radius_db', 'wisp_mariadb_v2'])
     
     db_is_running = db_container.get('is_running', False) if db_container.get('exists') else db_metrics['is_connected']
     db_status_code = 'running' if db_is_running else 'stopped'
@@ -262,7 +262,7 @@ def get_all_services_status():
     }
 
     # 4. Autoheal & Watchdog Engine Info
-    autoheal_container = get_container_info(['max_radius_autoheal', 'wisp_autoheal_v2'])
+    autoheal_container = get_container_info(['alpha_radius_autoheal', 'wisp_autoheal_v2'])
     autoheal_is_running = autoheal_container.get('is_running', False)
     autoheal_status = {
         'id': 'autoheal',
@@ -366,10 +366,10 @@ def execute_service_action(service_id, action, admin_username='admin'):
             return False, 'تعذر تنفيذ العملية عبر وصلة المضيف؛ لم يستخدم Docker بديلًا.'
 
     container_candidates = {
-        'freeradius': ['max_radius_core', 'wisp_freeradius_v2', 'max-radius-freeradius'],
-        'mariadb': ['max_radius_db', 'wisp_mariadb_v2'],
-        'web': ['max_radius_web', 'wisp_web_v2', 'max-radius-wisp-web'],
-        'autoheal': ['max_radius_autoheal', 'wisp_autoheal_v2']
+        'freeradius': ['alpha_radius_core', 'wisp_freeradius_v2', 'alpha-radius-freeradius'],
+        'mariadb': ['alpha_radius_db', 'wisp_mariadb_v2'],
+        'web': ['alpha_radius_web', 'wisp_web_v2', 'alpha-radius-wisp-web'],
+        'autoheal': ['alpha_radius_autoheal', 'wisp_autoheal_v2']
     }
 
     candidates = container_candidates.get(service_id)

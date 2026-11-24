@@ -12,7 +12,7 @@ import uuid
 from core.config import APP_VERSION, STORAGE_DIR
 from services.system_update_runtime import Docker, PIN, TERMINAL, UpdateError, scope, storage_mount, endpoints_for, write_json
 
-DEFAULT_UPDATE_SERVER_URL = os.environ.get('MASTER_UPDATE_SERVER_URL', 'https://raw.githubusercontent.com/mohd-1992/MAX-RADIUS/main/release.json')
+DEFAULT_UPDATE_SERVER_URL = os.environ.get('MASTER_UPDATE_SERVER_URL', 'https://raw.githubusercontent.com/gunaid/AlphaRadius/main/release.json')
 _UPDATE_CACHE = {'data': None, 'timestamp': 0}
 _UPDATE_LOCK = threading.Lock()
 
@@ -41,7 +41,7 @@ def check_for_updates(force_refresh=False, force=False):
         parsed = urllib.parse.urlsplit(DEFAULT_UPDATE_SERVER_URL)
         if parsed.scheme != 'https' or not parsed.hostname or parsed.username or parsed.password:
             raise UpdateError('Update catalogue requires HTTPS')
-        req = urllib.request.Request(DEFAULT_UPDATE_SERVER_URL, headers={'User-Agent': 'MAX-RADIUS-Client/' + APP_VERSION})
+        req = urllib.request.Request(DEFAULT_UPDATE_SERVER_URL, headers={'User-Agent': 'ALPHA-RADIUS-Client/' + APP_VERSION})
         with urllib.request.urlopen(req, timeout=8) as response:
             if response.status != 200 or urllib.parse.urlsplit(response.geturl()).scheme != 'https':
                 raise UpdateError('Invalid catalogue response')

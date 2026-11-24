@@ -182,7 +182,7 @@ class PublicationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as work:
             root=Path(work)
             orphan=root/'max-backup-sort-abcdefgh';orphan.mkdir()
-            (orphan/'.max-backup-owner').write_bytes(b'max-radius-backup-work-v1\n')
+            (orphan/'.max-backup-owner').write_bytes(b'alpha-radius-backup-work-v1\n')
             (orphan/'sort.sqlite').write_bytes(b'dead process work')
             foreign=root/'max-backup-sort-ijklmnop';foreign.mkdir()
             (foreign/'keep').write_bytes(b'not ours')

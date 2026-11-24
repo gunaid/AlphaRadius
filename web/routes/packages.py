@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-MAX RADIUS Web - Package Configuration and Rate Limit Profiles Routes Module.
+ALPHA RADIUS Web - Package Configuration and Rate Limit Profiles Routes Module.
 """
 
 import os

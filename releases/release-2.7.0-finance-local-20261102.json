@@ -3,7 +3,7 @@
   "status": "local_r5_finance_pressure_and_real_NAS_passed_no_publication",
   "ready_for_general_publication": false,
   "web": {
-    "tag": "max-radius-web:2.7.0-rc-local-20261102-r5",
+    "tag": "alpha-radius-web:2.7.0-rc-local-20261102-r5",
     "id": "sha256:8bb3520a2501a53c3e71099cd8895a265ef7b0672560d833706a780006aa902a",
     "source": {
       "services\\loyalty_rewards_service.py": "22a1228a68423336ca386942cf10f8e5f3fc7a3f6f3368f1114f590288571b27",

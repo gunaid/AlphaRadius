@@ -5,8 +5,8 @@
 قناة التثبيت الافتراضية `20261024-v2.6.5-subscriber-voucher-r1` تستخدم صور Web وCore المنشورة بالفعل، والمطابقة لبصمات الحاويات الجارية في الدومينات الأربعة عند التحقق في 26 أكتوبر 2026. رقم النسخة يبقى 2.6.5؛ لا بناء صور أو رفع Registry أو تضمين لإصلاح المحرك الجديد وميزات 2.6.6.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/mohd-1992/MAX-RADIUS/main/install.sh -o /tmp/max-radius-install.sh
-sudo bash /tmp/max-radius-install.sh
+curl -fsSL https://raw.githubusercontent.com/gunaid/AlphaRadius/main/install.sh -o /tmp/alpha-radius-install.sh
+sudo bash /tmp/alpha-radius-install.sh
 ```
 
 يقرأ المثبت `release.json` ويثبت الصور الخمس ببصماتها، ويفحص SHA256 وأعضاء حزمة التشغيل قبل استخراجها وتوقيع Web قبل التشغيل. الحزمة تضم Compose الإنتاج والمخطط ومفتاح الترخيص العام وإعداد PPP وأدوات الساعة؛ لا تضم اعتمادًا خاصًا. حزمة المصدر تطابق الملفات الـ255 المجمدة لبناء Web المنشور، وتثبت ملفات بناء Core في فهرس المصدر. يمكن فحصها دون استيراد التطبيق بأمر `python -B scripts/verify_release_source.py`.

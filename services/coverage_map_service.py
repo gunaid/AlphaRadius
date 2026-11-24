@@ -1,7 +1,7 @@
 """
 services/coverage_map_service.py
 --------------------------------
-Live Network Coverage, Towers & Access Points (Sectors) GIS Engine for MAX RADIUS.
+Live Network Coverage, Towers & Access Points (Sectors) GIS Engine for ALPHA RADIUS.
 Manages geographical tower coordinates, sectors/access points, live subscribers per site,
 and telemetry.
 """

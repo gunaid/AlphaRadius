@@ -24,4 +24,4 @@ HTTP200، وترخيصvalid/freshوبصمة مطابقة. قبول طبيعي م
 
 ## الأدلة وعدم التكرار
 
-PRIVATE/client-safe-cleanup-20261105-r1 محليًا، وإيصالات المضيف تحت /var/lib/max-radius/maintenance/client-safe-cleanup-20261105-r1. EXECUTE.intent وRESULT بحالة CLEANED_VERIFIED؛لاreplayللمشغل. quarantineأزيل بعد اكتمال حذف ملفاته. health-before/health-after وplan-details وexecute محفوظة محليًا دون أسرار أو حسابات أو سجلات خام. لاGitpushأوDockerHubأو تحديث دومين/عميل.
+PRIVATE/client-safe-cleanup-20261105-r1 محليًا، وإيصالات المضيف تحت /var/lib/alpha-radius/maintenance/client-safe-cleanup-20261105-r1. EXECUTE.intent وRESULT بحالة CLEANED_VERIFIED؛لاreplayللمشغل. quarantineأزيل بعد اكتمال حذف ملفاته. health-before/health-after وplan-details وexecute محفوظة محليًا دون أسرار أو حسابات أو سجلات خام. لاGitpushأوDockerHubأو تحديث دومين/عميل.

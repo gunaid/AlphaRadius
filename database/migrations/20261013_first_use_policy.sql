@@ -71,7 +71,7 @@ SET NEW.snap_rate_upload=COALESCE(NEW.snap_rate_upload,(SELECT rate_upload FROM 
           END IF; END;;
 CREATE OR REPLACE TRIGGER trg_voucher_first_policy_update
           BEFORE UPDATE ON wisp_vouchers FOR EACH ROW BEGIN
-          IF OLD.policy_frozen_at IS NOT NULL AND COALESCE(@max_radius_import,0)=1 THEN
+          IF OLD.policy_frozen_at IS NOT NULL AND COALESCE(@alpha_radius_import,0)=1 THEN
           SET NEW.snap_price=OLD.snap_price;
 SET NEW.snap_cost=OLD.snap_cost;
 SET NEW.snap_volume_quota_mb=OLD.snap_volume_quota_mb;

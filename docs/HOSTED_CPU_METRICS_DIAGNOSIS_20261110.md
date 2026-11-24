@@ -4,7 +4,7 @@
 
 ## السبب المؤكد
 
-في [stats_service.py](../services/stats_service.py#L122)،القارئيحددثلاثةأسماءثابتةmax_radius_web/core/db،ويبحثعن `/var/run/docker.sock` فقط. `_fetch_single_container_stats`يلتهمالأخطاءويرجعNone.عندفشلالقراءات،تظلCPU=0؛البديل/procالموجوديحسبRAMفقطولايلتقطCPUرغمتعليقLinux/cgroup.سطرالإرجاع[الحدالأدنى](../services/stats_service.py#L193)يفرض`max(0.5,cpu_percent)`،فتظهر0.5دائمًا.الكاشالابتدائيوكاشالخطألهماالقيمةذاتهاأيضًا.
+في [stats_service.py](../services/stats_service.py#L122)،القارئيحددثلاثةأسماءثابتةalpha_radius_web/core/db،ويبحثعن `/var/run/docker.sock` فقط. `_fetch_single_container_stats`يلتهمالأخطاءويرجعNone.عندفشلالقراءات،تظلCPU=0؛البديل/procالموجوديحسبRAMفقطولايلتقطCPUرغمتعليقLinux/cgroup.سطرالإرجاع[الحدالأدنى](../services/stats_service.py#L193)يفرض`max(0.5,cpu_percent)`،فتظهر0.5دائمًا.الكاشالابتدائيوكاشالخطألهماالقيمةذاتهاأيضًا.
 
 الواجهة [dashboard.html](../web/templates/dashboard.html#L952)تعرضالقيمةالقادمةوتحدّثعرضالشريط؛ليسهناكقيمة0.5ثابتةفيJavaScriptلهذاالمؤشر.المشكلةفيقراءةالموردوالتعبيرعنغيابه،وليستدليلًاعلىاستقرارالاستهلاكالحقيقي.
 
@@ -16,7 +16,7 @@
 |---|---|---|
 |m.max-r.cc271|/var/run/docker.sockغيرموجود؛MAX_CONTROL_SOCKETيحددقناةمقيدةمختلفة|cpu=0.5،containers={}؛طلباتstatsعبرالقناةالمقيدة403|
 |max1.max-r.cc271|نفسالاختلاف|cpu=0.5،containers={}؛طلباتstatsعبرالقناةالمقيدة403|
-|max1.max-net.net271|المسارموجودكوسيطمقيد|statsللأسماءالثابتةيرجع403؛cpu=0.5،containers={}|
+|max1.alpha.amtik.online271|المسارموجودكوسيطمقيد|statsللأسماءالثابتةيرجع403؛cpu=0.5،containers={}|
 
 قراءةDockerالمضيفالمباشرةللتحققالمحدودأظهرتعينةmax1-r:Web4.65%وCore0.16%بينماالقارئيرجع0.5؛وهذادليلعدمتطابقالقيمةالبديلةمعقراءةالمورد.عينةmفياللحظةنفسهاWeb0.01%وCore0.13%؛يمكنأنيكونالاستهلاكالحقيقيأقلمن0.5،ولاينبغيحذفالصفرالحقيقيأومساواتهبفشلالقياس.
 

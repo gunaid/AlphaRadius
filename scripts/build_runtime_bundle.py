@@ -16,7 +16,7 @@ BASE = {
     'storage/keys/master_public_key.pem': 'storage/keys/master_public_key.pem',
 }
 HOST = ('clock_ready.py', 'managed_files.py', 'active_files.py', 'manage.py',
-        '99-max-radius-clock-ready.conf')
+        '99-alpha-radius-clock-ready.conf')
 IMAGES = {'WEB': 'web', 'CORE': 'core', 'L2TP': 'l2tp',
           'DB': 'database', 'AUTOHEAL': 'autoheal'}
 

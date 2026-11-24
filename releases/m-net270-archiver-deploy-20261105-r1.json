@@ -1,9 +1,9 @@
 {
-  "target": "m.max-net.net",
+  "target": "m.alpha.amtik.online",
   "version": "2.7.0",
   "status": "DEPLOYED_ACCEPTED",
   "image": {
-    "tag": "max-radius-web:2.7.0-archiver-local-20261105-r1",
+    "tag": "alpha-radius-web:2.7.0-archiver-local-20261105-r1",
     "id": "sha256:7ca684ccfaa52926aab2635214d1b8aac25084a0ccc3c1d674edceaabe229483",
     "size": 2920721043,
     "base": "sha256:1508c922f5125d9260c1a96c22b478335ef0efc7824b5f59014a4a546519ccf4",

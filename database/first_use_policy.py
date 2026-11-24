@@ -104,7 +104,7 @@ def install_first_use_policy(conn):
         protected = '\n'.join('SET NEW.snap_'+f+'=OLD.snap_'+f+';' for f in FIELDS)
         ensure_schema_object(cur, """CREATE OR REPLACE TRIGGER trg_voucher_first_policy_update
           BEFORE UPDATE ON wisp_vouchers FOR EACH ROW BEGIN
-          IF OLD.policy_frozen_at IS NOT NULL AND COALESCE(@max_radius_import,0)=1 THEN
+          IF OLD.policy_frozen_at IS NOT NULL AND COALESCE(@alpha_radius_import,0)=1 THEN
           """ + protected + """
           SET NEW.policy_frozen_at=OLD.policy_frozen_at;
           ELSEIF NEW.policy_frozen_at IS NULL AND NEW.status IN ('unused','suspended','disabled')

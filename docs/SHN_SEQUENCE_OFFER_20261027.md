@@ -1,6 +1,6 @@
 # SHN sequence offered — 2026-10-27
 
-Scope: shn.max-net.net only; existing reader identity reused. Offered sequence: **2.6.5 → 2.6.6 → 2.6.7 → 2.6.8 → 2.6.9**. Installation is for the human.
+Scope: shn.alpha.amtik.online only; existing reader identity reused. Offered sequence: **2.6.5 → 2.6.6 → 2.6.7 → 2.6.8 → 2.6.9**. Installation is for the human.
 
 Live preflight confirmed SHN 2.6.5, idle controller, fresh license lease and four running project containers. Six immutable image manifests were verified. The final 2.6.9 uses corrected reports/backup image `sha256:c5ab9fe42359c867c6dedabaf607ff492b2652e8160fa5df987e34e645db098b`. Plans were explicitly loaded as UTF-8; Arabic notes were checked before publication and match the signed feed.
 

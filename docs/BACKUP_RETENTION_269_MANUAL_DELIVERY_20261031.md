@@ -4,14 +4,14 @@
 
 ## 1 نوفمبر 2026 — رفع صورتي 2.6.9 بوسم مستقل
 
-بتفويض المستخدم رُفعت الصورتان المختبرتان إلى Docker Hub بالوسم `2.6.9-maintenance-20261101-r1`: `mohd777/max-radius-web` ببصمة eab5cd4ff443، و`mohd777/max-radius-core` ببصمة 9786df38bb3c. ثبت تطابق Registry وطبقات rootfs مع الصور المختبرة وثبات latest لكليهما. لا تحديث دومين أو إعلان أو تغيير قناة أو Git push. إيصال النشر: `releases/publish-20261101-v2.6.9-maintenance-r1.json`؛ الأدلة PRIVATE/registry269-publish-20261101-r1، لا replay. الفقرات السابقة عن عدم الرفع تصف وقت الاختبار قبل هذا التفويض.
+بتفويض المستخدم رُفعت الصورتان المختبرتان إلى Docker Hub بالوسم `2.6.9-maintenance-20261101-r1`: `mohd777/alpha-radius-web` ببصمة eab5cd4ff443، و`mohd777/alpha-radius-core` ببصمة 9786df38bb3c. ثبت تطابق Registry وطبقات rootfs مع الصور المختبرة وثبات latest لكليهما. لا تحديث دومين أو إعلان أو تغيير قناة أو Git push. إيصال النشر: `releases/publish-20261101-v2.6.9-maintenance-r1.json`؛ الأدلة PRIVATE/registry269-publish-20261101-r1، لا replay. الفقرات السابقة عن عدم الرفع تصف وقت الاختبار قبل هذا التفويض.
 
 # حزمة 2.6.9 المحلية للتسليم اليدوي
 
 الحالة: جاهزة محليًا؛ لا نشر ولا تحديث ضمن هذه الجولة. [تقرير الاعتماد وحدود الاختبارات](BACKUP_RETENTION_269_ACCEPTANCE_LOCAL_20261031.md).
 
 الحزمة في الإحالة المحلية المحمية:
-`PRIVATE/backup-retention269-release-20261031-r1/distribution/MAX-RADIUS-2.6.9-local-web-core-20261031-r4.tar.gz`
+`PRIVATE/backup-retention269-release-20261031-r1/distribution/ALPHA-RADIUS-2.6.9-local-web-core-20261031-r4.tar.gz`
 
 الحجم 723,394,777 بايت. هذا حجم صور Docker وليس ملف نسخة بيانات العملاء.
 

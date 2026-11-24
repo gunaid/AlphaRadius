@@ -1,7 +1,7 @@
 """
 services/bot_notifications_service.py
 -------------------------------------
-Smart Telegram & WhatsApp Notifications and Bot Integration for MAX RADIUS.
+Smart Telegram & WhatsApp Notifications and Bot Integration for ALPHA RADIUS.
 Handles alert dispatching to admins, threshold alerts to subscribers,
 automated database backup shipping via Telegram Document API, and log tracking.
 """
@@ -255,7 +255,7 @@ def send_telegram_document(filepath, caption='', message_type='BACKUP_ARCHIVE', 
         filename = os.path.basename(filepath)
         try:
             result, progress = send_backup_document(token, chat_id, filepath,
-                caption or f"📦 نسخة احتياطية من MAX RADIUS\nالملف: {filename}")
+                caption or f"📦 نسخة احتياطية من ALPHA RADIUS\nالملف: {filename}")
             status = 'sent' if result.get('ok') else 'failed'
             details = json.dumps(dict(result, _transfer=progress), ensure_ascii=False)
         except UploadFailure as err:
@@ -317,7 +317,7 @@ def trigger_recharge_notification(username, package_name, price, card_number=Non
             type_label = "شحن باقة إنترنت" if recharge_type == 'package' else "شحن رصيد مالي"
 
             msg = (
-                f"💳 <b>عملية شحن كرت جديدة - MAX RADIUS</b>\n"
+                f"💳 <b>عملية شحن كرت جديدة - ALPHA RADIUS</b>\n"
                 f"━━━━━━━━━━━━━━━━━━━\n"
                 f"👤 <b>المشترك:</b> <code>{username}</code>\n"
                 f"📦 <b>الباقة:</b> {package_name}\n"

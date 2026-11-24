@@ -1,7 +1,7 @@
 {
   "application_version": "2.6.9",
   "build_id": "component-engine4-local-20261029-r2",
-  "image": "max-radius-web:2.6.9-component-engine-local-20261029-r2",
+  "image": "alpha-radius-web:2.6.9-component-engine-local-20261029-r2",
   "image_id": "sha256:ffdcaf5f0b76f41fa8fb75cec866d8e9245af044847201f74aeae6755fa4b925",
   "base_image_id": "sha256:c5ab9fe42359c867c6dedabaf607ff492b2652e8160fa5df987e34e645db098b",
   "scope": "local acceptance only",

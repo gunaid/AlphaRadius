@@ -15,7 +15,7 @@ import traceback
 import uuid
 
 ROOT = Path(__file__).resolve().parents[1]
-REPORT_ROOT = Path(r'C:/Users/lenovo/Documents/Codex/private/max-radius/as-client-access-check-20261016/monitor-reports')
+REPORT_ROOT = Path(r'C:/Users/lenovo/Documents/Codex/private/alpha-radius/as-client-access-check-20261016/monitor-reports')
 CORE = 'sha256:4d609e0c03a32be6a979dfd110ccd10d8c8ceda72c3495a1c4734de653f42d59'
 DB = 'sha256:0d0945c57f75b3a3b9ebe71aedaaad005fa5305054e8fca3d2e42a8c92b43b5e'
 
@@ -93,7 +93,7 @@ def main():
         values['GUARD_TABLE_SQL'] = next(ast.literal_eval(n.value) for n in tree.body if isinstance(n, ast.Assign) and any(isinstance(t, ast.Name) and t.id == 'GUARD_TABLE_SQL' for t in n.targets))
         (stage / 'schema.json').write_text(json.dumps({'tables': tables, **values}), encoding='utf-8')
         shutil.copy2(ROOT / 'tests/accounting_identity_live.py', stage / 'driver.py')
-        for name in ['entrypoint.sh', 'queries.conf', 'license-capacity-postauth.conf', 'max-accounting-identity.conf']:
+        for name in ['entrypoint.sh', 'queries.conf', 'license-capacity-postauth.conf', 'alpha-accounting-identity.conf']:
             shutil.copy2(ROOT / 'docker/freeradius' / name, stage / name)
         entrypoint = (stage / 'entrypoint.sh').read_text(encoding='utf-8')
         # Verbose diagnostics ONLY inside the owned fixture image.
@@ -110,7 +110,7 @@ def main():
             f'FROM {base_tag}\nCOPY entrypoint.sh /entrypoint.sh\n'
             'COPY queries.conf /etc/freeradius/3.0/mods-config/sql/main/mysql/queries.conf\n'
             'COPY license-capacity-postauth.conf /etc/freeradius/3.0/license-capacity-postauth.conf\n'
-            'COPY max-accounting-identity.conf /etc/freeradius/3.0/policy.d/max-accounting-identity\n'
+            'COPY alpha-accounting-identity.conf /etc/freeradius/3.0/policy.d/alpha-accounting-identity\n'
             'RUN chmod +x /entrypoint.sh\n', encoding='utf-8')
         docker('build', '--network', 'none', '--pull=false', '-t', candidate_tag, str(stage), timeout=180)
         result['candidate_image'] = docker('image', 'inspect', candidate_tag, '--format', '{{.Id}}')[0]
@@ -190,13 +190,13 @@ def main():
                 # A rollback must retain the lookup bridge for sessions that
                 # already received the new stable ID.  Do not restore a DB or
                 # switch blindly to an image that only knows the stock hash.
-                policy = (stage / 'max-accounting-identity.conf').read_text(encoding='utf-8')
+                policy = (stage / 'alpha-accounting-identity.conf').read_text(encoding='utf-8')
                 begin = policy.index("            elsif (&request:Tmp-String-9 == 'new') {")
                 end = policy.index("            elsif (&request:Tmp-String-9 == 'ambiguous')", begin)
                 compat = policy[:begin] + "            elsif (&request:Tmp-String-9 == 'new') {\n                noop\n            }\n" + policy[end:]
                 (stage / 'compat-policy.conf').write_text(compat, encoding='utf-8')
                 (stage / 'Dockerfile.compat').write_text(
-                    f'FROM {candidate_tag}\nCOPY compat-policy.conf /etc/freeradius/3.0/policy.d/max-accounting-identity\n', encoding='utf-8')
+                    f'FROM {candidate_tag}\nCOPY compat-policy.conf /etc/freeradius/3.0/policy.d/alpha-accounting-identity\n', encoding='utf-8')
                 compat_tag = owner + ':compat-rollback'
                 docker('build', '--network', 'none', '--pull=false', '-f', str(stage / 'Dockerfile.compat'),
                        '-t', compat_tag, str(stage), timeout=180)

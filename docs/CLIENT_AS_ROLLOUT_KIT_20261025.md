@@ -57,4 +57,4 @@
 
 `PRIVATE/client-rollout-kit-20261025-r1/`: SHIPPING-RECEIPT،stagekit،validatekit،LOCAL-INTEGRATION-SUCCESS،LOCAL-INTEGRATION-ROLLBACK،LOCAL-RECOVERY-TOOL،unit-tests،LOCAL-CLEANUP،وFINAL. الملفات الخام والمفاتيح والاعتمادات لا تدخلGitأوالتقريرالعام.
 
-مسار العميل الخاص الجديد `/var/lib/max-radius-rollout/20261025-client-rollout-kit-r1`؛ لا تعِد مرحلة النقل فوقه. اقرأالحالةقبلأيإجراء. لا تعدsetup/restore/switch/rollbackأواختباراتالأعمالالمكتملة. لا تمسحmarkersأوالـjournal لتجاوزحارس. استردادDBالفعليمسارحادثمنفصلبتفويضوتشخيصومصالحةأحدثالعمليات،وليسرجوعالإصدار.
+مسار العميل الخاص الجديد `/var/lib/alpha-radius-rollout/20261025-client-rollout-kit-r1`؛ لا تعِد مرحلة النقل فوقه. اقرأالحالةقبلأيإجراء. لا تعدsetup/restore/switch/rollbackأواختباراتالأعمالالمكتملة. لا تمسحmarkersأوالـjournal لتجاوزحارس. استردادDBالفعليمسارحادثمنفصلبتفويضوتشخيصومصالحةأحدثالعمليات،وليسرجوعالإصدار.

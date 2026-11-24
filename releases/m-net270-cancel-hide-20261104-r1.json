@@ -1,12 +1,12 @@
 {
   "status": "ACCEPTED_M_ONLY",
-  "domain": "m.max-net.net",
+  "domain": "m.alpha.amtik.online",
   "version": "2.7.0",
   "accepted_at_Aden": "2026-11-04T19:10:42.762589+03:00",
   "services": {
     "web": {
       "id": "17308dbdfb58cdb441a5c3dd90f2a636663a80dbf1751bd573973017376df015",
-      "name": "/max_radius_m_web",
+      "name": "/alpha_radius_m_web",
       "image": "sha256:1508c922f5125d9260c1a96c22b478335ef0efc7824b5f59014a4a546519ccf4",
       "running": true,
       "started": "2026-11-04T16:10:26.152813771Z",
@@ -16,7 +16,7 @@
     },
     "core": {
       "id": "e61f791ab5d93919a378125d066a4da1fb6a45619a0661b9b34b30ed5741b0ec",
-      "name": "/max_radius_m_core",
+      "name": "/alpha_radius_m_core",
       "image": "sha256:04fd43b4e13f6842d8d26d99250f5825eb3bb0bf67df58f5c35f125909f55f83",
       "running": true,
       "started": "2026-11-03T18:29:51.007744343Z",
@@ -26,7 +26,7 @@
     },
     "db": {
       "id": "5ab464143fdd9f8e6aee9ae28246c714c3aeb4d621f10cc49f04c078d0cddd29",
-      "name": "/max_radius_m_db",
+      "name": "/alpha_radius_m_db",
       "image": "sha256:0d0945c57f75b3a3b9ebe71aedaaad005fa5305054e8fca3d2e42a8c92b43b5e",
       "running": true,
       "started": "2026-10-22T18:15:37.933783987Z",

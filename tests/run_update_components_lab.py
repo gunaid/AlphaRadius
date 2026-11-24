@@ -24,7 +24,7 @@ from services.system_update_runtime import Docker, UpdateError, inspect, write_j
 WEB = 'sha256:c5ab9fe42359c867c6dedabaf607ff492b2652e8160fa5df987e34e645db098b'
 DB = 'sha256:0d0945c57f75b3a3b9ebe71aedaaad005fa5305054e8fca3d2e42a8c92b43b5e'
 CORE = 'sha256:bc4d4644108018c7f67188e639bfeea9a4d12deedc01602bc15e219406ac4932'
-L2TP = 'mohd777/max-radius-l2tp@sha256:a7fa96b5a7a485ce47755e0379c5553d1a0490855fcfda950602d6c1d9affee7'
+L2TP = 'mohd777/alpha-radius-l2tp@sha256:a7fa96b5a7a485ce47755e0379c5553d1a0490855fcfda950602d6c1d9affee7'
 AUTOHEAL = 'willfarrell/autoheal@sha256:658d4db0d5d570d07f1977e6cd344d5d9789f4453a050abf784caa330458ab26'
 ORACLE = """import json
 from database.db import query_one
@@ -44,7 +44,7 @@ def main():
     web_target = os.environ.get('MAX_COMPONENT_WEB_TARGET')
     if web_target:
         import re
-        assert re.fullmatch('max-radius-web@sha256:[a-f0-9]{64}', web_target)
+        assert re.fullmatch('alpha-radius-web@sha256:[a-f0-9]{64}', web_target)
     def api(method, path, body=None, timeout=30):
         started = time.monotonic()
         if method == 'POST' and path.startswith('/images/create?') and os.environ.get('MAX_COMPONENT_NATIVE_AUX') == '1':
@@ -144,7 +144,7 @@ def main():
                         reference = L2TP if role == 'l2tp' else AUTOHEAL
                     registry['components'][name] = {'role': role, 'project': project, 'service': name, 'compose_path': str(compose), 'images': {reference: 'fixture-compatible'}}
                     if web_target and role == 'web':
-                        registry['components'][name]['images'] = {'max-radius-web@'+WEB: 'fixture-compatible', web_target: 'fixture-compatible'}
+                        registry['components'][name]['images'] = {'alpha-radius-web@'+WEB: 'fixture-compatible', web_target: 'fixture-compatible'}
                     document['services'][name] = {'image': DB if role == 'db' else CORE if native and role == 'core' else WEB}
                     if role == 'db':
                         continue

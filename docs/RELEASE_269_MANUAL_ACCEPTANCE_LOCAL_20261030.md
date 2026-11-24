@@ -18,7 +18,7 @@
 
 ## الهوية والنطاق
 
-- الصورة نفسها دون إعادة بناء: `max-radius-web:2.6.9-renewal-engine-local-20261030-r2`، Linux/amd64.
+- الصورة نفسها دون إعادة بناء: `alpha-radius-web:2.6.9-renewal-engine-local-20261030-r2`، Linux/amd64.
 - Image ID محلي: `sha256:3f2b7ddb285e333d40460049de59c8bdf7fe019fb43e4a01411a816728cfede8`، وليس manifest digest في Registry.
 - [إيصال البناء](../releases/build-20261030-v2.6.9-renewal-engine-local-r2.json) و[إيصال قبول هذه الجولة](../releases/acceptance-20261030-v2.6.9-manual-local-r2.json).
 - ما زالت 212 من ملفات التشغيل السابقة مطابقة؛ تغيير أربع وحدات المحرك فقط موثق في تقرير البناء. إصلاحات التجديد والسرعة والاستيراد والنسخ السابقة محفوظة. لا إدخال لميزات 2.7.0 الحالية.

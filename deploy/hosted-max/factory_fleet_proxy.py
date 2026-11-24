@@ -11,10 +11,10 @@ from http.server import BaseHTTPRequestHandler
 from pathlib import Path
 from urllib.parse import unquote, urlsplit, parse_qs
 
-ALIASES = {'web': 'max_radius_web', 'radius_core': 'max_radius_core',
-           'db': 'max_radius_db', 'autoheal': 'max_radius_autoheal',
-           'l2tp': 'max_radius_l2tp'}
-SHARED_SERVICES = {'autoheal': 'max_radius_autoheal', 'l2tp': 'max_panel_l2tp'}
+ALIASES = {'web': 'alpha_radius_web', 'radius_core': 'alpha_radius_core',
+           'db': 'alpha_radius_db', 'autoheal': 'alpha_radius_autoheal',
+           'l2tp': 'alpha_radius_l2tp'}
+SHARED_SERVICES = {'autoheal': 'alpha_radius_autoheal', 'l2tp': 'max_panel_l2tp'}
 
 
 def listener_health(item):

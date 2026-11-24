@@ -99,7 +99,7 @@ def extend_cases(h,base,radius):
             # An owned, worker-free helper on the internal fixture network, never the development Web.
             helper=None
             try:
-                image=subprocess.check_output(['docker','image','inspect','--format','{{.Id}}','max-radius-web:20261017-batch-export-filenames-lab'],text=True).strip()
+                image=subprocess.check_output(['docker','image','inspect','--format','{{.Id}}','alpha-radius-web:20261017-batch-export-filenames-lab'],text=True).strip()
                 helper=subprocess.check_output(['docker','run','-d','--name','max-clock-operator-'+uuid.uuid4().hex[:10],
                     '--label','max-owned-task=clock-record-operator-lab','--network',radius.network,'--restart=no',
                     '--entrypoint','sleep',image,'infinity'],text=True).strip()

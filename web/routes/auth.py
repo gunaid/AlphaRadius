@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-MAX RADIUS Web - Authentication, Login, and Session Management Routes Module.
+ALPHA RADIUS Web - Authentication, Login, and Session Management Routes Module.
 """
 
 import os
@@ -64,7 +64,7 @@ auth_bp = Blueprint('auth_bp', __name__)
 def health_check():
     return jsonify({
         'status': 'healthy',
-        'app': 'MAX RADIUS',
+        'app': 'ALPHA RADIUS',
         'timestamp': datetime.datetime.now().isoformat()
     }), 200
 

@@ -61,7 +61,7 @@ spec=importlib.util.spec_from_file_location('power_fixture',source+'/managed_fil
 original=m.atomic_create
 def cut(path,data,mode_bits=0o644):
  original(path,data,mode_bits)
- if (mode=='stage' and path.name=='max-radius-clock-ready.py') or (mode=='rollback' and 'rollback-retained' in str(path)):os._exit(92)
+ if (mode=='stage' and path.name=='alpha-radius-clock-ready.py') or (mode=='rollback' and 'rollback-retained' in str(path)):os._exit(92)
 m.atomic_create=cut
 if mode=='stage':m.stage(root,journal,source)
 else:m.rollback(root,journal)

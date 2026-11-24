@@ -24,7 +24,7 @@ def format_sales_summary(period, start, end, *, voucher_count, voucher_revenue,
         months = ('يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
                   'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر')
         date_line = f'📅 <b>مبيعات شهر {months[start.month - 1]} {start.year}</b>'
-    lines = [f'📊 <b>التقرير المالي والمبيعات {title} - MAX RADIUS</b>',
+    lines = [f'📊 <b>التقرير المالي والمبيعات {title} - ALPHA RADIUS</b>',
              '━━━━━━━━━━━━━━━━━━━', date_line]
     if legacy_daily:
         lines += [f'🎫 <b>الكروت المفعلة اليوم:</b> <b>{int(voucher_count)} كرت</b>',
@@ -40,5 +40,5 @@ def format_sales_summary(period, start, end, *, voucher_count, voucher_revenue,
         lines.append(f'👥 <b>المشتركون النشطون:</b> <b>{int(active_subscribers)} مشترك</b>')
     if online_sessions is not None:
         lines.append(f'📶 <b>المتصلون الآن بالشبكة:</b> <b>{int(online_sessions)} جلسة</b>')
-    lines += ['━━━━━━━━━━━━━━━━━━━', f'#{hashtag} #Financial_Report #MAX_RADIUS']
+    lines += ['━━━━━━━━━━━━━━━━━━━', f'#{hashtag} #Financial_Report #ALPHA_RADIUS']
     return '\n'.join(lines)

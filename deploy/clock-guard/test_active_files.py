@@ -14,8 +14,8 @@ class ActiveFilesTests(unittest.TestCase):
         self.root = Path(self.temp.name)/'root'
         self.journal = Path(self.temp.name)/'journal'
         files.stage(self.root, self.journal)
-        self.helper = self.root/'usr/local/libexec/max-radius-clock-ready.py'
-        self.dropin = self.root/'etc/systemd/system/docker.service.d/99-max-radius-clock-ready.conf'
+        self.helper = self.root/'usr/local/libexec/alpha-radius-clock-ready.py'
+        self.dropin = self.root/'etc/systemd/system/docker.service.d/99-alpha-radius-clock-ready.conf'
         self.loaded = ''
 
     def reload(self):

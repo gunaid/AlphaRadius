@@ -20,7 +20,7 @@ def command(args,timeout=45):
 
 
 try:
-    image=command(['docker','image','inspect','--format','{{.Id}}','max-radius-clock-guard-lab:20261017'])
+    image=command(['docker','image','inspect','--format','{{.Id}}','alpha-radius-clock-guard-lab:20261017'])
     container=command(['docker','create','--name','max-clock-boot-files-'+uuid.uuid4().hex[:10],
         '--label','max-owned-task=clock-boot-prevention-local','--network','none','--restart=no',
         '-e','MAX_CLOCK_GUARD_FIXTURE=clock-boot-stability-20261017','--entrypoint','sleep',image,'infinity'])

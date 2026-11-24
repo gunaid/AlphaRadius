@@ -970,7 +970,7 @@ def download_license_file(lic_id):
         flash('لا يمكن إصدار ملف تفعيل لترخيص موقوف أو منتهي.', 'danger')
         return redirect(url_for('licenses_list'))
     mem_file = io.BytesIO(bundle['raw_json'].encode('utf-8'))
-    filename = f"max_radius_{lic['license_id'].replace('-', '_').lower()}.lic"
+    filename = f"alpha_radius_{lic['license_id'].replace('-', '_').lower()}.lic"
     
     response = send_file(
         mem_file,

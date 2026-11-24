@@ -22,7 +22,7 @@ def main():
     if (root/'ATTEMPTED').exists(): raise SystemExit('Do not replay a completed or uncertain lab')
     (root/'ATTEMPTED').write_text('Fresh isolated lifecycle acceptance')
     api=Docker();base='sha256:68a3daa26878fdb18dfc0ba70f128261093af1ead8e0db99c06ba7490f7d914f'
-    candidate=api('GET','/images/mohd777%2Fmax-radius-web%3A20261022-v2.6.4-control-v1/json')['Id']
+    candidate=api('GET','/images/mohd777%2Falpha-radius-web%3A20261022-v2.6.4-control-v1/json')['Id']
     prefix='max264lab'+uuid.uuid4().hex[:8]
     previous=api('GET','/containers/json?all=1')
     frozen={v['Id']:{k:inspect(api,v['Id'])[k] for k in ('Image','Mounts')} for v in previous}
@@ -65,7 +65,7 @@ def main():
             compose=folder/'compose.json';compose.write_text(json.dumps({'services':{r:{'image':snapshots[r]['Image']} for r in old}}))
             (folder/'compose-before.private').write_bytes(compose.read_bytes())
             plan={'job':job,'old':snapshots,'images':{'web':candidate,'core':candidate},
-                  'references':{'web':'mohd777/max-radius-web@sha256:'+'a'*64,'core':'mohd777/max-radius-core@sha256:'+'b'*64},
+                  'references':{'web':'mohd777/alpha-radius-web@sha256:'+'a'*64,'core':'mohd777/alpha-radius-core@sha256:'+'b'*64},
                   'version':'2.6.5','previous_version':'2.6.4','publisher_key':'fixture-probe-only','accounting':[],
                   'compose_path':str(compose),'compose_services':{'web':'web','core':'core','db':'db'}}
             write_json(folder/'plan.private.json',plan);write_json(folder/'state.json',{'status':'queued'})

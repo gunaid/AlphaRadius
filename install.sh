@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# MAX RADIUS: install prebuilt protected images; never clone application sources.
+# ALPHA RADIUS: install prebuilt protected images; never clone application sources.
 set -Eeuo pipefail
 umask 077
 [[ $EUID -eq 0 ]] || { echo 'Run as root: sudo bash install.sh' >&2; exit 1; }
-INSTALL_DIR="${MAX_INSTALL_DIR:-/opt/max-radius}"
-MANIFEST_URL="${MAX_RELEASE_MANIFEST_URL:-https://raw.githubusercontent.com/mohd-1992/MAX-RADIUS/main/release.json}"
+INSTALL_DIR="${MAX_INSTALL_DIR:-/opt/alpha-radius}"
+MANIFEST_URL="${MAX_RELEASE_MANIFEST_URL:-https://raw.githubusercontent.com/gunaid/AlphaRadius/main/release.json}"
 CLOCK_GUARD="${MAX_CLOCK_GUARD:-off}"
 case "$CLOCK_GUARD" in off|enable) ;; *) echo 'MAX_CLOCK_GUARD must be off or enable' >&2; exit 1;; esac
 [[ "$INSTALL_DIR" == /* && "$INSTALL_DIR" != / ]] || { echo 'Invalid installation directory' >&2; exit 1; }
@@ -22,7 +22,7 @@ ensure_host_time() {
     echo 'Host clock is not synchronized. Existing services were left unchanged; synchronize the host before retrying.' >&2
     return 1
   fi
-  timedatectl set-ntp true || { echo 'Enable a host NTP service before installing MAX RADIUS.' >&2; return 1; }
+  timedatectl set-ntp true || { echo 'Enable a host NTP service before installing ALPHA RADIUS.' >&2; return 1; }
   for ((attempt=0; attempt<30; attempt++)); do
     [[ $(timedatectl show -p NTPSynchronized --value 2>/dev/null) != yes ]] || return 0
     sleep 2
@@ -47,7 +47,7 @@ echo '[2/6] Downloading verified runtime-only release...'
 stage=$(mktemp -d)
 trap 'rm -rf -- "$stage"' EXIT
 curl --fail --location --retry 3 --proto '=https' --tlsv1.2 "$MANIFEST_URL" -o "$stage/release.json"
-jq -e '.format == 1 and .platform == "linux/amd64" and (.release | test("^[A-Za-z0-9._-]+$")) and (.bundle.sha256 | test("^[a-f0-9]{64}$")) and (.bundle.url | startswith("https://github.com/mohd-1992/MAX-RADIUS/releases/download/") or test("^https://raw\\.githubusercontent\\.com/mohd-1992/MAX-RADIUS/main/releases/runtime-[A-Za-z0-9._-]+\\.tar\\.gz$")) and ([.images.web,.images.core,.images.l2tp] | all(test("^mohd777/max-radius-(web|core|l2tp)@sha256:[a-f0-9]{64}$")))' "$stage/release.json" >/dev/null
+jq -e '.format == 1 and .platform == "linux/amd64" and (.release | test("^[A-Za-z0-9._-]+$")) and (.bundle.sha256 | test("^[a-f0-9]{64}$")) and (.bundle.url | startswith("https://github.com/gunaid/AlphaRadius/releases/download/") or test("^https://raw\\.githubusercontent\\.com/gunaid/AlphaRadius/main/releases/runtime-[A-Za-z0-9._-]+\\.tar\\.gz$")) and ([.images.web,.images.core,.images.l2tp] | all(test("^mohd777/alpha-radius-(web|core|l2tp)@sha256:[a-f0-9]{64}$")))' "$stage/release.json" >/dev/null
 jq -e '((.images.database // "legacy") | . == "legacy" or test("^mariadb@sha256:[a-f0-9]{64}$")) and ((.images.autoheal // "legacy") | . == "legacy" or test("^willfarrell/autoheal@sha256:[a-f0-9]{64}$"))' "$stage/release.json" >/dev/null
 release=$(jq -r .release "$stage/release.json")
 curl --fail --location --retry 3 --proto '=https' --tlsv1.2 "$(jq -r .bundle.url "$stage/release.json")" -o "$stage/runtime.tar.gz"
@@ -63,7 +63,7 @@ allowed = {'docker-compose.production.yml', 'database/schema_mysql.sql',
 if sys.argv[2] == 'v1':
     allowed.update('host/clock-guard/' + name for name in (
         'clock_ready.py', 'managed_files.py', 'active_files.py', 'manage.py',
-        '99-max-radius-clock-ready.conf'))
+        '99-alpha-radius-clock-ready.conf'))
 elif sys.argv[2] != 'none':
     raise SystemExit('Unsupported host tools version')
 with tarfile.open(sys.argv[1]) as archive:
@@ -104,7 +104,7 @@ fi
 install -m600 "$stage/runtime-release.env" "$INSTALL_DIR/runtime-release.env"
 install -m600 "$stage/release.json" "$INSTALL_DIR/release.json"
 if [[ "$host_tools" == v1 ]]; then
-  for file in clock_ready.py managed_files.py active_files.py manage.py 99-max-radius-clock-ready.conf; do
+  for file in clock_ready.py managed_files.py active_files.py manage.py 99-alpha-radius-clock-ready.conf; do
     install -Dm644 "$stage/host/clock-guard/$file" "$INSTALL_DIR/host/clock-guard/$file"
   done
 fi
@@ -112,7 +112,7 @@ if [[ "$CLOCK_GUARD" == enable ]]; then
   [[ "$host_tools" == v1 ]] || { echo 'This release does not include clock guard management' >&2; exit 1; }
   # Explicit host-wide opt-in: daemon-reload only, never restart Docker or change NTP.
   python3 "$INSTALL_DIR/host/clock-guard/manage.py" enable \
-    --journal "/var/lib/max-radius-clock-guard/$release"
+    --journal "/var/lib/alpha-radius-clock-guard/$release"
 fi
 mkdir -p "$INSTALL_DIR/storage/"{backups,uploads,logs,archive,l2tp}
 touch "$INSTALL_DIR/storage/l2tp/chap-secrets" "$INSTALL_DIR/storage/l2tp/pap-secrets"
@@ -121,7 +121,7 @@ chmod 600 "$INSTALL_DIR/storage/l2tp/"*-secrets
 # Existing source checkouts are not silently deleted; migrate them separately.
 
 echo '[4/6] Configuring host networking...'
-cat << 'EOF' > /etc/sysctl.d/99-maxradius.conf
+cat << 'EOF' > /etc/sysctl.d/99-alpharadius.conf
 net.ipv4.ip_forward = 1
 net.ipv4.conf.all.forwarding = 1
 net.ipv4.conf.default.forwarding = 1
@@ -143,9 +143,9 @@ fi
 echo '[5/6] Starting services...'
 docker compose --project-directory "$INSTALL_DIR" --env-file "$INSTALL_DIR/.env" --env-file "$INSTALL_DIR/runtime-release.env" -f "$INSTALL_DIR/docker-compose.production.yml" up -d --wait --wait-timeout 240
 # Preserve an unrelated/custom Nginx site instead of overwriting it.
-if [[ $nginx_default_existed -eq 0 ]] || grep -q 'MAX RADIUS' /etc/nginx/sites-available/default; then
+if [[ $nginx_default_existed -eq 0 ]] || grep -q 'ALPHA RADIUS' /etc/nginx/sites-available/default; then
 cat << 'NGINX_EOF' > /etc/nginx/sites-available/default
-# MAX RADIUS Nginx Reverse Proxy Configuration (Port 80 -> Port 5090)
+# ALPHA RADIUS Nginx Reverse Proxy Configuration (Port 80 -> Port 5090)
 server {
     listen 80 default_server;
     listen [::]:80 default_server;
@@ -187,8 +187,8 @@ fi
 ip route replace 192.168.44.0/24 via 172.18.0.10 2>/dev/null || true
 
 echo '[6/6] Verifying protected runtime...'
-docker exec max_radius_web python /opt/max-protection/verify.py
+docker exec alpha_radius_web python /opt/max-protection/verify.py
 SERVER_IP=$(hostname -I | awk '{print $1}')
-printf '\nMAX RADIUS release %s installed. Dashboard: http://%s:5090\n' "$release" "$SERVER_IP"
+printf '\nALPHA RADIUS release %s installed. Dashboard: http://%s:5090\n' "$release" "$SERVER_IP"
 printf 'Existing storage, credentials and database volumes were preserved.\n'
 printf 'Initial administrator credentials apply only to a fresh database; change them after first login.\n'

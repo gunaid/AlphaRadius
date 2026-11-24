@@ -59,8 +59,8 @@ MariaDB 10.11.19 مع حد 1,536MiB ومعالجين وbuffer pool بحجم 512M
 
 | الدور | الوسم المحلي | البصمة SHA256 |
 |---|---|---|
-| Web | `max-radius-web:2.7.0-backup-delete-acceptance-local-20261103-r1` | `bd046305c881dfa113a0a43b50d036097cba700f0730c1d79bcfb8625f3dd998` |
-| Core | `max-radius-core:2.7.0-backup-delete-acceptance-local-20261103-r1` | `04fd43b4e13f6842d8d26d99250f5825eb3bb0bf67df58f5c35f125909f55f83` |
+| Web | `alpha-radius-web:2.7.0-backup-delete-acceptance-local-20261103-r1` | `bd046305c881dfa113a0a43b50d036097cba700f0730c1d79bcfb8625f3dd998` |
+| Core | `alpha-radius-core:2.7.0-backup-delete-acceptance-local-20261103-r1` | `04fd43b4e13f6842d8d26d99250f5825eb3bb0bf67df58f5c35f125909f55f83` |
 
 لمن لم يملك قارئ ملخص الحصص يلزم الزوج المتوافق. m مسجل أصلًا على Core نفسه؛ الفرق الجديد له هو Web فقط. لا تحديث MariaDB أو إعداد RAM ضمن هذا الإصلاح. الصورة Web بنيت من قاعدة 248971 الثابتة، مع إعادة ختم المكون المعدل؛ لا دخول أسرار أو أدوات اختبار إلى الصورة.
 

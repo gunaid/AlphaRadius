@@ -10,7 +10,7 @@ import urllib.request
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
-CHANNEL = 'https://control.max-net.net'
+CHANNEL = 'https://control.alpha.amtik.online'
 MAX_BYTES = 262144
 from services.system_update_requirements import CAPABILITIES
 
@@ -96,7 +96,7 @@ def verify_response(response, config, current, now=None, capabilities=None):
     if sorted(images) != manifest.get('components') or not set(images) <= set(capabilities or CAPABILITIES):
         raise ChannelError('Components do not match executor capabilities')
     for role, image in images.items():
-        if not isinstance(image, str) or not re.fullmatch('mohd777/max-radius-'+role+r'@sha256:[0-9a-f]{64}', image):
+        if not isinstance(image, str) or not re.fullmatch('mohd777/alpha-radius-'+role+r'@sha256:[0-9a-f]{64}', image):
             raise ChannelError('Unpinned or unapproved repository')
     # A free-text migration/rollback description is not executable authorization.
     # First consumer supports backward-compatible releases without explicit DDL.
@@ -122,7 +122,7 @@ def fetch(config, current, capabilities=None):
     path = '/api/releases/v1/latest' if config['kind'] == 'public' else '/api/releases/v1/check'
     from services.system_update_requirements import facts
     url = config['channel'] + path + '?' + urllib.parse.urlencode(dict(current_version=current,capabilities=','.join(caps),**facts(config)))
-    headers = {'User-Agent': 'MAX-RADIUS/'+current, 'Accept': 'application/json'}
+    headers = {'User-Agent': 'ALPHA-RADIUS/'+current, 'Accept': 'application/json'}
     if config['kind'] != 'public':
         headers['Authorization'] = 'Bearer '+config['token']
     request = urllib.request.Request(url, headers=headers)

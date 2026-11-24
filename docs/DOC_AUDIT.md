@@ -88,7 +88,7 @@ check-docs القياسي يغطي README و AGENTS و docs و skills و scenari
 
 ### معدلة
 
-- `.agents/skills/max-project-onboarding/SKILL.md`
+- `.agents/skills/alpha-project-onboarding/SKILL.md`
 - `.dockerignore`
 - `.gitignore`
 - `AGENTS.md`

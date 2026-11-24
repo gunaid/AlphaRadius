@@ -36,7 +36,7 @@ class ProductProtectionTests(unittest.TestCase):
     def test_tenant_changes_cannot_mutate_release_identity(self):
         value = identity.get_product_identity()
         value['name'] = 'tenant override'
-        self.assertEqual(identity.get_product_identity()['name'], 'MAX RADIUS')
+        self.assertEqual(identity.get_product_identity()['name'], 'ALPHA RADIUS')
         with self.assertRaises(TypeError):
             identity.PRODUCT_IDENTITY['phone'] = 'other'
 

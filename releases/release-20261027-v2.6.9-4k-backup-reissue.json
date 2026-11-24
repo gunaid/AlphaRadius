@@ -1,16 +1,16 @@
 {
   "status": "old_4k269_withdrawn_new_patched_269_announced_no_install",
   "version": "2.6.9",
-  "target": "4k.max-net.net",
+  "target": "4k.alpha.amtik.online",
   "old_release": "b34d4b5912e49d9be2199e8de2162de8",
   "old_state": "withdrawn",
   "new_release": "fe726d008e4ff89ca6e5689dfc45b730",
   "image": {
     "version": "2.6.9",
     "image_id": "sha256:c5ab9fe42359c867c6dedabaf607ff492b2652e8160fa5df987e34e645db098b",
-    "tag": "mohd777/max-radius-web:2.6.9-reports-backup-r1",
+    "tag": "mohd777/alpha-radius-web:2.6.9-reports-backup-r1",
     "digest": "sha256:c5ab9fe42359c867c6dedabaf607ff492b2652e8160fa5df987e34e645db098b",
-    "reference": "mohd777/max-radius-web@sha256:c5ab9fe42359c867c6dedabaf607ff492b2652e8160fa5df987e34e645db098b",
+    "reference": "mohd777/alpha-radius-web@sha256:c5ab9fe42359c867c6dedabaf607ff492b2652e8160fa5df987e34e645db098b",
     "config_and_rootfs_match": true
   },
   "automatic_install": false,

@@ -3,7 +3,7 @@ from services.renewal_settlement_service import settle_cycle_operation
 """
 services/loyalty_rewards_service.py
 -----------------------------------
-Loyalty Points & Rewards Engine for MAX RADIUS subscribers.
+Loyalty Points & Rewards Engine for ALPHA RADIUS subscribers.
 Tracks earned points on recharges, manages customizable redemption rules, 
 and awards data, validity, credit balance, and custom bonuses with atomic concurrency protection.
 """

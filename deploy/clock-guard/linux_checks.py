@@ -44,7 +44,7 @@ scenario('probe timeout stays bounded','timeout',True,75)
 # Validate actual systemd parsing with representative Docker service dependencies.
 units=Path('/tmp/max-clock-fixture-units');units.mkdir()
 (units/'docker.service.d').mkdir()
-shutil.copyfile(HERE/'99-max-radius-clock-ready.conf',units/'docker.service.d/99-max-radius-clock-ready.conf')
+shutil.copyfile(HERE/'99-alpha-radius-clock-ready.conf',units/'docker.service.d/99-alpha-radius-clock-ready.conf')
 (units/'docker.service').write_text('[Unit]\nRequires=docker.socket\nAfter=docker.socket containerd.service\n[Service]\nType=notify\nExecStart=/bin/true\nRestart=always\nTimeoutStartSec=0\n')
 (units/'docker.socket').write_text('[Socket]\nListenStream=/tmp/max-clock-fixture-docker.sock\n')
 for name in ('containerd.service','systemd-timesyncd.service'):
@@ -61,6 +61,6 @@ p=subprocess.run(['/usr/bin/python3',str(HERE/'clock_ready.py'),'--wait-seconds'
 assert p.returncode==75 and time.monotonic()-start<1
 checks.append({'name':'standalone CLI with no readiness returns temporary failure','passed':True})
 
-source_hashes={name:hashlib.sha256((HERE/name).read_bytes()).hexdigest() for name in ('clock_ready.py','99-max-radius-clock-ready.conf','managed_files.py')}
+source_hashes={name:hashlib.sha256((HERE/name).read_bytes()).hexdigest() for name in ('clock_ready.py','99-alpha-radius-clock-ready.conf','managed_files.py')}
 print(json.dumps({'fixture':'clock-boot-stability-20261017','checks':checks,'passed':len(checks),'source_hashes':source_hashes,
                   'network':'none','customer_database_used':False,'real_boot_tested':False,'systemd_is_pid1':False,'privileged':False}))

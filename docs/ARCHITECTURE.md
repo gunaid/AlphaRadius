@@ -1,4 +1,4 @@
-# بنية MAX RADIUS
+# بنية ALPHA RADIUS
 أعيدت مراجعة حدود البنية مقابل HEAD في HANDOFF بتاريخ13أكتوبر2026. التشغيل الحالي في [ENVIRONMENTS](ENVIRONMENTS.md)، وليس هذا الرسم.
 
 ```mermaid

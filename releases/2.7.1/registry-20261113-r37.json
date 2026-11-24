@@ -1,10 +1,10 @@
 {
   "web": {
-    "tag": "mohd777/max-radius-web:2.7.1",
-    "immutable_tag": "mohd777/max-radius-web:2.7.1-maintenance-admission-20261113-r37",
+    "tag": "mohd777/alpha-radius-web:2.7.1",
+    "immutable_tag": "mohd777/alpha-radius-web:2.7.1-maintenance-admission-20261113-r37",
     "registry_digest": "sha256:cfbb38203bc94a770242040e48a398f2a2c4594829a486b00303986ef795c30d",
-    "pinned_reference": "mohd777/max-radius-web@sha256:cfbb38203bc94a770242040e48a398f2a2c4594829a486b00303986ef795c30d",
-    "versioned_mirror_reference": "mohd777/max-radius-web@sha256:cfbb38203bc94a770242040e48a398f2a2c4594829a486b00303986ef795c30d",
+    "pinned_reference": "mohd777/alpha-radius-web@sha256:cfbb38203bc94a770242040e48a398f2a2c4594829a486b00303986ef795c30d",
+    "versioned_mirror_reference": "mohd777/alpha-radius-web@sha256:cfbb38203bc94a770242040e48a398f2a2c4594829a486b00303986ef795c30d",
     "amd64_manifest": "sha256:cfbb38203bc94a770242040e48a398f2a2c4594829a486b00303986ef795c30d",
     "config_digest": "sha256:f17ca05d2c27160875a848ef1ce629eb693d2dffc1086f6921fe7cc324e5264f",
     "layer_digests": [
@@ -201,10 +201,10 @@
     "anonymous_pull_verified": true
   },
   "core": {
-    "tag": "mohd777/max-radius-core:2.7.1",
+    "tag": "mohd777/alpha-radius-core:2.7.1",
     "registry_digest": "sha256:6e71f1e291a90d8c45df79a3f88c5886193bb774054ec3d7e30e72d470b928af",
-    "pinned_reference": "mohd777/max-radius-core@sha256:6e71f1e291a90d8c45df79a3f88c5886193bb774054ec3d7e30e72d470b928af",
-    "versioned_mirror_reference": "mohd777/max-radius-core@sha256:6e71f1e291a90d8c45df79a3f88c5886193bb774054ec3d7e30e72d470b928af",
+    "pinned_reference": "mohd777/alpha-radius-core@sha256:6e71f1e291a90d8c45df79a3f88c5886193bb774054ec3d7e30e72d470b928af",
+    "versioned_mirror_reference": "mohd777/alpha-radius-core@sha256:6e71f1e291a90d8c45df79a3f88c5886193bb774054ec3d7e30e72d470b928af",
     "amd64_manifest": "sha256:0e34e466927677d2ec395d31141793960cb433767a23ebb2a2288b15e69342f9",
     "config_digest": "sha256:5391b78e7585952fb4a28cdd3717d23fcd63f9b44d07ec909f29a92ed20f2e97",
     "layer_digests": [
@@ -237,10 +237,10 @@
     "anonymous_pull_verified": true
   },
   "l2tp": {
-    "tag": "mohd777/max-radius-l2tp:2.7.1",
+    "tag": "mohd777/alpha-radius-l2tp:2.7.1",
     "registry_digest": "sha256:a7fa96b5a7a485ce47755e0379c5553d1a0490855fcfda950602d6c1d9affee7",
-    "pinned_reference": "mohd777/max-radius-l2tp@sha256:a7fa96b5a7a485ce47755e0379c5553d1a0490855fcfda950602d6c1d9affee7",
-    "versioned_mirror_reference": "mohd777/max-radius-l2tp@sha256:a7fa96b5a7a485ce47755e0379c5553d1a0490855fcfda950602d6c1d9affee7",
+    "pinned_reference": "mohd777/alpha-radius-l2tp@sha256:a7fa96b5a7a485ce47755e0379c5553d1a0490855fcfda950602d6c1d9affee7",
+    "versioned_mirror_reference": "mohd777/alpha-radius-l2tp@sha256:a7fa96b5a7a485ce47755e0379c5553d1a0490855fcfda950602d6c1d9affee7",
     "amd64_manifest": "sha256:981d83d0fd223d2c74d0160c56409624ebd3abd5916c8b57046d7907aa81b759",
     "config_digest": "sha256:4a87a14427bddcaa88a987a4ec4b5c435c5a3da269d04f91af040790cf71b49c",
     "layer_digests": [
@@ -257,10 +257,10 @@
     "anonymous_pull_verified": true
   },
   "database": {
-    "tag": "mohd777/max-radius-db:2.7.1",
+    "tag": "mohd777/alpha-radius-db:2.7.1",
     "registry_digest": "sha256:bb27bde261794d326398a9c998ddf9f35db45296d829123bff829cd076f68107",
     "pinned_reference": "mariadb@sha256:0d0945c57f75b3a3b9ebe71aedaaad005fa5305054e8fca3d2e42a8c92b43b5e",
-    "versioned_mirror_reference": "mohd777/max-radius-db@sha256:bb27bde261794d326398a9c998ddf9f35db45296d829123bff829cd076f68107",
+    "versioned_mirror_reference": "mohd777/alpha-radius-db@sha256:bb27bde261794d326398a9c998ddf9f35db45296d829123bff829cd076f68107",
     "source_platform_reference": "mariadb@sha256:bb27bde261794d326398a9c998ddf9f35db45296d829123bff829cd076f68107",
     "amd64_manifest": "sha256:bb27bde261794d326398a9c998ddf9f35db45296d829123bff829cd076f68107",
     "config_digest": "sha256:4e667183d5236dbbecf88167a0f1f49dc0c116aa46990309e920e663e2fdc348",
@@ -283,10 +283,10 @@
     "anonymous_pull_verified": true
   },
   "autoheal": {
-    "tag": "mohd777/max-radius-autoheal:2.7.1",
+    "tag": "mohd777/alpha-radius-autoheal:2.7.1",
     "registry_digest": "sha256:bc7ee40195302925cb0d43260ec56b194dc820215cd8694cb21d8234d48346e0",
     "pinned_reference": "willfarrell/autoheal@sha256:f8adb7a2343aaeaa2757561b52428ebf9d3bb8e304d0f7a77fd13de395610504",
-    "versioned_mirror_reference": "mohd777/max-radius-autoheal@sha256:bc7ee40195302925cb0d43260ec56b194dc820215cd8694cb21d8234d48346e0",
+    "versioned_mirror_reference": "mohd777/alpha-radius-autoheal@sha256:bc7ee40195302925cb0d43260ec56b194dc820215cd8694cb21d8234d48346e0",
     "source_platform_reference": "willfarrell/autoheal@sha256:bc7ee40195302925cb0d43260ec56b194dc820215cd8694cb21d8234d48346e0",
     "amd64_manifest": "sha256:bc7ee40195302925cb0d43260ec56b194dc820215cd8694cb21d8234d48346e0",
     "config_digest": "sha256:0524339e69b9e24588e035d2ef12b853f867912779ba286684706d79d80a899f",

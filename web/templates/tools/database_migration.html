@@ -16,7 +16,7 @@
                         استوديو ترحيل قواعد البيانات (Database Migration Studio)
                         <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">SAS4 & SQL Support</span>
                     </h2>
-                    <p class="text-xs text-slate-400 mt-0.5">استيراد وترحيل الباقات، المشتركين، الكروت، والموزعين من نسخ احتياطية خارجية إلى MAX RADIUS مع معمارية اللقطة الثابتة (Snapshotting)</p>
+                    <p class="text-xs text-slate-400 mt-0.5">استيراد وترحيل الباقات، المشتركين، الكروت، والموزعين من نسخ احتياطية خارجية إلى ALPHA RADIUS مع معمارية اللقطة الثابتة (Snapshotting)</p>
                 </div>
             </div>
         </div>
@@ -110,7 +110,7 @@
         </div>
 
         <div>
-            <h4 id="loadingTitle" class="text-lg font-bold text-white mb-1.5">جاري ترحيل وحقن البيانات في MAX RADIUS...</h4>
+            <h4 id="loadingTitle" class="text-lg font-bold text-white mb-1.5">جاري ترحيل وحقن البيانات في ALPHA RADIUS...</h4>
             <p id="loadingDesc" class="text-xs text-slate-400">يتم معالجة السجلات بدفعات فائقة السرعة مع المزامنة اللحظية للراديوس.</p>
         </div>
 
@@ -243,7 +243,7 @@
                         <i class="fa-solid fa-network-wired text-cyan-400"></i>
                         3. مصفوفة مطابقة وتخصيص الباقات (Package Mapping Matrix)
                     </h3>
-                    <p class="text-xs text-slate-400 mt-0.5">حدد لكل باقة مكتشفة في النسخة القديمة: هل تريد إنشاء باقة جديدة في MAX RADIUS أم ربطها بباقة موجودة مسبقاً؟</p>
+                    <p class="text-xs text-slate-400 mt-0.5">حدد لكل باقة مكتشفة في النسخة القديمة: هل تريد إنشاء باقة جديدة في ALPHA RADIUS أم ربطها بباقة موجودة مسبقاً؟</p>
                 </div>
                 <button type="button" onclick="autoSetAllPackages('auto_create')" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold border border-slate-700 transition flex-shrink-0">
                     <i class="fa-solid fa-wand-magic-sparkles text-cyan-400 me-1"></i>إنشاء الكل كباقات جديدة تلقائياً
@@ -259,7 +259,7 @@
                             <th class="py-3 px-3">السعر</th>
                             <th class="py-3 px-3">حجم البيانات (Quota)</th>
                             <th class="py-3 px-3">الصلاحية</th>
-                            <th class="py-3 px-3">الإجراء في MAX RADIUS</th>
+                            <th class="py-3 px-3">الإجراء في ALPHA RADIUS</th>
                         </tr>
                     </thead>
                     <tbody id="packageMappingTableBody" class="divide-y divide-slate-800/60 text-slate-200">
@@ -373,7 +373,7 @@
             <div class="mt-6 p-4 rounded-xl border border-amber-500/20 bg-amber-500/5 flex items-start gap-3 text-amber-200 text-xs">
                 <i class="fa-solid fa-shield-halved text-amber-400 text-base mt-0.5 flex-shrink-0"></i>
                 <div class="leading-relaxed">
-                    <span class="font-bold">حماية المعاملة الذرية (Atomic Commit):</span> لن يتم حفظ أي تعديل في قاعدة بيانات MAX RADIUS إلا بعد نجاح معالجة كافة السجلات بنسبة 100%. في حال حدوث أي خطأ، سيقوم النظام بالتراجع الفوري (Rollback) التلقائي لحماية بيانات الشبكة.
+                    <span class="font-bold">حماية المعاملة الذرية (Atomic Commit):</span> لن يتم حفظ أي تعديل في قاعدة بيانات ALPHA RADIUS إلا بعد نجاح معالجة كافة السجلات بنسبة 100%. في حال حدوث أي خطأ، سيقوم النظام بالتراجع الفوري (Rollback) التلقائي لحماية بيانات الشبكة.
                 </div>
             </div>
 
@@ -384,7 +384,7 @@
                 </button>
                 <button type="button" id="btnExecuteMigration" onclick="executeMigrationAction()" class="px-8 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-900/30 transition flex items-center gap-2">
                     <i class="fa-solid fa-bolt"></i>
-                    تأكيد وبدء الترحيل إلى MAX RADIUS الآن
+                    تأكيد وبدء الترحيل إلى ALPHA RADIUS الآن
                 </button>
             </div>
         </div>
@@ -604,7 +604,7 @@ function autoSetAllPackages(val) {
 let g_migrationPollInterval = null;
 
 function executeMigrationAction() {
-    if (!confirm('هل أنت متأكد من رغبتك في بدء ترحيل واستيراد هذه البيانات إلى نظام MAX RADIUS الآن؟')) {
+    if (!confirm('هل أنت متأكد من رغبتك في بدء ترحيل واستيراد هذه البيانات إلى نظام ALPHA RADIUS الآن؟')) {
         return;
     }
 
@@ -634,7 +634,7 @@ function executeMigrationAction() {
 
     document.getElementById('step-panel-4').classList.add('hidden');
     document.getElementById('loadingOverlay').classList.remove('hidden');
-    document.getElementById('loadingTitle').innerText = 'جاري ترحيل وحقن البيانات في MAX RADIUS...';
+    document.getElementById('loadingTitle').innerText = 'جاري ترحيل وحقن البيانات في ALPHA RADIUS...';
     document.getElementById('loadingDesc').innerText = 'يتم معالجة السجلات بدفعات فائقة السرعة مع المزامنة اللحظية للراديوس.';
     
     // Reset progress UI

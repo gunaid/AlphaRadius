@@ -32,7 +32,7 @@ class HandoffTests(unittest.TestCase):
         self.web=dict(Id='c'*64,Name='/owned_web',Image='candidate',State={'Running':True})
         self.api=API(self.old,self.web);self.probes=[]
         self.compose=self.folder/'compose.json';self.compose.write_text(json.dumps({'services':{'web':{'image':'candidate'},'update_controller':{'image':'old'}}}))
-        self.plan={'job':'d'*32,'images':{'web':'candidate'},'references':{'web':'mohd777/max-radius-web@sha256:'+'e'*64},'project':'owned','publisher_key':'fixture',
+        self.plan={'job':'d'*32,'images':{'web':'candidate'},'references':{'web':'mohd777/alpha-radius-web@sha256:'+'e'*64},'project':'owned','publisher_key':'fixture',
             'compose_path':str(self.compose),'controller':{'service':'update_controller','old':self.old}}
         h.write_json(self.folder/'plan.private.json',self.plan)
         h.write_json(self.folder/'state.json',{'status':'handoff_pending','services':{'web':{'new_id':self.web['Id']}}})

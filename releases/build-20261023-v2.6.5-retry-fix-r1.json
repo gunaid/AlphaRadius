@@ -4,9 +4,9 @@
   "version": "2.6.5",
   "build": "20261023-v2.6.5-retry-fix-r1",
   "platform": "linux/amd64",
-  "base_image": "mohd777/max-radius-web@sha256:be1b5a0319803ea8f3e51798b9622aa29ad7016e591a3162226d649865181c77",
-  "image": "mohd777/max-radius-web@sha256:ef10effbe0bf6d599ad1c8e382788b8e5f5674e820252ff853c1ee37fe27314c",
-  "immutable_tag": "mohd777/max-radius-web:20261023-v2.6.5-retry-fix-r1",
+  "base_image": "mohd777/alpha-radius-web@sha256:be1b5a0319803ea8f3e51798b9622aa29ad7016e591a3162226d649865181c77",
+  "image": "mohd777/alpha-radius-web@sha256:ef10effbe0bf6d599ad1c8e382788b8e5f5674e820252ff853c1ee37fe27314c",
+  "immutable_tag": "mohd777/alpha-radius-web:20261023-v2.6.5-retry-fix-r1",
   "latest_updated_at": "2026-10-23T09:08:55.447116Z",
   "published_verified_at": "2026-10-23T09:09:00.055698+00:00",
   "changed_signed_files": [

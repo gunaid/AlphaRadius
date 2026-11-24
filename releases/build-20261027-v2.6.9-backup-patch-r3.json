@@ -5,12 +5,12 @@
   "published": false,
   "registry_manifest_digest": null,
   "candidate": {
-    "tag": "max-radius-web:2.6.9-backup-candidate-local-20261027-r3",
+    "tag": "alpha-radius-web:2.6.9-backup-candidate-local-20261027-r3",
     "image": "sha256:c5ab9fe42359c867c6dedabaf607ff492b2652e8160fa5df987e34e645db098b",
     "published": false
   },
   "compatible_rollback": {
-    "tag": "max-radius-web:2.6.9-backup-rollback-local-20261027-r3",
+    "tag": "alpha-radius-web:2.6.9-backup-rollback-local-20261027-r3",
     "image": "sha256:f8cde0e7bfaa0b63aade6a5fed9e51fb921453ee674ba70e8202088c4b6c1a14",
     "published": false
   },
