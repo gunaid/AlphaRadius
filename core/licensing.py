@@ -66,8 +66,11 @@ def identify_license_authority(package_dict):
         return None
     canonical_json = json.dumps(package_dict['payload'], sort_keys=True, separators=(',', ':'), ensure_ascii=False)
     data_bytes = canonical_json.encode('utf-8')
-    for authority, public_pem in TRUSTED_LICENSE_PUBLIC_KEYS:
+    # Resolve every key through get_master_public_key_pem so the pinned roots
+    # have a single lookup point (also used by isolated tests with fixture keys).
+    for authority, _ in TRUSTED_LICENSE_PUBLIC_KEYS:
         try:
+            public_pem = get_master_public_key_pem(authority)
             public_key = serialization.load_pem_public_key(public_pem.encode('utf-8'))
             public_key.verify(signature, data_bytes)
             return authority

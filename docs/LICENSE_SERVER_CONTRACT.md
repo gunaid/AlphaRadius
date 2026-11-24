@@ -1,4 +1,4 @@
-# عقد خادم التراخيص — ما يجب أن ينفذه license.alpha.amtik.online
+# عقد خادم التراخيص — ما يجب أن ينفذه ls.amtik.online
 
 هذه الوثيقة مستخرجة من كود العميل الحالي، وهي المرجع لأي خادم تراخيص يخدم نسخ ALPHA RADIUS. العميل يرفض أي رد لا يطابقها حرفيًا.
 مصادر العميل: `core/licensing.py` و`core/license_protocol.py` و`services/license_guard_service.py` و`core/hardware_fingerprint.py` و`core/license_feature_policy.py`.
@@ -7,7 +7,8 @@
 ## 1. المفاتيح والترميز
 
 - مفتاح الناشر (master) زوج **Ed25519**. المفتاح الخاص يبقى في الخادم فقط.
-- المفتاح العام يُضمَّن في العميل بصيغة PEM (SubjectPublicKeyInfo) داخل `EMBEDDED_PUBLIC_KEY` في `core/licensing.py`. سلّم ملف PEM العام لتحديث العميل.
+- المفتاح العام يُضمَّن في العميل بصيغة PEM (SubjectPublicKeyInfo) داخل `AMAN_MASTER_PUBLIC_KEY` في `core/licensing.py`. أي تغيير للمفتاح يتطلب إصدار عميل جديد.
+- العميل يثق أيضًا بمفتاح قديم `LEGACY_MASTER_PUBLIC_KEY` للتراخيص الصادرة قبل الانتقال. مصدر الترخيص يُحدَّد من التوقيع نفسه، لا من حقل داخل الحزمة. التفاصيل في [ALPHA_LICENSE_PROVIDER_MIGRATION](ALPHA_LICENSE_PROVIDER_MIGRATION.md).
 - المفتاح نفسه يوقّع **ملفات الترخيص** و**ردود النبضات**.
 - التوقيع دائمًا على الصيغة القانونية للـ JSON:
   ```python
@@ -66,12 +67,13 @@
 
 ## 3. نقطة النبضات والتفعيل
 
-`POST https://license.alpha.amtik.online/api/v1/heartbeat/ping`
+`POST https://ls.amtik.online/api/v1/heartbeat/ping`
 
 - HTTPS إلزامي، وبلا أي إعادة توجيه (العميل يرفض 301/302).
 - مهلة العميل 6 ثوانٍ، وحجم الرد ≤ 1 MB.
 - الترويسات: `Content-Type: application/json`، و`User-Agent: ALPHA-RADIUS-License/2.0`.
-- عنوان الخادم في العميل: `MASTER_LICENSE_SERVER_URL`، والافتراضي `https://license.alpha.amtik.online`.
+- عنوان الخادم في العميل: `MASTER_LICENSE_SERVER_URL`، والافتراضي `https://ls.amtik.online`.
+- التراخيص الموقّعة بالمفتاح القديم لا تتصل بهذه النقطة إطلاقًا؛ تعمل بالتحقق المحلي فقط.
 
 ### جسم الطلب
 
@@ -152,7 +154,7 @@ HTTP **401** بجسم JSON: `{"error": "<code>"}`. القيم المسموحة �
 - الحقول الأربعة الأولى تساوي قيم الطلب حرفيًا.
 - `request_hash` محسوب على payload الطلب كما وصل، شاملًا `request_nonce` و`request_epoch` و`enrollment_token`.
 - `issued_epoch` و`expires_epoch` أرقام. يجب أن يكون `issued ≤ now+30` و`expires > now` و`0 < expires-issued ≤ 120`. المقترح 90 ثانية.
-- `status` واحد من: `active` `over_quota` `revoked` `suspended` `blacklisted` `hwid_mismatch` `unlicensed` `expired` `instance_limit`.
+- `status` واحد من: `active` `over_quota` `revoked` `suspended` `blacklisted` `hwid_mismatch` `unlicensed` `expired` `instance_limit` `error`.
 - `valid == true` إذا وفقط إذا كانت `status` تساوي `active` أو `over_quota`.
 
 ### كيف يتصرف العميل بحسب الرد
@@ -161,9 +163,13 @@ HTTP **401** بجسم JSON: `{"error": "<code>"}`. القيم المسموحة �
 |---|---|
 | `active` / `over_quota` | يحدّث آخر نبضة ويلغي فترة السماح. |
 | `suspended` أو `remote_action:"suspend"` | تعليق الترخيص محليًا. |
-| `revoked` / `blacklisted` / `hwid_mismatch` / `unlicensed`، أو `remote_action` = `revoke`/`unlicensed`، أو `valid:false` | حظر دائم محليًا. يُرفع عند أول رد `active` لاحق. |
-| `instance_limit` | تعليق مع رسالة بلوغ حد النسخ. |
+| `revoked` / `blacklisted`، أو `remote_action:"revoke"` | حظر دائم محليًا (قائمة الحظر). يُرفع عند أول رد `active` لاحق. |
+| `expired` | حالة محلية `expired`؛ تُرفع عند أول رد `active` لاحق. |
+| `hwid_mismatch` / `unlicensed` / `error`، أو `remote_action:"unlicensed"`، أو `valid:false` | حالة محلية `unlicensed` دون حظر دائم؛ تُرفع عند أول رد `active` لاحق. |
+| `instance_limit` | حالة محلية `instance_limit` مع رسالة بلوغ حد النسخ. |
 | تعذر الاتصال | بعد ساعة تنبيه، وبعد **24 ساعة** قفل `grace_expired`. |
+
+النبضة تُرسل حتى لو كانت الحزمة المحلية منتهية أو غير مطابقة للربط، ما دام توقيعها من مفتاح الخادم الحالي؛ هكذا يصل التجديد عن بعد إلى ترخيص منتهٍ. الحزمة ذات التوقيع غير الموثوق لا تُرسل نبضة.
 
 **تحديث الترخيص عن بعد (OTA):** أرسل في `remote_payload` (أو `license_token`) ملف ترخيص كاملًا كنص JSON أو Base64، موقعًا بمفتاح الناشر.
 - يُطبّق إذا كان `remote_action:"sync_license"`، أو إذا اختلف توقيعه عن المحفوظ.

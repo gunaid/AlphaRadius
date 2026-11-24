@@ -22,6 +22,7 @@ from core.licensing import (
     AMAN_LICENSE_AUTHORITY,
     LEGACY_LICENSE_AUTHORITY,
     decode_license_string,
+    identify_license_authority,
     verify_license_package,
     get_master_public_key_pem,
 )
@@ -1033,17 +1034,23 @@ def sync_license_heartbeat_with_server(max_retries=3):
     if lic:
         try:
             installed_package = json.loads(lic['raw_package_json'])
-            package_valid, package_message, package_info = verify_license_package(
+        except (TypeError, ValueError, KeyError) as exc:
+            return False, f"تعذر قراءة حزمة الترخيص المثبتة: {exc}"
+        # Only the signature decides the authority here. A managed (Aman) package
+        # that is locally expired, over its binding or otherwise invalid must still
+        # reach the server: the signed response is how renewals arrive (OTA).
+        authority = identify_license_authority(installed_package)
+        if authority is None:
+            return False, "توقيع حزمة الترخيص المثبتة غير صالح أو غير موثوق."
+        if authority == LEGACY_LICENSE_AUTHORITY:
+            package_valid, package_message, _ = verify_license_package(
                 installed_package,
                 current_active_sessions=max(0, active_sess_count),
                 current_nas=nas_count,
                 current_subscribers=subs_count,
             )
-        except (TypeError, ValueError, KeyError) as exc:
-            return False, f"تعذر قراءة حزمة الترخيص المثبتة: {exc}"
-        if not package_valid:
-            return False, package_message
-        if package_info.get('license_authority') == LEGACY_LICENSE_AUTHORITY:
+            if not package_valid:
+                return False, package_message
             # Preserve explicit local revocation/suspension, but recover the old
             # network-only grace state after upgrading from a retired endpoint.
             if lic.get('status') == 'grace_expired' and not is_license_blacklisted(lic['license_id']):

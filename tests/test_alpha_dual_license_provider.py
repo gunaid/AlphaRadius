@@ -192,5 +192,74 @@ class LegacyGraceCompatibilityTests(unittest.TestCase):
         self.assertEqual(status["status"], "grace_expired")
 
 
+class ManagedHeartbeatRenewalTests(unittest.TestCase):
+    """An expired managed package must still reach the server to receive renewal."""
+
+    def run_heartbeat(self, package):
+        aman_key, legacy_key = Ed25519PrivateKey.generate(), Ed25519PrivateKey.generate()
+        trust = ((licensing.AMAN_LICENSE_AUTHORITY, public_pem(aman_key)),
+                 (licensing.LEGACY_LICENSE_AUTHORITY, public_pem(legacy_key)))
+        package = package(aman_key)
+        row = {"id": 1, "license_id": package["payload"]["license_id"], "status": "expired",
+               "max_active_sessions": 0, "master_server_url": "https://ls.amtik.online",
+               "raw_package_json": json.dumps(package), "signature_b64": package["signature"]}
+        calls = []
+
+        class Connection:
+            def close(self):
+                pass
+
+        def exchange(server_url, payload, storage, public_key):
+            calls.append(payload)
+            return {"license_id": row["license_id"], "valid": True, "status": "active"}
+
+        source = (ROOT / "services" / "license_guard_service.py").read_text(encoding="utf-8")
+        tree = ast.parse(source)
+        function = next(node for node in tree.body if isinstance(node, ast.FunctionDef)
+                        and node.name == "sync_license_heartbeat_with_server")
+        namespace = {
+            "json": json, "time": time, "logger": logging.getLogger("heartbeat-renewal-test"),
+            "query_one": lambda *_: row, "DEFAULT_MASTER_SERVER_URL": "https://ls.amtik.online",
+            "get_current_system_counts": lambda: (1, 1, 1),
+            "get_machine_id": lambda: "HW-TEST", "get_instance_uuid": lambda: "INST-TEST",
+            "APP_VERSION": "2.7.1", "APP_EDITION": "test", "STORAGE_DIR": "/nonexistent",
+            "get_connection": Connection, "is_mysql_conn": lambda _conn: False,
+            "identify_license_authority": licensing.identify_license_authority,
+            "verify_license_package": licensing.verify_license_package,
+            "LEGACY_LICENSE_AUTHORITY": licensing.LEGACY_LICENSE_AUTHORITY,
+            "AMAN_LICENSE_AUTHORITY": licensing.AMAN_LICENSE_AUTHORITY,
+            "get_master_public_key_pem": lambda authority=None: "fixture",
+            "authenticated_license_exchange": exchange,
+            "execute_write": lambda *_: None, "clear_license_cache": lambda: None,
+            "is_license_blacklisted": lambda *_: False, "record_license_revocation": lambda *_: None,
+            "remove_license_revocation": lambda *_: None,
+            "_recover_clock_after_verified_heartbeat": lambda *_: False,
+            "check_and_update_monotonic_time": lambda: (True, ""),
+            "decode_license_string": licensing.decode_license_string,
+            "_apply_verified_package_to_db": lambda *_: None,
+        }
+        exec(compile(ast.Module(body=[function], type_ignores=[]), "license_guard", "exec"), namespace)
+        with patch.multiple(licensing, TRUSTED_LICENSE_PUBLIC_KEYS=trust,
+                            get_machine_id=lambda: "HW-TEST", get_instance_uuid=lambda: "INST-TEST"):
+            result = namespace["sync_license_heartbeat_with_server"](max_retries=1)
+        return result, calls
+
+    def test_expired_managed_package_still_sends_heartbeat(self):
+        def expired(key):
+            package = signed_package(key)
+            payload = dict(package["payload"], is_lifetime=False, expires_at="2020-01-01T00:00:00Z")
+            encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+            return {"payload": payload, "signature": base64.b64encode(key.sign(encoded)).decode("ascii")}
+
+        (ok, _), calls = self.run_heartbeat(expired)
+        self.assertTrue(ok)
+        self.assertEqual(len(calls), 1)
+
+    def test_untrusted_package_does_not_contact_server(self):
+        (ok, _), calls = self.run_heartbeat(lambda _key: signed_package(Ed25519PrivateKey.generate()))
+        self.assertFalse(ok)
+        self.assertEqual(calls, [])
+
+
 if __name__ == "__main__":
     unittest.main()
