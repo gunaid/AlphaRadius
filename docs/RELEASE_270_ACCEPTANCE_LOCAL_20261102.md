@@ -8,10 +8,10 @@
 
 | المكون | المرجع |
 |---|---|
-| Web 2.6.9 المنشورة التي بُني عليها المرشح | `mohd777/alpha-radius-web:2.6.9-backup-reader-20261101-r1`؛ `sha256:690cfa939cdc4dff5d09c2a2ef0543cd0abd506cad680baff814f7a5b6dca832` |
+| Web 2.6.9 المنشورة التي بُني عليها المرشح | `gunaid/alpha-radius-web:2.6.9-backup-reader-20261101-r1`؛ `sha256:690cfa939cdc4dff5d09c2a2ef0543cd0abd506cad680baff814f7a5b6dca832` |
 | Web 2.7.0 النهائية محليًا | `alpha-radius-web:2.7.0-rc-local-20261102-r3`؛ `sha256:9fcbfca04af5999956e1a8e82adcffa3aa13cde150f94eb4df2b3a879211bdda` |
 | Core 2.7.0 المحلية | `alpha-radius-core:2.7.0-rc-local-20261101-r1`؛ `sha256:10cc88946c5ed6310a36c4c11b7e991277137da87eb019958f2eb45c8d2eabf5` |
-| أصل Core المنشور | `mohd777/alpha-radius-core:2.6.9-maintenance-20261101-r1`؛ `sha256:9786df38bb3ce725c7a1f87a52b2db34ee90a0a221df29dd0331d95684a0a067` |
+| أصل Core المنشور | `gunaid/alpha-radius-core:2.6.9-maintenance-20261101-r1`؛ `sha256:9786df38bb3ce725c7a1f87a52b2db34ee90a0a221df29dd0331d95684a0a067` |
 
 تم التحقق من المرجع المنشور بالبصمة، وليس باسم `latest`. أضيف المصدر الحالي فوق طبقات تشغيل Web المنشورة، مع تجميع الوحدات وحماية القوالب وإعادة التوقيع بنفس ناشر سلامة التشغيل. التحقق داخل الصورة أكد التوقيع، الإصدار، تحميل وحدات `.so`، وغياب مصدر Python من `/app`. Core مطابقة في RootFS لأصلها المنشور؛ اختلاف رقم/وسوم الإصدار فقط.
 

@@ -23,8 +23,8 @@
 
 الصورتان المنشورتان المثبتتان في كل منظومة:
 
-- Web: `mohd777/alpha-radius-web@sha256:5455db7ca85a1d5f6c5c205fca0e171cefb28dc9f008dc56d25d4ecd090fa2ca`.
-- Core: `mohd777/alpha-radius-core@sha256:10cc88946c5ed6310a36c4c11b7e991277137da87eb019958f2eb45c8d2eabf5`.
+- Web: `gunaid/alpha-radius-web@sha256:5455db7ca85a1d5f6c5c205fca0e171cefb28dc9f008dc56d25d4ecd090fa2ca`.
+- Core: `gunaid/alpha-radius-core@sha256:10cc88946c5ed6310a36c4c11b7e991277137da87eb019958f2eb45c8d2eabf5`.
 
 هذه مدد التبديل والتحقق، لا مدة التحضير أو فحص البيانات كاملة ولا قياس فقد حزم. بدأ Web قبل Core لحفظ متطلب DNS `web` المثبت في [تجربة 4k](FOUR_K_270_MANUAL_UPGRADE_20261103.md)، وطبق الترتيب نفسه للرجوع. حُفظت عناوين max1 الداخلية `.25.3/.25.4` وm `.24.3/.24.4` وأسماؤهما وارتباطات التخزين والتحكم المحدود. لم يُفتح Docker المضيف العام داخل المستأجرين.
 

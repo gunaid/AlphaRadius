@@ -11,7 +11,7 @@
 ## جذرا العمل
 
 - تطبيق MAX: `C:/Users/lenovo/.gemini/antigravity/scratch/alpha_radius_local`، مستودع Git قائم وبه تغييرات سابقة ومحلية غير ملتزمة؛ احفظها ولا تدفعها ضمن مهمة أخرى.
-- لوحة التحكم V2: `C:/Users/lenovo/.gemini/antigravity/scratch/max_saas_panel_v2_local`، مشروع مستقل وشقيق؛ لم يكن مستودع Git مهيأ عند الفحص، ولم نهيئه أو نخلطه بمستودع MAX.
+- لوحة التحكم V2: `C:/Users/lenovo/.gemini/antigravity/scratch/alpha_saas_panel_v2_local`، مشروع مستقل وشقيق؛ لم يكن مستودع Git مهيأ عند الفحص، ولم نهيئه أو نخلطه بمستودع MAX.
 - الأسرار والنسخ والأدلة الخام: `C:/Users/lenovo/Documents/Codex/private/alpha-radius/` خارج المصدر والبناء. لا تنقل المفاتيح أو الاعتمادات أو قواعد التشغيل إلى Git أو الصور.
 
 ## المنفذ والمثبت
@@ -47,9 +47,9 @@
 
 راجع في المشروع الشقيق:
 
-- عقد الناشر وطريقة الاستخدام (`../../max_saas_panel_v2_local/docs/RELEASE_CENTER.md`، مرجع عمل محلي خارج حزمة المستودع).
-- قبول مركز الإصدار وحدوده (`../../max_saas_panel_v2_local/reports/RELEASE_CENTER_20261022.md`، مرجع عمل محلي خارج حزمة المستودع).
-- إصلاح عرض المركز الرئيسي (`../../max_saas_panel_v2_local/reports/CONTROL_UPDATE_CENTER_UI_FIX_20261022.md`، مرجع عمل محلي خارج حزمة المستودع).
+- عقد الناشر وطريقة الاستخدام (`../../alpha_saas_panel_v2_local/docs/RELEASE_CENTER.md`، مرجع عمل محلي خارج حزمة المستودع).
+- قبول مركز الإصدار وحدوده (`../../alpha_saas_panel_v2_local/reports/RELEASE_CENTER_20261022.md`، مرجع عمل محلي خارج حزمة المستودع).
+- إصلاح عرض المركز الرئيسي (`../../alpha_saas_panel_v2_local/reports/CONTROL_UPDATE_CENTER_UI_FIX_20261022.md`، مرجع عمل محلي خارج حزمة المستودع).
 
 الدليل الخاص `as-client-access-check-20261016/monitor-reports/control-release-center-20261022/FINAL.private.json`. جولة التفعيل مقبولة؛ لا تعاد أدوات النشر أو مؤقت الرجوع القديم ولا تستعد DB تاريخية.
 

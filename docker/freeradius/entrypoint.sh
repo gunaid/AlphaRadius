@@ -154,16 +154,16 @@ fi
 
 # Reserve only after successful authentication, before sending Access-Accept.
 # The packet authenticator makes retries idempotent and new sessions distinct.
-if ! grep -q 'MAX_LICENSE_ATOMIC_CAPACITY' "${CONF_DIR}/sites-available/default"; then
+if ! grep -q 'ALPHA_LICENSE_ATOMIC_CAPACITY' "${CONF_DIR}/sites-available/default"; then
     sed -i '/^post-auth {/r /etc/freeradius/3.0/license-capacity-postauth.conf' "${CONF_DIR}/sites-available/default"
 fi
 
 # Authenticate successful responses and rejects, including replies without EAP.
-if ! grep -q 'MAX_MESSAGE_AUTHENTICATOR_ACCEPT' "${CONF_DIR}/sites-available/default"; then
-    sed -i '/^post-auth {/a # MAX_MESSAGE_AUTHENTICATOR_ACCEPT\n\tupdate reply {\n\t\tMessage-Authenticator := 0x00000000000000000000000000000000\n\t}' "${CONF_DIR}/sites-available/default"
+if ! grep -q 'ALPHA_MESSAGE_AUTHENTICATOR_ACCEPT' "${CONF_DIR}/sites-available/default"; then
+    sed -i '/^post-auth {/a # ALPHA_MESSAGE_AUTHENTICATOR_ACCEPT\n\tupdate reply {\n\t\tMessage-Authenticator := 0x00000000000000000000000000000000\n\t}' "${CONF_DIR}/sites-available/default"
 fi
-if ! grep -q 'MAX_MESSAGE_AUTHENTICATOR_REJECT' "${CONF_DIR}/sites-available/default"; then
-    sed -i '/^[[:space:]]*attr_filter\.access_reject$/a # MAX_MESSAGE_AUTHENTICATOR_REJECT\n\t\tupdate reply {\n\t\t\tMessage-Authenticator := 0x00000000000000000000000000000000\n\t\t}' "${CONF_DIR}/sites-available/default"
+if ! grep -q 'ALPHA_MESSAGE_AUTHENTICATOR_REJECT' "${CONF_DIR}/sites-available/default"; then
+    sed -i '/^[[:space:]]*attr_filter\.access_reject$/a # ALPHA_MESSAGE_AUTHENTICATOR_REJECT\n\t\tupdate reply {\n\t\t\tMessage-Authenticator := 0x00000000000000000000000000000000\n\t\t}' "${CONF_DIR}/sites-available/default"
 fi
 
 chown -R freerad:freerad ${CONF_DIR} 2>/dev/null || true
@@ -179,9 +179,9 @@ fi
 
 # A diagnostic detail-file failure must not short-circuit the mandatory SQL
 # module. Override only detail's fail action, never SQL's failure semantics.
-if ! grep -q 'MAX_DETAIL_SQL_INDEPENDENT' "${CONF_DIR}/sites-available/default"; then
+if ! grep -q 'ALPHA_DETAIL_SQL_INDEPENDENT' "${CONF_DIR}/sites-available/default"; then
     sed -i '/^accounting {/,/^}/ {
-        s/^[[:space:]]*detail[[:space:]]*$/\t# MAX_DETAIL_SQL_INDEPENDENT\n\tdetail {\n\t\tfail = 1\n\t}/
+        s/^[[:space:]]*detail[[:space:]]*$/\t# ALPHA_DETAIL_SQL_INDEPENDENT\n\tdetail {\n\t\tfail = 1\n\t}/
     }' "${CONF_DIR}/sites-available/default"
 fi
 

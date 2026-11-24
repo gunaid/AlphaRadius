@@ -81,7 +81,7 @@ sudo bash /tmp/alpha-radius-install.sh
 ```bash
 cd /opt/alpha-radius
 docker compose --env-file .env --env-file runtime-release.env -f docker-compose.production.yml ps
-docker exec alpha_radius_web python /opt/max-protection/verify.py
+docker exec alpha_radius_web python /opt/alpha-protection/verify.py
 ```
 
 تستخدم `runtime-release.env` معرفات الصور الثابتة بالإصدار، حتى لا يتبدل المحتوى اعتمادًا على اسم `latest` وحده. عند اعتماد إصدار أحدث استخدم المثبت لتحديث البيان وملف الصور معًا.

@@ -19,14 +19,14 @@
 
 ## قناة القياس والعزل
 
-المصدر [native_tenant_resource_proxy.py](../deploy/hosted-max/native_tenant_resource_proxy.py) منفذ مستقل للقراءة فقط، وليس Docker API عامًا. يتحقق من id/slug/domain في binding مملوكة للمضيف، ومن labels الملكية والصورة وهوية الحاوية قبل القياس وبعده، وحتى عند إعادة نتيجة cache. يجمع استهلاك Web وCore فقط؛ لا يطلب stats لمحركي max-db-a/b المشتركين ولا ينسب حملهما إلى مستأجر.
+المصدر [native_tenant_resource_proxy.py](../deploy/hosted-max/native_tenant_resource_proxy.py) منفذ مستقل للقراءة فقط، وليس Docker API عامًا. يتحقق من id/slug/domain في binding مملوكة للمضيف، ومن labels الملكية والصورة وهوية الحاوية قبل القياس وبعده، وحتى عند إعادة نتيجة cache. يجمع استهلاك Web وCore فقط؛ لا يطلب stats لمحركي alpha-db-a/b المشتركين ولا ينسب حملهما إلى مستأجر.
 
 المقياس نسبة استهلاك خدمات المستأجر من سعة معالج المضيف، وليس إجمالي حمل الخادم أو نسبة Docker لكل نواة. المسار الوحيد GET /_max_metrics/v1/resources، دون query أو body، على socket بصلاحية 0600 وroot peer. يعيد حقول CPU منقاة مع cache لمدة 3 ثوانٍ.
 
-لكل هدف الحزمة `/opt/max-host-r/scoped-<slug>-cpu-20261110-r1` وخدمة `max-resource-<slug>-cpu.service` وconfig محمية. socket داخل `storage/.host-control/resources.sock`. أضيفت إلى Web فقط:
+لكل هدف الحزمة `/opt/alpha-host-r/scoped-<slug>-cpu-20261110-r1` وخدمة `max-resource-<slug>-cpu.service` وconfig محمية. socket داخل `storage/.host-control/resources.sock`. أضيفت إلى Web فقط:
 
-- `MAX_RESOURCE_METRICS_SOCKET=/app/storage/.host-control/resources.sock`
-- `MAX_RESOURCE_METRICS_TENANT=<slug>`
+- `ALPHA_RESOURCE_METRICS_SOCKET=/app/storage/.host-control/resources.sock`
+- `ALPHA_RESOURCE_METRICS_TENANT=<slug>`
 
 لم يتغير tenant_docker_proxy المشترك أو محرك التحديث أو ناشر اللوحة، ولم يركب Docker socket الجذري داخل Web. عند فشل القياس يبقى العرض 0.5% وفق قرار المستخدم؛ الصفر المقاس فعليًا يبقى صفرًا.
 
@@ -39,7 +39,7 @@
 - بعد تعافي قناتي المقاييس، قرأ القارئ المجمّع داخل Web الحية 2.47% على max1 و17.06% على m عند20:21:21. هذه عينات لحظية، لا قياس حمل طويل أو اختبار تحميل مصطنع.
 - حفظت 300 عينة محاسبة لكل هدف: ID وUID والعدادات الثلاثة دون تراجع. lease حديثة ومربوطة بالعقد، ومنافذ1812/1813 موجودة في network namespace الخاصة بـCore. لم تشغل مصادقة NAS اصطناعية أو CoA أو مهمة مالية أو حذف.
 - في جولة m ثبتت25 حاوية سابقة خارج Web المستبدلة، بما فيها Web max1 الجديدة. في تحقق max1 النهائي ثبتت23 حاوية بعد استبعاد Web الهدفين المصرح بتبديلهما؛ فحص الجولة الأول سبق تبديل m وحافظ على24 حاوية أخرى.
-- أثناء إعادة تشغيل قناتي المقاييس ثبتت جميع الحاويات27: الهوية والصورة وConfig/HostConfig/Mounts وStartedAt وRestartCount. بقيت خدمات max-host-r وmax-control-r وmax-release-m271 وmax-release-max1-271 وmax-r-l2tp بنفس PID وتوقيت البدء.
+- أثناء إعادة تشغيل قناتي المقاييس ثبتت جميع الحاويات27: الهوية والصورة وConfig/HostConfig/Mounts وStartedAt وRestartCount. بقيت خدمات alpha-host-r وalpha-control-r وmax-release-m271 وmax-release-max1-271 وalpha-r-l2tp بنفس PID وتوقيت البدء.
 - HTTPS من origin أعاد200 لصفحة الدخول في الدومينين، بالـSNI وHost الصحيحين ومهلات محددة. هذا لا يمثل اختبار DNS خارجي أو متصفح العميل. لم تظهر Traceback أوModuleNotFoundError أوCRITICAL في عينات logs بعد التبديل.
 - احتفظ بحاويتي Web السابقتين0987ca و244665 للرجوع؛ لا تنظفهما تلقائيًا.
 
@@ -49,7 +49,7 @@
 
 تعثر جامع الفحص الأول عند استكمال التحقق؛ لم تعد عملية التثبيت أو النسخ. استكمل القبول بقارئ مضيف محدود، وHTTPS origin دون اعتماد DNS، وقراءة منافذ Core من /proc/<pid>/net بدل حلقة exec. أوقف جامعا القراءة المحليان المعلقان فقط. افتقد Python النظام pymysql في محاولة قراءة SQL؛ استخدمت بيئة المنفذ المعتمدة دون تثبيت تبعية جديدة. هذه أخطاء في أداة التحقق، ولا تصنف فشلًا لتحديث العميل.
 
-الإعدادات محفوظة في الحاوية الحالية عند restart، وفي التحديث الذي يحفظ Env. قالب إعادة إنشاء Native العام لا يضيف MAX_RESOURCE_METRICS بعد؛ أي إعادة إنشاء من اللوحة أو تحديث لاحق يجب أن يحفظ الصورة وEnv وقناة المقاييس الخاصة بالهدف. اعتماد هذا السلوك في مولد الإنشاء والتعافي العام ما زال معلقًا. لم يتغير default2.7.0 أو الكتالوج العام أو NET أو192.168.33.33.
+الإعدادات محفوظة في الحاوية الحالية عند restart، وفي التحديث الذي يحفظ Env. قالب إعادة إنشاء Native العام لا يضيف ALPHA_RESOURCE_METRICS بعد؛ أي إعادة إنشاء من اللوحة أو تحديث لاحق يجب أن يحفظ الصورة وEnv وقناة المقاييس الخاصة بالهدف. اعتماد هذا السلوك في مولد الإنشاء والتعافي العام ما زال معلقًا. لم يتغير default2.7.0 أو الكتالوج العام أو NET أو192.168.33.33.
 
 ## الاستئناف والأدلة
 

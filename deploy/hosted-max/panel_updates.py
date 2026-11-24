@@ -84,7 +84,7 @@ def request(socket_path, action, body=None):
     conn.sock.settimeout(25)
     try:
         conn.sock.connect(str(socket_path))
-        conn.request('GET' if body is None else 'POST','/_max_updates/v1/'+action,
+        conn.request('GET' if body is None else 'POST','/_alpha_updates/v1/'+action,
                      body=json.dumps(body).encode() if body is not None else None,
                      headers={'Content-Type':'application/json'})
         res = conn.getresponse(); raw=res.read(262145)
@@ -112,19 +112,19 @@ def ensure_controller(name):
             proof=json.loads(marker.read_text())
             if proof.get('instance')!=instance or proof.get('status')!='ready':
                 raise PanelUpdateError('تهيئة سابقة غير مؤكدة؛ راجع الإيصال دون تكرارها.')
-            command(['systemctl','start','max-panel-update@'+name+'.service'])
+            command(['systemctl','start','alpha-panel-update@'+name+'.service'])
         return root,sockets/'controller.sock'
     # Validate actual service ownership and trust before creating an identity.
     from services.system_update_executor import owned_snapshot, execute
     from services.system_update_runtime import Docker
     roles={'web':'web','core':'radius_core','db':'db'}
     old=owned_snapshot(Docker(),{'project':name,'services':roles})
-    if any(m['Destination']=='/max-update-socket' for m in old['web']['Mounts']):
+    if any(m['Destination']=='/alpha-update-socket' for m in old['web']['Mounts']):
         raise PanelUpdateError('منفذ تحديث آخر موجود؛ يلزم التحقق قبل الربط.')
     trust=execute(Docker(),old['web']['Id'],
         "import json,hashlib,pathlib,subprocess;from core.config import APP_VERSION;"
-        "p=subprocess.run(['python','/opt/max-protection/verify.py'],capture_output=True);"
-        "print(json.dumps({'version':APP_VERSION,'verified':p.returncode==0,'key':hashlib.sha256(pathlib.Path('/opt/max-protection/runtime-public.pem').read_bytes()).hexdigest()}))")
+        "p=subprocess.run(['python','/opt/alpha-protection/verify.py'],capture_output=True);"
+        "print(json.dumps({'version':APP_VERSION,'verified':p.returncode==0,'key':hashlib.sha256(pathlib.Path('/opt/alpha-protection/runtime-public.pem').read_bytes()).hexdigest()}))")
     from services.system_update_channel import version
     version(trust['version'])
     if trust.get('verified') is not True or trust.get('key')!=cfg['publisher_key_sha256']:
@@ -143,7 +143,7 @@ def ensure_controller(name):
                    services=roles,compose_path=str(path/'docker-compose.yml'),enrollment_socket=str(sockets))
         bootstrap.atomic(config_path,value)
         bootstrap.atomic(marker,{'status':'ready','instance':instance})
-        command(['systemctl','enable','--now','max-panel-update@'+name+'.service'])
+        command(['systemctl','enable','--now','alpha-panel-update@'+name+'.service'])
     except Exception:
         bootstrap.atomic(marker,{'status':'review_required','instance':instance})
         raise PanelUpdateError('تعذر إكمال الربط؛ حُفظ الإيصال دون تحديث المنظومة أو تكرار التسجيل.') from None

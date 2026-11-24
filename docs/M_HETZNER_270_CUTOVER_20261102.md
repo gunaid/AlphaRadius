@@ -46,7 +46,7 @@
 
 ## هوية النسخة وحدود الاستئناف
 
-Web `mohd777/alpha-radius-web@sha256:5455db7ca85a1d5f6c5c205fca0e171cefb28dc9f008dc56d25d4ecd090fa2ca` وCore `mohd777/alpha-radius-core@sha256:10cc88946c5ed6310a36c4c11b7e991277137da87eb019958f2eb45c8d2eabf5`. محركmهوالمشتركa، وضبطهسبقالتجهيز؛max1علىb. لا رفعصور/Gitأوlatestأوإعلان تحديث بهذهالجولة.
+Web `gunaid/alpha-radius-web@sha256:5455db7ca85a1d5f6c5c205fca0e171cefb28dc9f008dc56d25d4ecd090fa2ca` وCore `gunaid/alpha-radius-core@sha256:10cc88946c5ed6310a36c4c11b7e991277137da87eb019958f2eb45c8d2eabf5`. محركmهوالمشتركa، وضبطهسبقالتجهيز؛max1علىb. لا رفعصور/Gitأوlatestأوإعلان تحديث بهذهالجولة.
 
 الأدلةالمحميةمحليًا `C:/Users/lenovo/Documents/Codex/private/alpha-radius/hetzner-provision270-20261102-r1`، وعلىكلمنالمصدر173والهدف2.31 `/var/lib/max-m-hetzner-cutover-20261102-r1`. الإيصالات الأساسية CUTOVER-COMPLETE وFINAL-READY وFINAL-DELTA-APPLIED وRESTORE-FINAL وFINAL-AUDIT وDIRECT-NEW-API-VERIFIED وPOST-first/later وSOURCE-FINAL-VERIFIED وDELIVERY-MARKED. تجاربالمرآةوالاستعادةموقوفةومحفوظة خارجmالحية؛ لا تحذفDBبالاسم العامأوتعدتشغيلfixture.
 

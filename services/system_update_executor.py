@@ -21,10 +21,10 @@ from database.db import query_one,query_all
 x=get_active_license_status(force_refresh=True)
 y=query_one('SELECT is_valid,valid_until>UTC_TIMESTAMP() fresh FROM wisp_license_runtime_state WHERE id=1')
 rows=query_all('SELECT radacctid,acctinputoctets,acctoutputoctets,acctsessiontime,acctuniqueid FROM radacct ORDER BY radacctid DESC LIMIT 300')
-v=subprocess.run(['python','/opt/max-protection/verify.py'],capture_output=True)
+v=subprocess.run(['python','/opt/alpha-protection/verify.py'],capture_output=True)
 print(json.dumps({'version':APP_VERSION,'verified':v.returncode==0,'license':bool(x['valid']),
 'lease':bool(y and y['is_valid'] and y['fresh']),
-'publisher_key':hashlib.sha256(pathlib.Path('/opt/max-protection/runtime-public.pem').read_bytes()).hexdigest(),
+'publisher_key':hashlib.sha256(pathlib.Path('/opt/alpha-protection/runtime-public.pem').read_bytes()).hexdigest(),
 'rows':rows},default=str))
 '''
 COMPARE = r'''import json,sys
@@ -191,10 +191,10 @@ def prepare(api, config, response, current, folder):
             from services.system_update_channel import version
             if version(manifest['version']) < (2,6,4):
                 raise UpdateError('Enrolling an older installation requires a control-capable release')
-            existing = [m for m in old['web']['Mounts'] if m['Destination']=='/max-update-socket']
+            existing = [m for m in old['web']['Mounts'] if m['Destination']=='/alpha-update-socket']
             if existing:
                 if (len(existing)!=1 or existing[0]['Source']!=bridge or existing[0]['RW']
-                        or 'MAX_UPDATE_SOCKET=/max-update-socket/controller.sock' not in old['web']['Config'].get('Env',[])):
+                        or 'ALPHA_UPDATE_SOCKET=/alpha-update-socket/controller.sock' not in old['web']['Config'].get('Env',[])):
                     raise UpdateError('Existing enrollment socket does not match trusted configuration')
             else:
                 plan['enrollment_socket'] = bridge
@@ -264,12 +264,12 @@ def persist_compose(plan, folder, rollback=False):
         web = document['services'][plan['compose_services']['web']]
         env = web.setdefault('environment', {})
         if isinstance(env, list): env = dict(v.split('=',1) for v in env)
-        env['MAX_UPDATE_SOCKET'] = '/max-update-socket/controller.sock'
+        env['ALPHA_UPDATE_SOCKET'] = '/alpha-update-socket/controller.sock'
         web['environment'] = env
         volumes = web.setdefault('volumes', [])
-        if any((v.split(':')[1] if isinstance(v,str) else v.get('target')) == '/max-update-socket' for v in volumes):
+        if any((v.split(':')[1] if isinstance(v,str) else v.get('target')) == '/alpha-update-socket' for v in volumes):
             raise UpdateError('Existing update socket requires explicit enrollment review')
-        volumes.append(plan['enrollment_socket']+':/max-update-socket:ro')
+        volumes.append(plan['enrollment_socket']+':/alpha-update-socket:ro')
     updated = yaml.safe_dump(document, sort_keys=False, allow_unicode=True).encode('utf-8')
     current = hashlib.sha256(path.read_bytes()).hexdigest()
     if current not in (previous, hashlib.sha256(updated).hexdigest()):
@@ -322,12 +322,12 @@ def run_job(folder, api=None, wait=None):
             specs = {r: candidate_spec(plan['old'][r], image, endpoints_for(plan['old'][r])) for r,image in plan['images'].items()}
             if plan.get('enrollment_socket'):
                 spec = specs['web']
-                if any(m['Target']=='/max-update-socket' for m in spec['HostConfig']['Mounts']):
+                if any(m['Target']=='/alpha-update-socket' for m in spec['HostConfig']['Mounts']):
                     raise UpdateError('Refusing to override an existing update socket')
                 spec['HostConfig']['Mounts'].append({'Type':'bind','Source':plan['enrollment_socket'],
-                                                    'Target':'/max-update-socket','ReadOnly':True})
-                spec['Env']=[v for v in spec.get('Env',[]) if not v.startswith('MAX_UPDATE_SOCKET=')]
-                spec['Env'].append('MAX_UPDATE_SOCKET=/max-update-socket/controller.sock')
+                                                    'Target':'/alpha-update-socket','ReadOnly':True})
+                spec['Env']=[v for v in spec.get('Env',[]) if not v.startswith('ALPHA_UPDATE_SOCKET=')]
+                spec['Env'].append('ALPHA_UPDATE_SOCKET=/alpha-update-socket/controller.sock')
             for role in specs:
                 specs[role].setdefault('Labels', {})['max.update.job'] = plan['job']
             if required(plan['version']):

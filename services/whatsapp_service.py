@@ -186,7 +186,7 @@ def get_evolution_qr_code():
     api_key = settings.get('api_key', '')
     instance = settings.get('instance_name', 'alpha_radius_bot')
 
-    endpoints_to_try = [endpoint, 'http://max_evolution_whatsapp:8080', 'http://localhost:3010']
+    endpoints_to_try = [endpoint, 'http://alpha_evolution_whatsapp:8080', 'http://localhost:3010']
     for ep in endpoints_to_try:
         if not ep:
             continue
@@ -224,7 +224,7 @@ def get_evolution_connection_state():
     api_key = settings.get('api_key', '')
     instance = settings.get('instance_name', 'alpha_radius_bot')
 
-    endpoints_to_try = [endpoint, 'http://max_evolution_whatsapp:8080', 'http://localhost:3010']
+    endpoints_to_try = [endpoint, 'http://alpha_evolution_whatsapp:8080', 'http://localhost:3010']
     for ep in endpoints_to_try:
         if not ep:
             continue
@@ -254,7 +254,7 @@ def restart_evolution_instance():
     api_key = settings.get('api_key', '')
     instance = settings.get('instance_name', 'alpha_radius_bot')
 
-    endpoints_to_try = [endpoint, 'http://max_evolution_whatsapp:8080', 'http://localhost:3010']
+    endpoints_to_try = [endpoint, 'http://alpha_evolution_whatsapp:8080', 'http://localhost:3010']
     for ep in endpoints_to_try:
         if not ep:
             continue
@@ -384,7 +384,7 @@ def send_whatsapp_message(phone_number, message_text, event_type='manual', messa
             "options": {"delay": 1000, "presence": "composing"}
         }
         
-        endpoints_to_try = [settings.get('api_endpoint', '').rstrip('/'), 'http://max_evolution_whatsapp:8080', 'http://localhost:3010']
+        endpoints_to_try = [settings.get('api_endpoint', '').rstrip('/'), 'http://alpha_evolution_whatsapp:8080', 'http://localhost:3010']
         for ep in endpoints_to_try:
             if not ep:
                 continue

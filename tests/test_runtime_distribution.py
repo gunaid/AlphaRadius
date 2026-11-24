@@ -31,7 +31,7 @@ class BundleContracts(unittest.TestCase):
             for name in BASE+HOST:
                 if name == 'runtime-release.env':
                     actual = dict(line.split('=', 1) for line in archive.extractfile(name).read().decode().splitlines())
-                    for key, service in [('MAX_WEB_IMAGE','web'),('MAX_CORE_IMAGE','core'),('MAX_L2TP_IMAGE','l2tp'),('MAX_DB_IMAGE','database'),('MAX_AUTOHEAL_IMAGE','autoheal')]:
+                    for key, service in [('ALPHA_WEB_IMAGE','web'),('ALPHA_CORE_IMAGE','core'),('ALPHA_L2TP_IMAGE','l2tp'),('ALPHA_DB_IMAGE','database'),('ALPHA_AUTOHEAL_IMAGE','autoheal')]:
                         self.assertEqual(actual[key], manifest['images'][service])
                     continue
                 # Old approved bundles must remain valid as development advances.

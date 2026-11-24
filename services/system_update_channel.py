@@ -96,7 +96,7 @@ def verify_response(response, config, current, now=None, capabilities=None):
     if sorted(images) != manifest.get('components') or not set(images) <= set(capabilities or CAPABILITIES):
         raise ChannelError('Components do not match executor capabilities')
     for role, image in images.items():
-        if not isinstance(image, str) or not re.fullmatch('mohd777/alpha-radius-'+role+r'@sha256:[0-9a-f]{64}', image):
+        if not isinstance(image, str) or not re.fullmatch('gunaid/alpha-radius-'+role+r'@sha256:[0-9a-f]{64}', image):
             raise ChannelError('Unpinned or unapproved repository')
     # A free-text migration/rollback description is not executable authorization.
     # First consumer supports backward-compatible releases without explicit DDL.

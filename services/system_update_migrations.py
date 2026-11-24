@@ -74,7 +74,7 @@ def initialize():
 
 ATTEST = """import hashlib,json,pathlib,subprocess
 p=pathlib.Path('/app/database/update_plans/features268.json')
-print(json.dumps({'verified':subprocess.run(['python','/opt/max-protection/verify.py'],capture_output=True).returncode==0,'publisher_key':hashlib.sha256(pathlib.Path('/opt/max-protection/runtime-public.pem').read_bytes()).hexdigest(),'plan_sha256':hashlib.sha256(p.read_bytes()).hexdigest()}))
+print(json.dumps({'verified':subprocess.run(['python','/opt/alpha-protection/verify.py'],capture_output=True).returncode==0,'publisher_key':hashlib.sha256(pathlib.Path('/opt/alpha-protection/runtime-public.pem').read_bytes()).hexdigest(),'plan_sha256':hashlib.sha256(p.read_bytes()).hexdigest()}))
 """
 
 
@@ -145,7 +145,7 @@ def run_initializer(api, plan, folder, state):
     write_json(marker,{'attempted':True,'plan_sha256':plan['migration']['sha256']})
     old=plan['old']['web'];nets=list(old['NetworkSettings']['Networks'])
     if len(nets)!=1:raise UpdateError('Migration requires a single owned DB network')
-    env=[v for v in old['Config'].get('Env',[]) if not v.startswith(('HOSTNAME=','STORAGE_DIR=','BACKUPS_DIR=','MAX_UPDATE_SOCKET='))]
+    env=[v for v in old['Config'].get('Env',[]) if not v.startswith(('HOSTNAME=','STORAGE_DIR=','BACKUPS_DIR=','ALPHA_UPDATE_SOCKET='))]
     env+=['STORAGE_DIR=/tmp/migration-storage','PYTHONDONTWRITEBYTECODE=1']
     spec={'Image':plan['images']['web'],'Entrypoint':['python','-c'],'Cmd':['import time;time.sleep(600)'],'Env':env,
           'Labels':{'max.update.job':plan['job'],'autoheal':'false'},

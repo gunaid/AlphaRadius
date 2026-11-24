@@ -323,7 +323,7 @@ class ServiceTests(unittest.TestCase):
             def fetchone(self):return {'bot_token':TOKEN,'chat_id':'main','backup_chat_id':'backup','is_enabled':1}
             def commit(self):outer.events.append('commit')
             def close(self):self.closed=True;outer.events.append('close')
-        if os.environ.get('MAX_TELEGRAM_COMPILED') == '1':
+        if os.environ.get('ALPHA_TELEGRAM_COMPILED') == '1':
             fake=types.ModuleType('database.db');fake.get_connection=lambda:None
             with patch.dict(sys.modules,{'database.db':fake}):
                 from services import bot_notifications_service as service

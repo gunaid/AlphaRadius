@@ -10,8 +10,8 @@
 
 | الدور | الوسم | هوية Docker المحلية |
 |---|---|---|
-| Web | `mohd777/alpha-radius-web:2.7.0-maintenance-20261105-r2` | `sha256:db5c36f5e93fb842b97c6c3de59b703994933184594b2476d346a6552e7378cc` |
-| Core | `mohd777/alpha-radius-core:2.7.0-maintenance-20261105-r2` | `sha256:8c5594cf7a89e7127aff1cae0303d3967ca2af0d7043c01229fe1825b7a4836a` |
+| Web | `gunaid/alpha-radius-web:2.7.0-maintenance-20261105-r2` | `sha256:db5c36f5e93fb842b97c6c3de59b703994933184594b2476d346a6552e7378cc` |
+| Core | `gunaid/alpha-radius-core:2.7.0-maintenance-20261105-r2` | `sha256:8c5594cf7a89e7127aff1cae0303d3967ca2af0d7043c01229fe1825b7a4836a` |
 
 هذه هويات محلية، وليست ادعاءdigestمنRegistry. البصمات المنشورة تسجل بعد الرفع والتحقق فقط. حجمDockerغيرالمضغوط:Web2,873,573,785بايت وCore314,730,239بايت؛ لا يعبر ذلك عن حجم الرفع، الذي يعتمد على الطبقات الموجودة بالمستودع.
 

@@ -185,7 +185,7 @@ def _register_background_jobs(scheduler, system_tz):
 def init_backup_scheduler():
     """Initialize and start the backup scheduler with the database configured Timezone."""
     import os
-    if os.environ.get('MAX_MAINTENANCE_MODE') == '1':
+    if os.environ.get('ALPHA_MAINTENANCE_MODE') == '1':
         return None
     global _SCHEDULER
     with _SCHEDULER_LOCK:

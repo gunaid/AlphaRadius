@@ -382,7 +382,7 @@ def install_triggers(engine,replace=False):
 try:
     db_extra=['--stop-timeout','120'] if CASE_MODULE=='clock_boot_resilience_cases' else []
     db_command=['--innodb-flush-log-at-trx-commit=1','--innodb-doublewrite=ON','--sync-binlog=1'] if db_extra else []
-    p=subprocess.run(['docker','run','-d','--name',name,'--label','max-owned-task=clock-record-repair-lab',
+    p=subprocess.run(['docker','run','-d','--name',name,'--label','alpha-owned-task=clock-record-repair-lab',
         '--restart=no','-p','127.0.0.1::3306','-e','MARIADB_ROOT_PASSWORD='+password,
         '-e','MARIADB_DATABASE='+schema,*db_extra,'mariadb:10.11',*db_command],capture_output=True)
     (REPORT/'launch.stderr.private').write_bytes(p.stderr)

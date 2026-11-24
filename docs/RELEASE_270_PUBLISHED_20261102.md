@@ -4,8 +4,8 @@
 
 | الصورة | المرجع المثبت |
 |---|---|
-| Web | `mohd777/alpha-radius-web@sha256:5455db7ca85a1d5f6c5c205fca0e171cefb28dc9f008dc56d25d4ecd090fa2ca` |
-| Core | `mohd777/alpha-radius-core@sha256:10cc88946c5ed6310a36c4c11b7e991277137da87eb019958f2eb45c8d2eabf5` |
+| Web | `gunaid/alpha-radius-web@sha256:5455db7ca85a1d5f6c5c205fca0e171cefb28dc9f008dc56d25d4ecd090fa2ca` |
+| Core | `gunaid/alpha-radius-core@sha256:10cc88946c5ed6310a36c4c11b7e991277137da87eb019958f2eb45c8d2eabf5` |
 
 ## أساس البناء وحفظ العمل السابق
 
@@ -23,9 +23,9 @@
 
 ## إعداد ذاكرة DB مرفق
 
-خمسة ملفات إعداد/توثيق معبأة داخلWebفي`/opt/max-deploy/2.7.0/db-memory`، معSHA256SUMS.json. فُحصت بصماتها داخل الصورة النهائية. توجد نسخة ZIP محلية [للإعدادات](../releases/2.7.0-20261102-r1/db-memory-configuration.zip).
+خمسة ملفات إعداد/توثيق معبأة داخلWebفي`/opt/alpha-deploy/2.7.0/db-memory`، معSHA256SUMS.json. فُحصت بصماتها داخل الصورة النهائية. توجد نسخة ZIP محلية [للإعدادات](../releases/2.7.0-20261102-r1/db-memory-configuration.zip).
 
-balanced يضيفMALLOC_ARENA_MAX=2بعد إثباتglibc ويحفظ الكاش؛ conservative يضيفAria16MiBوkey8MiBبشرط قبول حمل الوجهة. لا تعديلInnoDBأوالمتانةأوالبياناتأوالتراخيص، ولا تفعيل تلقائي أو صورةDBجديدة. الأمثلةComposeلا تطبق نفسها علىmax-db-a/b. يلزم حفظdigestوصلاحيات وتخزين المحرك وجرد المشاركين وخطة إعادة الإنشاء/الرجوع. ربط المضيف واللوحة وإعداد المحرك علىHetznerمرحلة تالية؛ لا ادعاء بأن مجرد سحبWebيضبطRAMلـMariaDB.
+balanced يضيفMALLOC_ARENA_MAX=2بعد إثباتglibc ويحفظ الكاش؛ conservative يضيفAria16MiBوkey8MiBبشرط قبول حمل الوجهة. لا تعديلInnoDBأوالمتانةأوالبياناتأوالتراخيص، ولا تفعيل تلقائي أو صورةDBجديدة. الأمثلةComposeلا تطبق نفسها علىalpha-db-a/b. يلزم حفظdigestوصلاحيات وتخزين المحرك وجرد المشاركين وخطة إعادة الإنشاء/الرجوع. ربط المضيف واللوحة وإعداد المحرك علىHetznerمرحلة تالية؛ لا ادعاء بأن مجرد سحبWebيضبطRAMلـMariaDB.
 
 ## الفحوص لهذه الإضافة
 

@@ -10,7 +10,7 @@ from pathlib import Path
 def persistent_secret(storage, env_name='SECRET_KEY'):
     supplied = os.environ.get(env_name)
     if supplied:
-        if len(supplied) < 32 or supplied.startswith(('alpha-radius-secret', 'max-license-master-secret')):
+        if len(supplied) < 32 or supplied.startswith(('alpha-radius-secret', 'alpha-license-master-secret')):
             raise RuntimeError('Configure a unique session secret of at least 32 characters')
         return supplied
     path = Path(storage) / 'secrets' / 'session.key'

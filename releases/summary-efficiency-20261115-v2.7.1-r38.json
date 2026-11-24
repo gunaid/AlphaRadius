@@ -3,14 +3,14 @@
   "release": "20261115-v2.7.1-summary-efficiency-r38",
   "image_digest": "sha256:28553ef8f6956f794771b2db4ae5d33ac2bde824aa4c359c611e61d02e56c7f7",
   "updated_tags": [
-    "mohd777/alpha-radius-web:2.7.1-summary-efficiency-20261115-r38",
-    "mohd777/alpha-radius-web:2.7.1",
-    "mohd777/alpha-radius-web:2.7.1-update-safety-20261107-r7"
+    "gunaid/alpha-radius-web:2.7.1-summary-efficiency-20261115-r38",
+    "gunaid/alpha-radius-web:2.7.1",
+    "gunaid/alpha-radius-web:2.7.1-update-safety-20261107-r7"
   ],
   "previous_web_digest": "sha256:cfbb38203bc94a770242040e48a398f2a2c4594829a486b00303986ef795c30d",
   "runtime_delta": {
     "image": "sha256:28553ef8f6956f794771b2db4ae5d33ac2bde824aa4c359c611e61d02e56c7f7",
-    "base": "mohd777/alpha-radius-web:2.7.1-maintenance-admission-20261113-r37",
+    "base": "gunaid/alpha-radius-web:2.7.1-maintenance-admission-20261113-r37",
     "changed_runtime_files": 3,
     "runtime_paths": [
       "services/backup_usage_summary.cpython-311-x86_64-linux-gnu.so",

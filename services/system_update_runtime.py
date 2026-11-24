@@ -10,7 +10,7 @@ import socket
 import time
 import urllib.parse
 
-PIN = re.compile(r'^mohd777/alpha-radius-web@sha256:[0-9a-f]{64}$')
+PIN = re.compile(r'^gunaid/alpha-radius-web@sha256:[0-9a-f]{64}$')
 TERMINAL = {'completed', 'error', 'rolled_back', 'recovery_required'}
 
 class UpdateError(RuntimeError):
@@ -181,10 +181,10 @@ VERIFY = """import hashlib,json,pathlib,subprocess
 from services.license_guard_service import get_active_license_status
 from core.config import APP_VERSION
 from database.db import query_one
-p=subprocess.run(['python','/opt/max-protection/verify.py'],capture_output=True)
+p=subprocess.run(['python','/opt/alpha-protection/verify.py'],capture_output=True)
 x=get_active_license_status(force_refresh=True)
 y=query_one('SELECT is_valid,valid_until>UTC_TIMESTAMP() fresh FROM wisp_license_runtime_state WHERE id=1')
-print(json.dumps({'verified':p.returncode==0,'key':hashlib.sha256(pathlib.Path('/opt/max-protection/runtime-public.pem').read_bytes()).hexdigest(),'version':APP_VERSION,'license':bool(x['valid']),'lease':bool(y and y['is_valid'] and y['fresh'])}))
+print(json.dumps({'verified':p.returncode==0,'key':hashlib.sha256(pathlib.Path('/opt/alpha-protection/runtime-public.pem').read_bytes()).hexdigest(),'version':APP_VERSION,'license':bool(x['valid']),'lease':bool(y and y['is_valid'] and y['fresh'])}))
 """
 
 def exec_verify(api, ident, expected_key, expected_version):
@@ -218,7 +218,7 @@ def run_job(folder, api=None, verify=None, sleep=time.sleep, clock=time.monotoni
             api('POST', '/containers/' + old_id + '/stop?t=25')
             for net in plan['endpoints']:
                 api('POST', '/networks/' + urllib.parse.quote(net, safe='') + '/disconnect', {'Container': old_id, 'Force': True})
-            api('POST', '/containers/' + old_id + '/rename?name=max_web_prev_update_' + plan['job'])
+            api('POST', '/containers/' + old_id + '/rename?name=alpha_web_prev_update_' + plan['job'])
             # Record create intent before issuing it: resume discovers a lost create response by exact name.
             state['create_attempted'] = True
             write_json(state_path, state)

@@ -1,6 +1,6 @@
 {
   "version": "2.6.5",
-  "tag": "mohd777/alpha-radius-web:20261023-v2.6.5-rbac-fix-r1",
+  "tag": "gunaid/alpha-radius-web:20261023-v2.6.5-rbac-fix-r1",
   "image_digest": "sha256:5f582abe49d75b7a5fed40f57318dac5e0c62fa1da2f02b05d88d4644c1f7a2f",
   "runtime_manifest_sha256": "3d54b6312976a2356035f308e4a62a896a03b85b00bd77e9c97ee6c9109ebdf7",
   "signed_files": 166,

@@ -1,7 +1,7 @@
 {
   "version": "2.7.1",
   "patch": "cpu-metrics-max1-20261110-r31",
-  "image": "mohd777/alpha-radius-web@sha256:ac314a336b4f84e63cbf98d1cf141625feaa2e76aefbb44a192735799899a1b0",
+  "image": "gunaid/alpha-radius-web@sha256:ac314a336b4f84e63cbf98d1cf141625feaa2e76aefbb44a192735799899a1b0",
   "scope": "max1.alpha.amtik.online",
   "status": "deployed",
   "cpu_basis": "host_capacity_of_tenant_owned_services",

@@ -23,7 +23,7 @@ class ProxyTests(unittest.TestCase):
         self.binding.write_text(json.dumps(self.row))
         self.rows = {}
         for i, role in enumerate(('web', 'core', 'db'), 1):
-            name = self.row['containers'].get(role, 'max-db-a')
+            name = self.row['containers'].get(role, 'alpha-db-a')
             self.rows[name] = dict(Id=str(i) * 64, Name='/' + name,
                                   Created='2026-11-01T00:00:00Z', Image='sha256:' + str(i) * 64,
                                   State={'Running': True, 'Status': 'running', 'Health': {'Status': 'healthy', 'Log': ['secret']}},
@@ -99,7 +99,7 @@ class ProxyTests(unittest.TestCase):
             self.scope.handle('GET', '/containers/json')
         self.row['id'] = 'tenant1'
         self.binding.write_text(json.dumps(self.row))
-        self.rows['max-db-a']['Config']['Labels']['max.pool'] = 'b'
+        self.rows['alpha-db-a']['Config']['Labels']['max.pool'] = 'b'
         with self.assertRaises(p.Denied):
             self.scope.handle('GET', '/containers/json')
 

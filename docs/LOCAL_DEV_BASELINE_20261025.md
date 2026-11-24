@@ -12,8 +12,8 @@
 
 | الخدمة | هوية الصورة الفعلية | النتيجة |
 | --- | --- | --- |
-| Web: `alpha_radius_web`، ID يبدأ `149b35b95458` | `sha256:5eda6a3450ddef586478153082395fbeb73f661be0fcf73b47bffd1e02559d38` | تطابق digest الحالي المنشور تحت `mohd777/alpha-radius-web:latest` |
-| Core: `alpha_radius_core`، ID يبدأ `f3c9f920fafc` | `sha256:7bf2baa71525ea79e866daeb063c35346f39054fbf81ae209107f632681c1a5e` | تطابق digest الحالي المنشور تحت `mohd777/alpha-radius-core:latest` |
+| Web: `alpha_radius_web`، ID يبدأ `149b35b95458` | `sha256:5eda6a3450ddef586478153082395fbeb73f661be0fcf73b47bffd1e02559d38` | تطابق digest الحالي المنشور تحت `gunaid/alpha-radius-web:latest` |
+| Core: `alpha_radius_core`، ID يبدأ `f3c9f920fafc` | `sha256:7bf2baa71525ea79e866daeb063c35346f39054fbf81ae209107f632681c1a5e` | تطابق digest الحالي المنشور تحت `gunaid/alpha-radius-core:latest` |
 | MariaDB | `sha256:0d0945c57f75b3a3b9ebe71aedaaad005fa5305054e8fca3d2e42a8c92b43b5e` | الاستعلام الفعلي10.11.19؛ لم يثبت احتياج ترقية |
 | L2TP | `sha256:a7fa96b5a7a485ce47755e0379c5553d1a0490855fcfda950602d6c1d9affee7` | قائمة وسليمة، لم تعدل |
 | Autoheal | `sha256:f8adb7a2343aaeaa2757561b52428ebf9d3bb8e304d0f7a77fd13de395610504` | قائمة وسليمة، لم تعدل |

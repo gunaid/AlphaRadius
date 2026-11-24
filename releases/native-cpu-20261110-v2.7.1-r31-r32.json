@@ -19,7 +19,7 @@
     "stale_socket_recovery": true
   },
   "images": {
-    "max1": "mohd777/alpha-radius-web@sha256:ac314a336b4f84e63cbf98d1cf141625feaa2e76aefbb44a192735799899a1b0",
+    "max1": "gunaid/alpha-radius-web@sha256:ac314a336b4f84e63cbf98d1cf141625feaa2e76aefbb44a192735799899a1b0",
     "m": "sha256:2c76d485acd840b87edc12cc01d4b273b5143c7b4fbd1300c5ec3cfbdebdc87b"
   },
   "m_image_distribution": "Offline OCI delta, exact image ID; no Registry push or public tag replacement",

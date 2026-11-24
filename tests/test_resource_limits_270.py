@@ -15,7 +15,7 @@ class ResourceLimits(unittest.TestCase):
     def setUp(self):
         self.directory=tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)
-        env=patch.dict(os.environ,STORAGE_DIR=self.directory.name,MAX_REPORT_CATALOG_CACHE='1')
+        env=patch.dict(os.environ,STORAGE_DIR=self.directory.name,ALPHA_REPORT_CATALOG_CACHE='1')
         env.start();self.addCleanup(env.stop);clear()
 
     def test_another_process_cannot_start_until_slot_released(self):

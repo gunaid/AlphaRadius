@@ -1,12 +1,12 @@
 {
   "version": "2.7.1",
   "release": "20261113-v2.7.1-reservation-index-r36",
-  "tag": "mohd777/alpha-radius-web:2.7.1-reservation-index-20261113-r36",
+  "tag": "gunaid/alpha-radius-web:2.7.1-reservation-index-20261113-r36",
   "image_digest": "sha256:e4984159c23786ebc59c2b410130fb951a751e1cc8d14405d713fcd46a53b173",
   "updated_tags": [
-    "mohd777/alpha-radius-web:2.7.1-reservation-index-20261113-r36",
-    "mohd777/alpha-radius-web:2.7.1",
-    "mohd777/alpha-radius-web:2.7.1-update-safety-20261107-r7"
+    "gunaid/alpha-radius-web:2.7.1-reservation-index-20261113-r36",
+    "gunaid/alpha-radius-web:2.7.1",
+    "gunaid/alpha-radius-web:2.7.1-update-safety-20261107-r7"
   ],
   "previous_web_digest": "sha256:9b4aac08a65b4f911357538f71c279aa85a1aa1d0aad29cb3fc863b44313ca6c",
   "runtime_delta": {

@@ -26,7 +26,7 @@ def actual_stop(row):
 
 
 def journal_path(username, token):
-    root = Path(os.environ.get('MAX_SETTLEMENT_JOURNAL_DIR', '/app/storage/nas-session-settlements'))
+    root = Path(os.environ.get('ALPHA_SETTLEMENT_JOURNAL_DIR', '/app/storage/nas-session-settlements'))
     root.mkdir(mode=0o700, parents=True, exist_ok=True)
     return root / (hashlib.sha256(username.casefold().encode()).hexdigest()+'-'+token+'.json')
 
@@ -155,7 +155,7 @@ def seal_rows(snapshot):
 def recover_journals(username):
     """Recover counters/closure only; never replay a purchase or renewal."""
     from core.mikrotik_api import RouterOSApiProtocol
-    root=Path(os.environ.get('MAX_SETTLEMENT_JOURNAL_DIR','/app/storage/nas-session-settlements'))
+    root=Path(os.environ.get('ALPHA_SETTLEMENT_JOURNAL_DIR','/app/storage/nas-session-settlements'))
     prefix=hashlib.sha256(username.casefold().encode()).hexdigest()+'-'
     for path in root.glob(prefix+'*.json'):
         payload=json.loads(path.read_text(encoding='utf8'))

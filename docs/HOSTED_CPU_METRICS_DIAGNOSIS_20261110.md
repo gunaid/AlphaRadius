@@ -14,7 +14,7 @@
 
 | الهدف | المسار الذي يستخدمه القارئ | النتيجة |
 |---|---|---|
-|m.max-r.cc271|/var/run/docker.sockغيرموجود؛MAX_CONTROL_SOCKETيحددقناةمقيدةمختلفة|cpu=0.5،containers={}؛طلباتstatsعبرالقناةالمقيدة403|
+|m.max-r.cc271|/var/run/docker.sockغيرموجود؛ALPHA_CONTROL_SOCKETيحددقناةمقيدةمختلفة|cpu=0.5،containers={}؛طلباتstatsعبرالقناةالمقيدة403|
 |max1.max-r.cc271|نفسالاختلاف|cpu=0.5،containers={}؛طلباتstatsعبرالقناةالمقيدة403|
 |max1.alpha.amtik.online271|المسارموجودكوسيطمقيد|statsللأسماءالثابتةيرجع403؛cpu=0.5،containers={}|
 

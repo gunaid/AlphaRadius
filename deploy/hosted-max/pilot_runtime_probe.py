@@ -23,9 +23,9 @@ if checkpoint:
     accounting_ok=len(actual)==len(checkpoint) and all(int(v['radacctid']) in actual and actual[int(v['radacctid'])]['acctuniqueid']==v['acctuniqueid'] and all(int(actual[int(v['radacctid'])].get(k) or 0)>=int(v.get(k) or 0) for k in ('acctinputoctets','acctoutputoctets','acctsessiontime')) for v in checkpoint)
 integrity=None
 if mode in ('candidate','final'):
-    integrity=subprocess.run(['python','/opt/max-protection/verify.py'],capture_output=True).returncode==0
+    integrity=subprocess.run(['python','/opt/alpha-protection/verify.py'],capture_output=True).returncode==0
 else:
     # Before/rollback use the exact retained legacy Web, which predates the
     # signed runtime. Its frozen source hashes are checked by the host separately.
     integrity=Path('/app/services/system_update_service.py').is_file()
-print(json.dumps({'passed':bool(version_ok and integrity and accounting_ok and license_state.get('valid') and lease and lease['is_valid'] and lease['fresh']),'version':APP_VERSION,'integrity':integrity,'accounting_checkpoint_rows':len(checkpoint),'accounting_preserved':accounting_ok,'license_valid':bool(license_state.get('valid')),'lease_valid':bool(lease and lease['is_valid'] and lease['fresh']),'publisher_key':hashlib.sha256(Path('/opt/max-protection/runtime-public.pem').read_bytes()).hexdigest() if Path('/opt/max-protection/runtime-public.pem').exists() else None}))
+print(json.dumps({'passed':bool(version_ok and integrity and accounting_ok and license_state.get('valid') and lease and lease['is_valid'] and lease['fresh']),'version':APP_VERSION,'integrity':integrity,'accounting_checkpoint_rows':len(checkpoint),'accounting_preserved':accounting_ok,'license_valid':bool(license_state.get('valid')),'lease_valid':bool(lease and lease['is_valid'] and lease['fresh']),'publisher_key':hashlib.sha256(Path('/opt/alpha-protection/runtime-public.pem').read_bytes()).hexdigest() if Path('/opt/alpha-protection/runtime-public.pem').exists() else None}))

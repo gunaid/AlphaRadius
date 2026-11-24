@@ -27,7 +27,7 @@ def invalidate():
 
 def catalog_query(query, owner):
     def read(sql,params=()):
-        if owner is not None or os.environ.get('MAX_REPORT_CATALOG_CACHE','1')!='1':
+        if owner is not None or os.environ.get('ALPHA_REPORT_CATALOG_CACHE','1')!='1':
             return query(sql,params)
         from services.heavy_operation_service import lock_root
         marker=lock_root()/'catalog-generation'

@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 
 def main():
-    if '--run' not in sys.argv or os.environ.get('DB_HOST')!='max-license-test-db' or os.environ.get('DB_NAME')!='maintenance_admission_fixture':
+    if '--run' not in sys.argv or os.environ.get('DB_HOST')!='alpha-license-test-db' or os.environ.get('DB_NAME')!='maintenance_admission_fixture':
         raise SystemExit('Requires --run and the disposable maintenance_admission_fixture')
     from database.db import get_connection,query_one,query_all,execute_write
     from services import maintenance_admission as gate,automation_task_service as tasks,automation_task_actions as actions

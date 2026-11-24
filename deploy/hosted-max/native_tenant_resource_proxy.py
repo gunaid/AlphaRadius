@@ -138,7 +138,7 @@ def prepare_socket(path):
 
 def serve(config):
     path = Path(config['socket'])
-    expected = Path('/var/lib/max-host-r/tenants') / config['slug'] / 'storage/.host-control/resources.sock'
+    expected = Path('/var/lib/alpha-host-r/tenants') / config['slug'] / 'storage/.host-control/resources.sock'
     if (not re.fullmatch('[a-z][a-z0-9-]{0,30}', config['slug']) or path != expected
             or path.parent.is_symlink() or path.is_symlink()):
         raise ValueError('Unexpected tenant socket')

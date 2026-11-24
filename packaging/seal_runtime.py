@@ -6,7 +6,7 @@ from pathlib import Path
 from cryptography.hazmat.primitives import serialization
 
 root = Path('/app')
-control = Path('/opt/max-protection')
+control = Path('/opt/alpha-protection')
 control.mkdir(parents=True, exist_ok=True)
 files = {}
 for path in sorted(root.rglob('*')):

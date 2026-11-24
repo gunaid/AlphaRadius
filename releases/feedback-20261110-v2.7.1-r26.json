@@ -5,8 +5,8 @@
   "base_digest": "sha256:d1877af154ad20b3393f1239f9f79e1d3cd42c5dea0706b31daf422124b289a1",
   "image_digest": "sha256:aea59466d4ac388ed2a3b9dc14ff91b53acb1a985dbbf7a19976c657bbc88829",
   "tags": [
-    "mohd777/alpha-radius-web:2.7.1",
-    "mohd777/alpha-radius-web:2.7.1-update-safety-20261107-r7"
+    "gunaid/alpha-radius-web:2.7.1",
+    "gunaid/alpha-radius-web:2.7.1-update-safety-20261107-r7"
   ],
   "runtime_delta_files": [
     "services/automation_defaults_service.cpython-311-x86_64-linux-gnu.so",

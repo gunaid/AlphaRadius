@@ -1,6 +1,6 @@
 ## تصحيح نطاق الدليل — 10 نوفمبر 2026، مراجعة التوثيق اللاحقة
 
-المسار NET الموصوف أدناه هو **محرك SaaS القديم** saas-manager.service، وليس مصدر واجهة https://control.alpha.amtik.online. الواجهة الفعلية max-control-v2 مستقلة ومعزولة، ولم يثبت ربط زر إنشائها بالإنتاج. وثيقة [اللوحتين والجرد الحالية](../../max_saas_panel_v2_local/docs/CONTROL_PANELS_ENVIRONMENTS_20261110.md) و[تسليم تطوير اللوحة](../../max_saas_panel_v2_local/docs/PANEL_HANDOFF_20261110.md) تتقدمان على أي مساواة بينهما في هذا التقرير. لم يُنفذ إنشاء أو تغيير defaults. Native complete=True في WSGI الحية، لا تستنتج إعدادها من قالب محلي قديم.
+المسار NET الموصوف أدناه هو **محرك SaaS القديم** saas-manager.service، وليس مصدر واجهة https://control.alpha.amtik.online. الواجهة الفعلية alpha-control-v2 مستقلة ومعزولة، ولم يثبت ربط زر إنشائها بالإنتاج. وثيقة [اللوحتين والجرد الحالية](../../alpha_saas_panel_v2_local/docs/CONTROL_PANELS_ENVIRONMENTS_20261110.md) و[تسليم تطوير اللوحة](../../alpha_saas_panel_v2_local/docs/PANEL_HANDOFF_20261110.md) تتقدمان على أي مساواة بينهما في هذا التقرير. لم يُنفذ إنشاء أو تغيير defaults. Native complete=True في WSGI الحية، لا تستنتج إعدادها من قالب محلي قديم.
 
 # تدقيق الإنشاء الحي في اللوحتين واعتماد CPU — 10 نوفمبر 2026
 
@@ -8,19 +8,19 @@
 
 ## لوحةNET
 
-الخدمةالحيةsaas-manager.serviceتشغلserve.pyمن `/opt/saas-manager-next`؛app.pyيستوردcentral_provision.المسارالفعالcentral_provision.composeيبنيWebمنconfig.DOCKER_IMAGE_WEB،والقيمةالحية **mohd777/alpha-radius-web:latest**.prepare_creation_imagesفيtenant_releaseينفذpullثميسجلبصمةRegistryويثبتهافيComposeوcreation-release.json؛لايجوزاستنتاجالإصدارالفعليالمستقبليمنلفظlatestأومنالكاشالحالي.لمتُسحبالصورةأوتنشأمنظومةلتحديدAPP_VERSION.
+الخدمةالحيةsaas-manager.serviceتشغلserve.pyمن `/opt/saas-manager-next`؛app.pyيستوردcentral_provision.المسارالفعالcentral_provision.composeيبنيWebمنconfig.DOCKER_IMAGE_WEB،والقيمةالحية **gunaid/alpha-radius-web:latest**.prepare_creation_imagesفيtenant_releaseينفذpullثميسجلبصمةRegistryويثبتهافيComposeوcreation-release.json؛لايجوزاستنتاجالإصدارالفعليالمستقبليمنلفظlatestأومنالكاشالحالي.لمتُسحبالصورةأوتنشأمنظومةلتحديدAPP_VERSION.
 
-خطالإنشاءيجهزالقناةprepare_new_domain_updatesويشغلوحدةmax-panel-fleet@اسم.socket.إعدادnew-domain-updates.jsonيخصمساراتالتسجيلوالثقة؛ليسفيهصورةCPUالتجريبيةأوإصدارافتراضيبديل.المساريضيفوصلةالتحديثلكنه **لايضبطMAX_RESOURCE_METRICSولايثبتقارئCPUلكلمستأجر**.تجاوزmax1الفرديلايُورَّثلأسماءجديدة،والملفالمشتركللوسيطلميتغيرفيالتجربة.
+خطالإنشاءيجهزالقناةprepare_new_domain_updatesويشغلوحدةalpha-panel-fleet@اسم.socket.إعدادnew-domain-updates.jsonيخصمساراتالتسجيلوالثقة؛ليسفيهصورةCPUالتجريبيةأوإصدارافتراضيبديل.المساريضيفوصلةالتحديثلكنه **لايضبطALPHA_RESOURCE_METRICSولايثبتقارئCPUلكلمستأجر**.تجاوزmax1الفرديلايُورَّثلأسماءجديدة،والملفالمشتركللوسيطلميتغيرفيالتجربة.
 
 نطاقالعملالمطلوبللمستقبل:صورةعامةمصححةبدونهويةmax1مضمنة،إصدارأومرجعمعتمدللإنشاءبدلتحويلالتجربةالفرديةإلىافتراضي،توليدإعدادالمقاييسمنهويةالمنظومة،وتجهيزالوسيطالمقيدوفحصهداخلمسارcentral_provisionقبلإعلانالمنظومةجاهزة.يبقىتعذرالقراءة0.5%وفقأحدثقرارالمستخدم،معالسماحبالصفرالحقيقي.
 
 ## لوحةNative/max-r.cc
 
-المصدرالفعلي `/opt/max-host-r/releases/hetzner270-20261102-r1/backend`،والإعدادالفعلي `/etc/max-host-r/config.json`يحتويdefault_release= **2.7.0**.كتالوجالمثبتالأصليبه270فقط،Webببصمة5455db7cوCore10cc8894.إتاحات271المقيدةلـm/max1لا تغيرهذهالقيمولا تمنحالمثبتانتقالًاعامًا.
+المصدرالفعلي `/opt/alpha-host-r/releases/hetzner270-20261102-r1/backend`،والإعدادالفعلي `/etc/alpha-host-r/config.json`يحتويdefault_release= **2.7.0**.كتالوجالمثبتالأصليبه270فقط،Webببصمة5455db7cوCore10cc8894.إتاحات271المقيدةلـm/max1لا تغيرهذهالقيمولا تمنحالمثبتانتقالًاعامًا.
 
-hosting_provisioning.pyفياللوحةيختارcreation.releaseأوinventory.default_release؛hosting_runtime.pyيستخدمreleaseالمحددأوdefault_releaseعندالإنشاء.مسارenvيضيفMAX_CONTROL_MODE/SOCKET/TENANT_ID،ولايضيفMAX_RESOURCE_METRICS.tenant_docker_proxy.pyالحيفيالمصدرالفعليلايتضمنمسار `/_max_metrics/v1/resources`.
+hosting_provisioning.pyفياللوحةيختارcreation.releaseأوinventory.default_release؛hosting_runtime.pyيستخدمreleaseالمحددأوdefault_releaseعندالإنشاء.مسارenvيضيفALPHA_CONTROL_MODE/SOCKET/TENANT_ID،ولايضيفALPHA_RESOURCE_METRICS.tenant_docker_proxy.pyالحيفيالمصدرالفعليلايتضمنمسار `/_max_metrics/v1/resources`.
 
-نطاقالعملالمطلوبللمستقبل:إضافةمقاييسخاصةبـWeb/CoreللمتحكمالأصليمعاستثناءDBالمشتركة،توليدربطالقارئمنbindingالمستأجر،ثمقبولصورةعامة271وتسجيلهافيكتالوجالإنشاءواختيارهاافتراضيًابنطاقمصرح.لاتنسخوسيطComposeالتجريبيأوصورتهذاتMAX_RESOURCE_METRICS_TENANT=max1إلىNativeكماهي.
+نطاقالعملالمطلوبللمستقبل:إضافةمقاييسخاصةبـWeb/CoreللمتحكمالأصليمعاستثناءDBالمشتركة،توليدربطالقارئمنbindingالمستأجر،ثمقبولصورةعامة271وتسجيلهافيكتالوجالإنشاءواختيارهاافتراضيًابنطاقمصرح.لاتنسخوسيطComposeالتجريبيأوصورتهذاتALPHA_RESOURCE_METRICS_TENANT=max1إلىNativeكماهي.
 
 ## حدود الاستنتاج
 

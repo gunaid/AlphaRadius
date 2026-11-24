@@ -29,7 +29,7 @@ from core.watchdog import (
 
 import core.watchdog as watchdog
 
-DOCKER_SOCKET_PATH = os.environ.get('MAX_CONTROL_SOCKET', '/var/run/docker.sock')
+DOCKER_SOCKET_PATH = os.environ.get('ALPHA_CONTROL_SOCKET', '/var/run/docker.sock')
 MONITORED_CONTAINER_NAMES = [
     'alpha_radius_autoheal',
     'alpha_radius_core',

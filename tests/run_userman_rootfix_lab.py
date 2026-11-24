@@ -27,7 +27,7 @@ def run(args, **kw):
 
 
 try:
-    p=run(['docker','run','-d','--name',name,'--label','max-owned-task=userman-rootfix-local',
+    p=run(['docker','run','-d','--name',name,'--label','alpha-owned-task=userman-rootfix-local',
            '--restart=no','-p','127.0.0.1::3306','-e','MARIADB_ROOT_PASSWORD='+password,
            '-e','MARIADB_DATABASE='+schema,'mariadb:10.11'])
     (reports/'launch.stderr.private').write_bytes(p.stderr)

@@ -15,13 +15,70 @@ from cryptography.exceptions import InvalidSignature
 
 from core.hardware_fingerprint import get_machine_id, get_instance_uuid
 
-EMBEDDED_PUBLIC_KEY = """-----BEGIN PUBLIC KEY-----
+LEGACY_LICENSE_AUTHORITY = "legacy-alpha"
+AMAN_LICENSE_AUTHORITY = "aman-alpha"
+
+# Keep the original Alpha key permanently pinned so an application upgrade does
+# not invalidate licenses that were issued before the Aman platform migration.
+LEGACY_MASTER_PUBLIC_KEY = """-----BEGIN PUBLIC KEY-----
 MCowBQYDK2VwAyEADT6MJTY7bmDdw6nrAzsUyZ1nGrAxTwNKgE1MQYqAgNE=
 -----END PUBLIC KEY-----"""
 
-def get_master_public_key_pem():
-    """Returns Master Public Key (Strictly Pinned to Immutable Embedded Key)."""
-    return EMBEDDED_PUBLIC_KEY
+# Current Alpha Radius authority exposed by https://ls.amtik.online.  This is a
+# separate trust root; it never replaces or aliases the legacy key above.
+AMAN_MASTER_PUBLIC_KEY = """-----BEGIN PUBLIC KEY-----
+MCowBQYDK2VwAyEA3G3TqEFxe9EAcbTR1WyqTMHx/BxAqc6tMb14iJAnzdU=
+-----END PUBLIC KEY-----"""
+
+# Backwards-compatible name for extensions that imported the old constant.
+EMBEDDED_PUBLIC_KEY = LEGACY_MASTER_PUBLIC_KEY
+
+TRUSTED_LICENSE_PUBLIC_KEYS = (
+    (AMAN_LICENSE_AUTHORITY, AMAN_MASTER_PUBLIC_KEY),
+    (LEGACY_LICENSE_AUTHORITY, LEGACY_MASTER_PUBLIC_KEY),
+)
+
+
+def get_master_public_key_pem(authority=AMAN_LICENSE_AUTHORITY):
+    """Return the immutable response/package key for a known authority.
+
+    Network exchanges default to the current Aman authority.  Legacy callers
+    can request the old key explicitly; unknown authorities fail closed.
+    """
+    for name, public_key in TRUSTED_LICENSE_PUBLIC_KEYS:
+        if name == authority:
+            return public_key
+    raise ValueError("Unknown Alpha Radius license authority")
+
+
+def identify_license_authority(package_dict):
+    """Verify the exact package bytes and return the trusted signing authority."""
+    if not isinstance(package_dict, dict) or not isinstance(package_dict.get('payload'), dict):
+        return None
+    signature_text = package_dict.get('signature')
+    if not isinstance(signature_text, str):
+        return None
+    try:
+        signature = base64.b64decode(signature_text, validate=True)
+    except (ValueError, TypeError):
+        return None
+    if len(signature) != 64:
+        return None
+    canonical_json = json.dumps(package_dict['payload'], sort_keys=True, separators=(',', ':'), ensure_ascii=False)
+    data_bytes = canonical_json.encode('utf-8')
+    # Resolve every key through get_master_public_key_pem so the pinned roots
+    # have a single lookup point (also used by isolated tests with fixture keys).
+    for authority, _ in TRUSTED_LICENSE_PUBLIC_KEYS:
+        try:
+            public_pem = get_master_public_key_pem(authority)
+            public_key = serialization.load_pem_public_key(public_pem.encode('utf-8'))
+            public_key.verify(signature, data_bytes)
+            return authority
+        except InvalidSignature:
+            continue
+        except (TypeError, ValueError):
+            return None
+    return None
 
 def decode_license_string(lic_input):
     """
@@ -59,22 +116,11 @@ def verify_license_package(package_dict, current_active_sessions=0, current_nas=
         return False, "هيكل ملف الترخيص غير مكتمل", {}
         
     payload = package_dict['payload']
-    sig_b64 = package_dict['signature']
-    
-    # 1. Verify Digital Signature
-    try:
-        canonical_json = json.dumps(payload, sort_keys=True, separators=(',', ':'), ensure_ascii=False)
-        data_bytes = canonical_json.encode('utf-8')
-        signature = base64.b64decode(sig_b64)
-        
-        pub_pem = get_master_public_key_pem().encode('utf-8')
-        public_key = serialization.load_pem_public_key(pub_pem)
-        
-        public_key.verify(signature, data_bytes)
-    except InvalidSignature:
+    # 1. Verify against the two immutable Alpha trust roots.  The matching key,
+    # not a package-controlled field, determines the provider and migration path.
+    authority = identify_license_authority(package_dict)
+    if authority is None:
         return False, "فشل التحقق الأمني: التوقيع الرقمي غير صالح أو تم التعديل على بيانات الترخيص", {}
-    except Exception as e:
-        return False, f"خطأ أثناء التحقق من التوقيع الرقمي: {str(e)}", {}
         
     # 2. Check Machine ID & Instance UUID Binding (Dual-Lock Anti-Clone)
     licensed_hw = payload.get('hardware_id', 'ANY').strip().upper()
@@ -176,7 +222,9 @@ def verify_license_package(package_dict, current_active_sessions=0, current_nas=
         "hardware_id": licensed_hw,
         "current_machine_id": current_hw,
         "is_over_quota": is_over_quota,
-        "quota_reason": quota_reason
+        "quota_reason": quota_reason,
+        "license_authority": authority,
+        "requires_heartbeat": authority == AMAN_LICENSE_AUTHORITY,
     }
     
     return True, "الترخيص معتمد وصالح وموثق رقمياً بنجاح", info

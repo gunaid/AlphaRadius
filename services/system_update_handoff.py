@@ -25,11 +25,11 @@ def freeze(api, config, compose):
     # Reject unsupported networking/storage while Web is still untouched.
     candidate_spec(old, old['Image'], endpoints_for(old))
     result={'service':service,'old':old}
-    for destination in ('/max-update-private','/max-update-socket','/max-update-compose','/var/run/docker.sock'):
+    for destination in ('/alpha-update-private','/alpha-update-socket','/alpha-update-compose','/var/run/docker.sock'):
         mounts=[m for m in old['Mounts'] if m['Destination']==destination and m.get('RW')]
         expected=[m for m in config['controller_mounts'] if m['Target']==destination]
         actual_source=mounts[0].get('Name') if len(mounts)==1 and mounts[0]['Type']=='volume' else mounts[0].get('Source') if len(mounts)==1 else None
-        if destination=='/max-update-socket' and len(mounts)==1 and not expected:
+        if destination=='/alpha-update-socket' and len(mounts)==1 and not expected:
             # Older provisioning omitted this item from helper configuration.
             # Recover it only from the already shared, read-only owned Web mount.
             webs=[inspect(api,x['Id']) for x in fleet if x.get('State')=='running'
@@ -52,10 +52,10 @@ def wait_ready(api, ident, plan, project, previous=False, clock=time.monotonic, 
     code=r'''import json,hashlib,pathlib,subprocess,http.client,socket,sys
 class Unix(http.client.HTTPConnection):
  def connect(self):
-  self.sock=socket.socket(socket.AF_UNIX);self.sock.settimeout(3);self.sock.connect('/max-update-socket/controller.sock')
-c=Unix('localhost');c.request('GET','/_max_updates/v1/progress' if sys.argv[1]=='previous' else '/_max_updates/v1/engine');r=c.getresponse();v=json.loads(r.read());c.close()
-v['verified']=subprocess.run(['python','/opt/max-protection/verify.py'],capture_output=True).returncode==0
-v['publisher_key']=hashlib.sha256(pathlib.Path('/opt/max-protection/runtime-public.pem').read_bytes()).hexdigest()
+  self.sock=socket.socket(socket.AF_UNIX);self.sock.settimeout(3);self.sock.connect('/alpha-update-socket/controller.sock')
+c=Unix('localhost');c.request('GET','/_alpha_updates/v1/progress' if sys.argv[1]=='previous' else '/_alpha_updates/v1/engine');r=c.getresponse();v=json.loads(r.read());c.close()
+v['verified']=subprocess.run(['python','/opt/alpha-protection/verify.py'],capture_output=True).returncode==0
+v['publisher_key']=hashlib.sha256(pathlib.Path('/opt/alpha-protection/runtime-public.pem').read_bytes()).hexdigest()
 print(json.dumps(v))'''
     deadline=clock()+90
     while clock()<deadline:

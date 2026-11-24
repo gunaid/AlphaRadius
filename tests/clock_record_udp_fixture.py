@@ -83,10 +83,10 @@ class RadiusFixture:
 '''
         (folder/'default').write_text(site,encoding='utf-8')
         self.network='max-clock-radius-'+uuid.uuid4().hex[:10]
-        self.command(['docker','network','create','--internal','--label','max-owned-task=clock-record-priority-lab',self.network])
+        self.command(['docker','network','create','--internal','--label','alpha-owned-task=clock-record-priority-lab',self.network])
         self.command(['docker','network','connect','--alias','fixture-db',self.network,h.container])
         name='max-clock-radius-'+uuid.uuid4().hex[:10]
-        self.container=self.command(['docker','create','--name',name,'--label','max-owned-task=clock-record-priority-lab',
+        self.container=self.command(['docker','create','--name',name,'--label','alpha-owned-task=clock-record-priority-lab',
             '--network',self.network,'--network-alias','fixture-radius','--restart=no',
             '--entrypoint','sh',self.image,'-c',
             'chmod -R go-w /fixture; chown -R freerad:freerad /fixture; '
@@ -105,7 +105,7 @@ class RadiusFixture:
             time.sleep(.2)
         # No host UDP publication. One persistent Python relay runs on the same internal network.
         self.client=self.command(['docker','run','-d','--name','max-clock-udp-client-'+uuid.uuid4().hex[:10],
-            '--label','max-owned-task=clock-record-priority-lab','--network',self.network,'--restart=no',
+            '--label','alpha-owned-task=clock-record-priority-lab','--network',self.network,'--restart=no',
             '--entrypoint','sleep','alpha-radius-clock-guard-lab:20261017','infinity'])
         relay_code='''import json,socket,sys
 for line in sys.stdin:

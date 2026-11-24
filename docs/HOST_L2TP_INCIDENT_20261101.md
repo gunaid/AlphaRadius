@@ -14,7 +14,7 @@
 ## عطل مصادقة m بعد إعادة التشغيل
 
 - Web/Core يعملان، license runtime valid وفترة حديثة؛ HTTPالأصل200. نفقL2TP متصلppp0 بعنوان10.81.0.4.
-- خدمةmax-r-network تفشل عند الإقلاع بسببDB Connection refused172.19.0.2، قبل إعدادMRCC_DNAT/FWD/INPUT. وبعد bootثانٍ فشلت ثانية؛ لا قواعد1812/1813.
+- خدمةalpha-r-network تفشل عند الإقلاع بسببDB Connection refused172.19.0.2، قبل إعدادMRCC_DNAT/FWD/INPUT. وبعد bootثانٍ فشلت ثانية؛ لا قواعد1812/1813.
 - محاولة استعادة firewall بعد جاهزيةDB رفضت Owned NAS database binding differs. سجلmNAS8 يطابقpeerبIP+secret+API53780+CoA3799، لكنdescriptionفقدmarkerالملكية بفعل الاستعادة. nasshortname الحالي اسم راوتر وليسmrcc-id؛ لا تغيره للتوافق معdiagnosticفقط.
 - حُفظ descriptionالسابق ثم تغير هذا الحقل فقط إلىcontrol.max-r.cc:<peer-id> بعد قفل الصف وإثباتIP/secret/portsوفرادةالوجهة. لا تغيير أسرار/منافذ/كروت/ترخيص أوrestartCore.
 - أُعيد تطبيقNetworks.firewall فقط (لاwg/l2tpapply). ثبتتDNAT1812/1813true مع بقاء binding/config/tunnelsبالبصمة وCoreبنفسStartedAt.

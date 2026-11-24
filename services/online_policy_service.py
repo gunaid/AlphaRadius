@@ -427,7 +427,7 @@ def _retry_once():
     from pathlib import Path
     import json
     recovery=set()
-    root=Path(os.environ.get('MAX_SETTLEMENT_JOURNAL_DIR','/app/storage/nas-session-settlements'))
+    root=Path(os.environ.get('ALPHA_SETTLEMENT_JOURNAL_DIR','/app/storage/nas-session-settlements'))
     for path in list(root.glob('*.json'))[:10]:
         recovery.add(json.loads(path.read_text())['username'])
     pending=query_all("SELECT username FROM wisp_online_policy_outbox WHERE status='pending' AND next_attempt<=NOW() LIMIT 10")

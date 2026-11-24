@@ -14,7 +14,7 @@ from urllib.parse import unquote, urlsplit, parse_qs
 ALIASES = {'web': 'alpha_radius_web', 'radius_core': 'alpha_radius_core',
            'db': 'alpha_radius_db', 'autoheal': 'alpha_radius_autoheal',
            'l2tp': 'alpha_radius_l2tp'}
-SHARED_SERVICES = {'autoheal': 'alpha_radius_autoheal', 'l2tp': 'max_panel_l2tp'}
+SHARED_SERVICES = {'autoheal': 'alpha_radius_autoheal', 'l2tp': 'alpha_panel_l2tp'}
 
 
 def listener_health(item):
@@ -243,7 +243,7 @@ def main():
         raise SystemExit('Invalid tenant')
     if int(os.environ.get('LISTEN_PID', '0')) != os.getpid() or os.environ.get('LISTEN_FDS') != '1':
         raise SystemExit('Requires one systemd socket')
-    endpoint = '/run/max-panel-fleet/' + tenant + '/docker.sock'
+    endpoint = '/run/alpha-panel-fleet/' + tenant + '/docker.sock'
     server = Server(endpoint, Handler, bind_and_activate=False)
     server.socket.close()
     server.socket = socket.fromfd(3, socket.AF_UNIX, socket.SOCK_STREAM)

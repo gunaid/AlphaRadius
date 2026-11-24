@@ -1,13 +1,13 @@
 {
   "status": "published-registry-only",
   "version": "2.6.9",
-  "target": "mohd777/alpha-radius-web:2.6.9-backup-reader-20261101-r1",
+  "target": "gunaid/alpha-radius-web:2.6.9-backup-reader-20261101-r1",
   "registry_digest": "sha256:690cfa939cdc4dff5d09c2a2ef0543cd0abd506cad680baff814f7a5b6dca832",
   "tested_image_id": "sha256:690cfa939cdc4dff5d09c2a2ef0543cd0abd506cad680baff814f7a5b6dca832",
   "pulled_image_id": "sha256:690cfa939cdc4dff5d09c2a2ef0543cd0abd506cad680baff814f7a5b6dca832",
   "registry_repo_digests": [
     "alpha-radius-web@sha256:690cfa939cdc4dff5d09c2a2ef0543cd0abd506cad680baff814f7a5b6dca832",
-    "mohd777/alpha-radius-web@sha256:690cfa939cdc4dff5d09c2a2ef0543cd0abd506cad680baff814f7a5b6dca832"
+    "gunaid/alpha-radius-web@sha256:690cfa939cdc4dff5d09c2a2ef0543cd0abd506cad680baff814f7a5b6dca832"
   ],
   "rootfs_exact": true,
   "runtime_config_exact": true,

@@ -4,7 +4,7 @@ from pathlib import Path
 from cryptography.hazmat.primitives import serialization
 
 ROOT=Path('/app')
-CONTROL=Path('/opt/max-protection')
+CONTROL=Path('/opt/alpha-protection')
 def fail():
     print('MAX RUNTIME INTEGRITY CHECK FAILED',file=sys.stderr)
     raise SystemExit(78)

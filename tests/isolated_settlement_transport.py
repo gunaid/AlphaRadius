@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 @contextmanager
 def isolated_settlement_transport():
-    if (os.environ.get('DB_HOST') != 'max-license-test-db'
+    if (os.environ.get('DB_HOST') != 'alpha-license-test-db'
             or not os.environ.get('DB_NAME', '').startswith('subscriber_edit_fixture_')):
         raise RuntimeError('Explicit isolated settlement fixture required')
     with ExitStack() as stack:

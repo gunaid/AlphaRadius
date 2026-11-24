@@ -186,8 +186,8 @@ def main():
         def test_activation_trigger_uses_packet_not_package_capability(self):
             conn=connection();install_sales_source_schema(conn);install_sales_source_schema(conn)
             with conn.cursor() as cur:
-                cur.execute('DROP TRIGGER IF EXISTS max_fixture_activation_source')
-                cur.execute('CREATE TRIGGER max_fixture_activation_source AFTER INSERT ON radacct FOR EACH ROW BEGIN DECLARE v_id BIGINT; DECLARE v_package_id BIGINT; SET v_id=NEW.account_voucher_id,v_package_id=1; '+ACTIVATION_SOURCE_SQL+' END')
+                cur.execute('DROP TRIGGER IF EXISTS alpha_fixture_activation_source')
+                cur.execute('CREATE TRIGGER alpha_fixture_activation_source AFTER INSERT ON radacct FOR EACH ROW BEGIN DECLARE v_id BIGINT; DECLARE v_package_id BIGINT; SET v_id=NEW.account_voucher_id,v_package_id=1; '+ACTIVATION_SOURCE_SQL+' END')
             try:
                 for id,protocol,service in [(1,'',''),(2,'PPP',''),(3,'PPP','Login-User')]:
                     self.insert('wisp_voucher_sales',dict(id=id,first_activation_voucher_id=id,price=6000,cost=5000))
@@ -196,7 +196,7 @@ def main():
                 self.assertEqual([(r['service_type'],r['package_service_type']) for r in rows],[('','both'),('pppoe','both'),('','both')])
                 self.assertEqual(execute('SELECT SUM(price) n FROM wisp_voucher_sales',mode='one')['n'],18000)
             finally:
-                with conn.cursor() as cur:cur.execute('DROP TRIGGER max_fixture_activation_source')
+                with conn.cursor() as cur:cur.execute('DROP TRIGGER alpha_fixture_activation_source')
                 conn.close()
         def test_verified_service_enriches_sale_metadata_only(self):
             from services.sales_source_service import record_sale_source,enrich_sale_sources

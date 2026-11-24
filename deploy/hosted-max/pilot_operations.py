@@ -81,7 +81,7 @@ import json,os,re,hashlib
 from database.db import query_all,query_one
 from database.schema_healer import heal_database_schema
 assert query_one('SELECT DATABASE() d')['d']=='radius_4k'
-approved=set(json.loads(os.environ['MAX_4K_DEMO_SUBSCRIBERS']))
+approved=set(json.loads(os.environ['ALPHA_4K_DEMO_SUBSCRIBERS']))
 tables=[v['TABLE_NAME'] for v in query_all("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_TYPE='BASE TABLE'")]
 def snap():
  result={}
@@ -113,7 +113,7 @@ print('RESULT_JSON='+json.dumps({'verified':True,'tables':len(tables),'rows':sum
 def migrate(root):
     plan=checked(root);environment=dict(v.split('=',1) for v in plan['old']['web']['Config']['Env'] if '=' in v)
     environment.pop('HOSTNAME',None)
-    for key,value in {'STORAGE_DIR':'/tmp/pilot-storage','BACKUPS_DIR':'/tmp/pilot-storage/backups','UPLOADS_DIR':'/tmp/pilot-storage/uploads','LOGS_DIR':'/tmp/pilot-storage/logs','MAX_4K_DEMO_SUBSCRIBERS':json.dumps(plan['demo_subscriber_ids'])}.items():environment[key]=value
+    for key,value in {'STORAGE_DIR':'/tmp/pilot-storage','BACKUPS_DIR':'/tmp/pilot-storage/backups','UPLOADS_DIR':'/tmp/pilot-storage/uploads','LOGS_DIR':'/tmp/pilot-storage/logs','ALPHA_4K_DEMO_SUBSCRIBERS':json.dumps(plan['demo_subscriber_ids'])}.items():environment[key]=value
     file=root/'migration.env.private';file.write_text('\n'.join(k+'='+v for k,v in environment.items())+'\n');os.chmod(file,0o600)
     networks=list(plan['old']['web']['NetworkSettings']['Networks'])
     if len(networks)!=1:raise RuntimeError('Ambiguous tenant network')

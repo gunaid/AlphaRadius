@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pymysql
 
-OWNER = os.environ.get('MAX_ACCTID_FIXTURE', '')
+OWNER = os.environ.get('ALPHA_ACCTID_FIXTURE', '')
 assert OWNER.startswith('max-acctid-') and len(OWNER) > 20
 assert os.environ['DB_HOST'] == OWNER + '-db'
 assert os.environ['DB_NAME'] in ('identity_candidate', 'identity_baseline')

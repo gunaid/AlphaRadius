@@ -34,7 +34,7 @@ class GatewayProbeTests(unittest.TestCase):
  def setUp(self):
   self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup);self.tenant='a'*32;self.binding=dict(id=self.tenant,slug='local',domain='local.max-r.cc',state='ready',instance='fixture',pool='local-probe',containers=dict(web='probe-web',core='probe-core'),images=dict(web='web-image',core='core-image'));p=Path(self.tmp.name)/'binding.json';p.write_text(json.dumps(self.binding));self.rows={}
   for n,role in enumerate(('web','core','db'),1):
-   labels={'max.platform':'max-r','max.tenant':self.tenant,'max.service':role} if role!='db' else {'max.pool':'local-probe'};name='probe-'+role if role!='db' else 'max-db-local-probe';self.rows[role]=dict(Id=str(n)*64,Name='/'+name,Created='2026-11-08T00:00:00Z',Image='sha256:'+str(n)*64,Config=dict(Image=role+'-image',Labels=labels),State=dict(Running=True,Status='running',Paused=False,Restarting=False),RestartCount=0)
+   labels={'max.platform':'max-r','max.tenant':self.tenant,'max.service':role} if role!='db' else {'max.pool':'local-probe'};name='probe-'+role if role!='db' else 'alpha-db-local-probe';self.rows[role]=dict(Id=str(n)*64,Name='/'+name,Created='2026-11-08T00:00:00Z',Image='sha256:'+str(n)*64,Config=dict(Image=role+'-image',Labels=labels),State=dict(Running=True,Status='running',Paused=False,Restarting=False),RestartCount=0)
   self.api_calls=[];self.core_reads=0;self.replace_core=False
   def api(method,path):
    self.api_calls.append((method,path));self.assertEqual(method,'GET');ref=path.split('/')[2];row=next(v for v in self.rows.values() if ref in (v['Id'],v['Name'].lstrip('/')))

@@ -750,7 +750,7 @@ session {
 #  Once we KNOW that the user has been authenticated, there are
 #  additional steps we can take.
 post-auth {
-	# MAX_MESSAGE_AUTHENTICATOR_ACCEPT
+	# ALPHA_MESSAGE_AUTHENTICATOR_ACCEPT
 	update reply {
 		Message-Authenticator := 0x00000000000000000000000000000000
 	}
@@ -967,7 +967,7 @@ post-auth {
 		# log failed authentications in SQL, too.
 		sql
 		attr_filter.access_reject
-		# MAX_MESSAGE_AUTHENTICATOR_REJECT
+		# ALPHA_MESSAGE_AUTHENTICATOR_REJECT
 		update reply {
 			Message-Authenticator := 0x00000000000000000000000000000000
 		}

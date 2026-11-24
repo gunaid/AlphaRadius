@@ -124,9 +124,9 @@ class EnrollmentEngineTests(unittest.TestCase):
         self.assertEqual(self.case.runjob()['status'],'completed')
         import yaml
         web=yaml.safe_load(Path(self.case.plan['compose_path']).read_text())['services']['wisp-web']
-        self.assertEqual(web['environment']['MAX_UPDATE_SOCKET'],'/max-update-socket/controller.sock')
-        self.assertIn(str(self.socket)+':/max-update-socket:ro',web['volumes'])
-        self.assertFalse(any(m['Destination']=='/max-update-socket' for m in self.case.old['Mounts']))
+        self.assertEqual(web['environment']['ALPHA_UPDATE_SOCKET'],'/alpha-update-socket/controller.sock')
+        self.assertIn(str(self.socket)+':/alpha-update-socket:ro',web['volumes'])
+        self.assertFalse(any(m['Destination']=='/alpha-update-socket' for m in self.case.old['Mounts']))
     def test_failed_candidate_restores_original_compose_without_enrollment(self):
         before=Path(self.case.plan['compose_path']).read_bytes()
         def fail(*args,**kw):
@@ -134,20 +134,20 @@ class EnrollmentEngineTests(unittest.TestCase):
         self.assertEqual(self.case.runjob(fail)['status'],'rolled_back')
         self.assertEqual(Path(self.case.plan['compose_path']).read_bytes(),before)
     def test_conflicting_socket_mount_is_rejected_before_switch(self):
-        self.case.old['Mounts'].append({'Type':'bind','Source':'/foreign','Destination':'/max-update-socket','RW':False})
+        self.case.old['Mounts'].append({'Type':'bind','Source':'/foreign','Destination':'/alpha-update-socket','RW':False})
         self.case.api.rows[self.case.old['Id']]=copy.deepcopy(self.case.old)
         runtime.write_json(self.case.folder/'plan.private.json',self.case.plan)
         self.assertEqual(self.case.runjob()['status'],'error')
         self.assertFalse(any('/stop?' in v[1] for v in self.case.api.calls))
 
 
-@unittest.skipUnless(os.environ.get('MAX_CONTROL_FIXTURE_SOURCE'),'Frozen control fixture source is required')
+@unittest.skipUnless(os.environ.get('ALPHA_CONTROL_FIXTURE_SOURCE'),'Frozen control fixture source is required')
 class RegistrationTests(unittest.TestCase):
     def test_official_target_registration_is_encrypted_reused_and_inactive_target_rejected(self):
         import sqlite3
         import types
         from cryptography.fernet import Fernet
-        sys.path.insert(0,os.environ['MAX_CONTROL_FIXTURE_SOURCE'])
+        sys.path.insert(0,os.environ['ALPHA_CONTROL_FIXTURE_SOURCE'])
         from platform_store import Store
         from release_center import ReleaseCenter
         with tempfile.TemporaryDirectory() as directory:
@@ -157,7 +157,7 @@ class RegistrationTests(unittest.TestCase):
                 db.execute('CREATE TABLE receipts(actor TEXT,key TEXT,fingerprint TEXT,result TEXT,PRIMARY KEY(actor,key))')
                 db.execute('CREATE TABLE audit(id INTEGER PRIMARY KEY,created TEXT DEFAULT CURRENT_TIMESTAMP,actor TEXT NOT NULL,action TEXT NOT NULL,target TEXT NOT NULL,detail TEXT NOT NULL)')
             ReleaseCenter(store,types.SimpleNamespace())
-            cfg={'control_backend':os.environ['MAX_CONTROL_FIXTURE_SOURCE'],'control_store':str(root),'base_domain':'example.test'}
+            cfg={'control_backend':os.environ['ALPHA_CONTROL_FIXTURE_SOURCE'],'control_store':str(root),'base_domain':'example.test'}
             with patch.object(panel,'context',return_value=(cfg,root,'INST-1234567890')):
                 one=panel.enrollment('fixture');two=panel.enrollment('fixture')
                 self.assertEqual(one,two)

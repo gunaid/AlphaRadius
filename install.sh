@@ -3,10 +3,10 @@
 set -Eeuo pipefail
 umask 077
 [[ $EUID -eq 0 ]] || { echo 'Run as root: sudo bash install.sh' >&2; exit 1; }
-INSTALL_DIR="${MAX_INSTALL_DIR:-/opt/alpha-radius}"
-MANIFEST_URL="${MAX_RELEASE_MANIFEST_URL:-https://raw.githubusercontent.com/gunaid/AlphaRadius/main/release.json}"
-CLOCK_GUARD="${MAX_CLOCK_GUARD:-off}"
-case "$CLOCK_GUARD" in off|enable) ;; *) echo 'MAX_CLOCK_GUARD must be off or enable' >&2; exit 1;; esac
+INSTALL_DIR="${ALPHA_INSTALL_DIR:-/opt/alpha-radius}"
+MANIFEST_URL="${ALPHA_RELEASE_MANIFEST_URL:-https://raw.githubusercontent.com/gunaid/AlphaRadius/main/release.json}"
+CLOCK_GUARD="${ALPHA_CLOCK_GUARD:-off}"
+case "$CLOCK_GUARD" in off|enable) ;; *) echo 'ALPHA_CLOCK_GUARD must be off or enable' >&2; exit 1;; esac
 [[ "$INSTALL_DIR" == /* && "$INSTALL_DIR" != / ]] || { echo 'Invalid installation directory' >&2; exit 1; }
 [[ -f /etc/os-release ]] || { echo 'Cannot detect operating system' >&2; exit 1; }
 . /etc/os-release
@@ -47,7 +47,7 @@ echo '[2/6] Downloading verified runtime-only release...'
 stage=$(mktemp -d)
 trap 'rm -rf -- "$stage"' EXIT
 curl --fail --location --retry 3 --proto '=https' --tlsv1.2 "$MANIFEST_URL" -o "$stage/release.json"
-jq -e '.format == 1 and .platform == "linux/amd64" and (.release | test("^[A-Za-z0-9._-]+$")) and (.bundle.sha256 | test("^[a-f0-9]{64}$")) and (.bundle.url | startswith("https://github.com/gunaid/AlphaRadius/releases/download/") or test("^https://raw\\.githubusercontent\\.com/gunaid/AlphaRadius/main/releases/runtime-[A-Za-z0-9._-]+\\.tar\\.gz$")) and ([.images.web,.images.core,.images.l2tp] | all(test("^mohd777/alpha-radius-(web|core|l2tp)@sha256:[a-f0-9]{64}$")))' "$stage/release.json" >/dev/null
+jq -e '.format == 1 and .platform == "linux/amd64" and (.release | test("^[A-Za-z0-9._-]+$")) and (.bundle.sha256 | test("^[a-f0-9]{64}$")) and (.bundle.url | startswith("https://github.com/gunaid/AlphaRadius/releases/download/") or test("^https://raw\\.githubusercontent\\.com/gunaid/AlphaRadius/main/releases/runtime-[A-Za-z0-9._-]+\\.tar\\.gz$")) and ([.images.web,.images.core,.images.l2tp] | all(test("^gunaid/alpha-radius-(web|core|l2tp)@sha256:[a-f0-9]{64}$")))' "$stage/release.json" >/dev/null
 jq -e '((.images.database // "legacy") | . == "legacy" or test("^mariadb@sha256:[a-f0-9]{64}$")) and ((.images.autoheal // "legacy") | . == "legacy" or test("^willfarrell/autoheal@sha256:[a-f0-9]{64}$"))' "$stage/release.json" >/dev/null
 release=$(jq -r .release "$stage/release.json")
 curl --fail --location --retry 3 --proto '=https' --tlsv1.2 "$(jq -r .bundle.url "$stage/release.json")" -o "$stage/runtime.tar.gz"
@@ -74,9 +74,9 @@ with tarfile.open(sys.argv[1]) as archive:
 BUNDLE_CHECK
 tar --no-same-owner --no-same-permissions -xzf "$stage/runtime.tar.gz" -C "$stage"
 # Image references come from the validated manifest, never from a mutable latest tag.
-printf 'MAX_WEB_IMAGE=%s\nMAX_CORE_IMAGE=%s\nMAX_L2TP_IMAGE=%s\n' \
+printf 'ALPHA_WEB_IMAGE=%s\nALPHA_CORE_IMAGE=%s\nALPHA_L2TP_IMAGE=%s\n' \
   "$(jq -r .images.web "$stage/release.json")" "$(jq -r .images.core "$stage/release.json")" "$(jq -r .images.l2tp "$stage/release.json")" > "$stage/runtime-release.env"
-printf 'MAX_DB_IMAGE=%s\nMAX_AUTOHEAL_IMAGE=%s\n' \
+printf 'ALPHA_DB_IMAGE=%s\nALPHA_AUTOHEAL_IMAGE=%s\n' \
   "$(jq -r '.images.database // "mariadb:10.11"' "$stage/release.json")" \
   "$(jq -r '.images.autoheal // "willfarrell/autoheal:latest"' "$stage/release.json")" >> "$stage/runtime-release.env"
 mkdir -p "$INSTALL_DIR"
@@ -86,7 +86,7 @@ compose=(docker compose --project-directory "$INSTALL_DIR" --env-file "$INSTALL_
 "${compose[@]}" pull
 # Check the actual image before replacing configuration or recreating any service.
 web_image=$(jq -r .images.web "$stage/release.json")
-docker run --rm --network none --entrypoint python "$web_image" /opt/max-protection/verify.py
+docker run --rm --network none --entrypoint python "$web_image" /opt/alpha-protection/verify.py
 
 echo '[3/6] Installing runtime configuration (preserving storage and database volumes)...'
 backup="$INSTALL_DIR/.install-backups/$(date -u +%Y%m%dT%H%M%SZ)-$$"
@@ -187,7 +187,7 @@ fi
 ip route replace 192.168.44.0/24 via 172.18.0.10 2>/dev/null || true
 
 echo '[6/6] Verifying protected runtime...'
-docker exec alpha_radius_web python /opt/max-protection/verify.py
+docker exec alpha_radius_web python /opt/alpha-protection/verify.py
 SERVER_IP=$(hostname -I | awk '{print $1}')
 printf '\nALPHA RADIUS release %s installed. Dashboard: http://%s:5090\n' "$release" "$SERVER_IP"
 printf 'Existing storage, credentials and database volumes were preserved.\n'

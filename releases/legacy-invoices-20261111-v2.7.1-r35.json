@@ -1,12 +1,12 @@
 {
   "version": "2.7.1",
   "release": "20261111-v2.7.1-legacy-invoices-r35",
-  "tag": "mohd777/alpha-radius-web:2.7.1-legacy-invoices-20261111-r35",
+  "tag": "gunaid/alpha-radius-web:2.7.1-legacy-invoices-20261111-r35",
   "image_digest": "sha256:9b4aac08a65b4f911357538f71c279aa85a1aa1d0aad29cb3fc863b44313ca6c",
   "updated_tags": [
-    "mohd777/alpha-radius-web:2.7.1-legacy-invoices-20261111-r35",
-    "mohd777/alpha-radius-web:2.7.1",
-    "mohd777/alpha-radius-web:2.7.1-update-safety-20261107-r7"
+    "gunaid/alpha-radius-web:2.7.1-legacy-invoices-20261111-r35",
+    "gunaid/alpha-radius-web:2.7.1",
+    "gunaid/alpha-radius-web:2.7.1-update-safety-20261107-r7"
   ],
   "previous_web_digest": "sha256:89ce5cd11959ac2acda0c41aeff82bb71fe083c9685fd2fb3f113001dc02a951",
   "runtime_delta": {

@@ -19,7 +19,7 @@ import time
 SETTINGS = Path('/opt/saas-manager-state/new-domain-updates.json')
 NAME = re.compile(r'[a-z0-9]{1,40}')
 INSTANCE = re.compile(r'INST-[A-F0-9]{10}')
-PIN = re.compile(r'mohd777/alpha-radius-web@sha256:[0-9a-f]{64}')
+PIN = re.compile(r'gunaid/alpha-radius-web@sha256:[0-9a-f]{64}')
 PUBLIC_TRUST = 'c780e786051edc07e9c309793c3bcd1fd3ba7881f645a7ccdd647f535bbdf5a4'
 
 
@@ -149,8 +149,8 @@ def prepare_new_domain_updates(directory, name):
             or not re.fullmatch(r'\d+\.\d+\.\d+',version) or tuple(map(int,version.split('.'))) < (2,6,4)):
         raise BootstrapError('صورة الإنشاء لا تدعم منفذ تحديث control المعتمد.')
     probe = ("import hashlib,json,subprocess;from services.system_update_provision import TRUST;"
-             "p=subprocess.run(['python','/opt/max-protection/verify.py'],capture_output=True);"
-             "print(json.dumps({'verified':p.returncode==0,'key':hashlib.sha256(open('/opt/max-protection/runtime-public.pem','rb').read()).hexdigest(),'channel_key':TRUST['key_fingerprint']}))")
+             "p=subprocess.run(['python','/opt/alpha-protection/verify.py'],capture_output=True);"
+             "print(json.dumps({'verified':p.returncode==0,'key':hashlib.sha256(open('/opt/alpha-protection/runtime-public.pem','rb').read()).hexdigest(),'channel_key':TRUST['key_fingerprint']}))")
     result = json.loads(run(['docker','run','--rm','--network','none','--read-only','--entrypoint','python',image['Id'],'-c',probe],timeout=60))
     if result != {'verified':True,'key':cfg['publisher_key_sha256'],'channel_key':cfg['key_fingerprint']}:
         raise BootstrapError('لم يثبت توقيع صورة الإنشاء أو ثقة قناة التحديث.')

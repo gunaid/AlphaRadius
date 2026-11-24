@@ -145,15 +145,15 @@ class TaskContracts(unittest.TestCase):
     def test_temp_cleanup_preserves_unknown_files_and_backups(self):
         import os, time
         with tempfile.TemporaryDirectory() as root, patch.object(self.actions.tempfile,'gettempdir',return_value=root):
-            good=Path(root,'max-pdf-abcdefgh');good.mkdir();file=good/'0.html';file.write_text('fixture')
+            good=Path(root,'alpha-pdf-abcdefgh');good.mkdir();file=good/'0.html';file.write_text('fixture')
             old=time.time()-100*86400;os.utime(file,(old,old));os.utime(good,(old,old))
-            bad=Path(root,'max-pdf-ijklmnop');bad.mkdir();(bad/'backup.zip').write_bytes(b'protected');os.utime(bad,(old,old))
+            bad=Path(root,'alpha-pdf-ijklmnop');bad.mkdir();(bad/'backup.zip').write_bytes(b'protected');os.utime(bad,(old,old))
             result=self.actions.clean_temporary(7,lambda _:None,lambda:False)
             self.assertEqual(result['processed'],1);self.assertFalse(good.exists());self.assertTrue((bad/'backup.zip').exists())
 
     def test_temp_cancel_before_removal(self):
         with tempfile.TemporaryDirectory() as root, patch.object(self.actions.tempfile,'gettempdir',return_value=root):
-            Path(root,'max-pdf-abcdefgh').mkdir()
+            Path(root,'alpha-pdf-abcdefgh').mkdir()
             self.assertTrue(self.actions.clean_temporary(7,lambda _:None,lambda:True)['cancelled'])
 
     def test_report_stored_before_delivery_and_no_channel_is_success(self):

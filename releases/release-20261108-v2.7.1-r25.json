@@ -7,10 +7,10 @@
   "automatic_distribution": false,
   "client_updater_compatible": false,
   "images": {
-    "web": "mohd777/alpha-radius-web@sha256:d1877af154ad20b3393f1239f9f79e1d3cd42c5dea0706b31daf422124b289a1",
-    "core": "mohd777/alpha-radius-core@sha256:6e71f1e291a90d8c45df79a3f88c5886193bb774054ec3d7e30e72d470b928af",
+    "web": "gunaid/alpha-radius-web@sha256:d1877af154ad20b3393f1239f9f79e1d3cd42c5dea0706b31daf422124b289a1",
+    "core": "gunaid/alpha-radius-core@sha256:6e71f1e291a90d8c45df79a3f88c5886193bb774054ec3d7e30e72d470b928af",
     "database": "mariadb@sha256:0d0945c57f75b3a3b9ebe71aedaaad005fa5305054e8fca3d2e42a8c92b43b5e",
-    "l2tp": "mohd777/alpha-radius-l2tp@sha256:a7fa96b5a7a485ce47755e0379c5553d1a0490855fcfda950602d6c1d9affee7",
+    "l2tp": "gunaid/alpha-radius-l2tp@sha256:a7fa96b5a7a485ce47755e0379c5553d1a0490855fcfda950602d6c1d9affee7",
     "autoheal": "willfarrell/autoheal@sha256:f8adb7a2343aaeaa2757561b52428ebf9d3bb8e304d0f7a77fd13de395610504"
   },
   "host_tools": {
@@ -22,13 +22,13 @@
   },
   "source_manifest": "releases/source-20261108-v2.7.1-r25.json",
   "image_tags": {
-    "web": "mohd777/alpha-radius-web:2.7.1",
-    "core": "mohd777/alpha-radius-core:2.7.1",
-    "l2tp": "mohd777/alpha-radius-l2tp:2.7.1",
-    "database": "mohd777/alpha-radius-db:2.7.1",
-    "autoheal": "mohd777/alpha-radius-autoheal:2.7.1"
+    "web": "gunaid/alpha-radius-web:2.7.1",
+    "core": "gunaid/alpha-radius-core:2.7.1",
+    "l2tp": "gunaid/alpha-radius-l2tp:2.7.1",
+    "database": "gunaid/alpha-radius-db:2.7.1",
+    "autoheal": "gunaid/alpha-radius-autoheal:2.7.1"
   },
-  "previous_web_tag_updated": "mohd777/alpha-radius-web:2.7.1-update-safety-20261107-r7",
+  "previous_web_tag_updated": "gunaid/alpha-radius-web:2.7.1-update-safety-20261107-r7",
   "registry_manifest": "releases/2.7.1/registry.json",
   "release_notes": "docs/RELEASE_271_PUBLISHED_20261108.md",
   "weekly_enhancements_included": true,

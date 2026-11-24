@@ -30,4 +30,4 @@
 
 ## الأدلة المحمية
 
-`PRIVATE/m-r271-legacy-invoices-20261111-r35` يحفظ BUILD-SOURCE وIMAGE-AUDIT وLOCAL-ACCEPTANCE وإيصالات النقل وSTAGED وDEPLOY-OUTCOME وACCEPTANCE وSTABILITY وCLOSED وFINAL-REPORT، والنسخة المشفرة خارج المضيف وإثبات فكها في SWITCH-OFFHOST-BACKUP. النظير علىNative في `/var/lib/max-host-r/manual-operations/m-r271-legacy-invoices-20261111-r35`. تفاصيل الوصول خارجGit. لا تعاد المشغلات المكتملة أو تستخدم هذا التقرير كتفويض نشر عام.
+`PRIVATE/m-r271-legacy-invoices-20261111-r35` يحفظ BUILD-SOURCE وIMAGE-AUDIT وLOCAL-ACCEPTANCE وإيصالات النقل وSTAGED وDEPLOY-OUTCOME وACCEPTANCE وSTABILITY وCLOSED وFINAL-REPORT، والنسخة المشفرة خارج المضيف وإثبات فكها في SWITCH-OFFHOST-BACKUP. النظير علىNative في `/var/lib/alpha-host-r/manual-operations/m-r271-legacy-invoices-20261111-r35`. تفاصيل الوصول خارجGit. لا تعاد المشغلات المكتملة أو تستخدم هذا التقرير كتفويض نشر عام.

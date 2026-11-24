@@ -28,7 +28,7 @@ class ProtocolTests(unittest.TestCase):
                      'public_key':base64.b64encode(public).decode(),'key_fingerprint':hashlib.sha256(public).hexdigest()}
         self.now=dt.datetime.now(dt.timezone.utc)
         self.manifest={'schema':1,'version':'2.6.5','title':'تحديث','changelog':['تجربة'],'release':'r1','published':self.now.isoformat(),
-            'min_client_version':'2.6.4','images':{'web':'mohd777/alpha-radius-web@sha256:'+'a'*64},'components':['web'],
+            'min_client_version':'2.6.4','images':{'web':'gunaid/alpha-radius-web@sha256:'+'a'*64},'components':['web'],
             'audience':{'kind':'domain','id':'target1','identity':'new.example.test'},'migration':'none','update_scope':'web_only',
             'automatic_install':False,'database_image_change':False,'shared_services_change':False}
     def response(self):
@@ -68,11 +68,11 @@ class ProtocolTests(unittest.TestCase):
             with self.assertRaises(c.ChannelError):self.verify()
             self.manifest[field]=old
     def test_unpinned_or_foreign_repository_rejected(self):
-        for image in ('mohd777/alpha-radius-web:latest','foreign/web@sha256:'+'a'*64):
+        for image in ('gunaid/alpha-radius-web:latest','foreign/web@sha256:'+'a'*64):
             self.manifest['images']['web']=image
             with self.assertRaises(c.ChannelError):self.verify()
     def test_core_bundle_supported(self):
-        self.manifest['images']['core']='mohd777/alpha-radius-core@sha256:'+'b'*64
+        self.manifest['images']['core']='gunaid/alpha-radius-core@sha256:'+'b'*64
         self.manifest.update(components=['core','web'],update_scope='web_core');self.assertTrue(self.verify())
     def test_db_shared_and_explicit_migration_rejected(self):
         for field,value in [('database_image_change',True),('shared_services_change',True),('automatic_install',True),('migration','explicit')]:
@@ -112,7 +112,7 @@ class ProvisionTests(unittest.TestCase):
         spec=importlib.util.spec_from_file_location('provision',ROOT/'deploy/hosted-max/provision_update_controller.py');p=importlib.util.module_from_spec(spec);spec.loader.exec_module(p)
         with tempfile.TemporaryDirectory() as folder:
             root=Path(folder);tenant=root/'tenant';tenant.mkdir()
-            old={'services':{'web':{'image':'mohd777/alpha-radius-web@sha256:'+'a'*64,'environment':{},'volumes':['./storage:/app/storage']},'radius_core':{'image':'core'},'db':{'image':'db'}}}
+            old={'services':{'web':{'image':'gunaid/alpha-radius-web@sha256:'+'a'*64,'environment':{},'volumes':['./storage:/app/storage']},'radius_core':{'image':'core'},'db':{'image':'db'}}}
             path=tenant/'docker-compose.yml';path.write_text(json.dumps(old))
             p.provision(tenant,'newtenant',root/'private',root/'socket')
             import yaml

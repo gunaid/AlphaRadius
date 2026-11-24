@@ -6,14 +6,14 @@ import json
 import os
 import socket
 
-PREFIX = '/_max_updates/v1/'
+PREFIX = '/_alpha_updates/v1/'
 
 
 class Connection(http.client.HTTPConnection):
     def connect(self):
         self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self.sock.settimeout(self.timeout)
-        self.sock.connect(os.environ.get('MAX_UPDATE_SOCKET', '/var/run/max-updates.sock'))
+        self.sock.connect(os.environ.get('ALPHA_UPDATE_SOCKET', '/var/run/alpha-updates.sock'))
 
 
 def request(method, action, data=None):

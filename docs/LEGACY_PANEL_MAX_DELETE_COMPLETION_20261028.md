@@ -17,7 +17,7 @@
 ## تثبيت النطاق والقبول
 
 - طابقت tenant.json بالمعرف الفرعي max، وأسماء حاويات Compose بالبادئة alpha_radius_max_ وموارده غير الخارجية. لا استيراد لتطبيق اللوحة لاستخراج المعلومات.
-- لم توجد حاويات max أو volume max_db_data أو أنفاق لها في سجل الأنفاق. فحصت جميع mount sources للحاويات للتأكد من عدم ربط أي منها بمسارات التنظيف.
+- لم توجد حاويات max أو volume alpha_db_data أو أنفاق لها في سجل الأنفاق. فحصت جميع mount sources للحاويات للتأكد من عدم ربط أي منها بمسارات التنظيف.
 - ثُبتت المسارات المطلقة وغياب الروابط الرمزية والتجاوز إلى filesystem آخر؛ استُخدم قفل operation.lock نفسه غير الحاجب لمنع التزامن مع عمليات اللوحة.
 - قورنت جميع الحاويات قبل وبعد: IDs والصور وStartedAt وRunning وRestartCount دون تغيير. بقي جرد الشبكات وvolumes دون تغيير.
 - بقيت بصمات tenant.json وCompose للمنظومات الأخرى وإعدادات Nginx، وحالات/PID وبدء الخدمات المشتركة دون تغيير. لم ينفذ restart أو reload أو SQL مؤثر أو تغيير ترخيص أو NAS.
@@ -26,6 +26,6 @@
 
 ## الإيصال وحدود الاستئناف
 
-PRIVATE/control-max-r-20261028-r1/MAX-DELETE-COMPLETION-20261028.private.json ملخص محلي. الإيصال الكامل المنقح على المضيف /opt/saas-manager-state/manual-operations/max-delete-completion-20261028-r1.json. المشغل يرفض التكرار إذا وجد الإيصال؛ لا تعاد جولة الحذف.
+PRIVATE/control-alpha-r-20261028-r1/MAX-DELETE-COMPLETION-20261028.private.json ملخص محلي. الإيصال الكامل المنقح على المضيف /opt/saas-manager-state/manual-operations/max-delete-completion-20261028-r1.json. المشغل يرفض التكرار إذا وجد الإيصال؛ لا تعاد جولة الحذف.
 
 الخلل العام في unlink داخل كود اللوحة القديمة لم يُصلح بهذه العملية. مهمة استكمال control.max-r.cc وMAX 2.7.0 تبقيان متوقفتين؛ لا نشر أو تحديث أو استئناف مراقبة بهذه الجولة.
