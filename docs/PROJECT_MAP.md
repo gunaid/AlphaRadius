@@ -1142,7 +1142,7 @@ Implementation and local measurements are complete; see [implementation report](
 
 سياسة الكروت عند أول استخدام وحصة دورة المشترك: [FIRST_USE_POLICY](FIRST_USE_POLICY.md)، المثبت [first_use_policy.py](../database/first_use_policy.py)، والتثبيت قبل الرد في license-capacity-postauth.conf.
 
-اعتماد المفتاح ضمن التفعيل: [LICENSE_ENROLLMENT](LICENSE_ENROLLMENT.md). خادم الإصدار مشروع منفصل؛ مكونات الإصدار المتأثرة محفوظة في deploy/license-server.
+اعتماد المفتاح ضمن التفعيل: [LICENSE_ENROLLMENT](LICENSE_ENROLLMENT.md). خادم الإصدار مشروع منفصل؛ مكونات الإصدار المتأثرة محفوظة في deploy/license-server. عقد الخادم المطلوب: [LICENSE_SERVER_CONTRACT](LICENSE_SERVER_CONTRACT.md).
 
 وقاية الساعة والطاقة المحلية ومناطق العرض: [BOOT_POWER_RESILIENCE](BOOT_POWER_RESILIENCE.md). مرجع الوقت `core/time_service.py`، وساعة العرض `web/static/server-clock.js`، واختبارات `deploy/clock-guard/test_clock_authority.py` و`test_server_clock.cjs`. لم تنشر هذه الجولة على العميل.
 
