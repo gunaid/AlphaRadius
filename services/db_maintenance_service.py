@@ -1,0 +1,908 @@
+# -*- coding: utf-8 -*-
+"""
+Database Maintenance, Storage Analysis & Optimization Service for MAX RADIUS.
+Handles:
+1. High-Performance Live Statistics for Vouchers, Radius tables, Expired cards.
+2. Table Size Analyzer (Top 5 key tables with Arabic labels + other tables aggregation).
+3. Historical Log Pruning (radacct closed sessions & radpostauth logs by retention days).
+4. Table Defragmentation & Optimization (OPTIMIZE TABLE).
+5. Deep Engineering Database Audit (Orphaned records, missing limits, status mismatches, zombie sessions).
+6. Auto-Cleanup Scheduler integration.
+"""
+
+import time
+import datetime
+from database.db import query_all, query_one, execute_write, execute_update, get_connection
+
+from core.time_service import get_utc_cutoff_str
+
+SYSTEM_RESERVED_USERS = ('healthcheck', 'probe_user', 'admin')
+
+VALID_CHECK_ATTRIBUTES = frozenset(('Cleartext-Password','Calling-Station-Id','Auth-Type','Expiration','Simultaneous-Use','Max-All-Session','Max-Daily-Session','User-Password','Crypt-Password','MD5-Password','SMD5-Password','SHA-Password','SSHA-Password','NT-Password','LM-Password','CHAP-Password','NAS-IP-Address','NAS-Identifier','NAS-Port','NAS-Port-Type','Called-Station-Id','Service-Type','Framed-Protocol','Login-Time','Group','Huntgroup-Name'))
+
+def get_heartbeat_cutoff(minutes=10):
+    return get_utc_cutoff_str(minutes)
+
+def get_maintenance_stats():
+    """
+    Returns real-time counts and metrics for database maintenance (Sub-50ms execution).
+    """
+    stats = {
+        'total_vouchers': 0,
+        'expired_total': 0,
+        'expired_by_quota': 0,
+        'expired_by_time': 0,
+        'expired_by_other': 0,
+        'recharged_vouchers': 0,
+        'active_used_vouchers': 0,
+        'unused_vouchers': 0,
+        'total_subscribers': 0,
+        'radcheck_count': 0,
+        'radreply_count': 0,
+        'radusergroup_count': 0,
+        'radacct_count': 0,
+        'radpostauth_count': 0,
+        'db_size_mb': 0.0
+    }
+
+    try:
+        # 1. Voucher status breakdown
+        v_counts = query_all("""
+            SELECT status, COUNT(*) as cnt
+            FROM wisp_vouchers
+            GROUP BY status
+        """)
+        for r in v_counts:
+            st = r['status']
+            cnt = int(r['cnt'] or 0)
+            if st == 'expired':
+                stats['expired_total'] = cnt
+            elif st == 'recharged':
+                stats['recharged_vouchers'] = cnt
+            elif st in ('active', 'used'):
+                stats['active_used_vouchers'] += cnt
+            elif st == 'unused':
+                stats['unused_vouchers'] = cnt
+
+        stats['total_vouchers'] = sum(int(r['cnt'] or 0) for r in v_counts)
+
+        # 2. Breakdown of Expired vouchers: Quota vs Time
+        if stats['expired_total'] > 0:
+            from services.voucher_expiry_policy import category_sql
+            category = category_sql()
+            breakdown = query_one(f"""SELECT
+                SUM(({category})='quota') AS by_quota,
+                SUM(({category})='time') AS by_time,
+                SUM(({category})='other') AS by_other
+                FROM wisp_vouchers WHERE status='expired'""") or {}
+            stats['expired_by_quota'] = int(breakdown.get('by_quota') or 0)
+            stats['expired_by_time'] = int(breakdown.get('by_time') or 0)
+            stats['expired_by_other'] = int(breakdown.get('by_other') or 0)
+
+        # 3. Subscribers
+        sub_row = query_one("SELECT COUNT(*) as cnt FROM wisp_subscribers")
+        stats['total_subscribers'] = int((sub_row and sub_row['cnt']) or 0)
+
+        # 4. FreeRADIUS Table Counts
+        rc_row = query_one("SELECT COUNT(*) as cnt FROM radcheck")
+        stats['radcheck_count'] = int((rc_row and rc_row['cnt']) or 0)
+
+        rr_row = query_one("SELECT COUNT(*) as cnt FROM radreply")
+        stats['radreply_count'] = int((rr_row and rr_row['cnt']) or 0)
+
+        rg_row = query_one("SELECT COUNT(*) as cnt FROM radusergroup")
+        stats['radusergroup_count'] = int((rg_row and rg_row['cnt']) or 0)
+
+        ra_row = query_one("SELECT COUNT(*) as cnt FROM radacct")
+        stats['radacct_count'] = int((ra_row and ra_row['cnt']) or 0)
+
+        rp_row = query_one("SELECT COUNT(*) as cnt FROM radpostauth")
+        stats['radpostauth_count'] = int((rp_row and rp_row['cnt']) or 0)
+
+        # 5. DB Size Estimation (MySQL / MariaDB)
+        try:
+            db_sz = query_one("""
+                SELECT SUM(data_length + index_length) / 1024 / 1024 as size_mb
+                FROM information_schema.TABLES
+                WHERE table_schema = DATABASE()
+            """)
+            if db_sz and db_sz.get('size_mb'):
+                stats['db_size_mb'] = round(float(db_sz['size_mb']), 2)
+        except Exception:
+            pass
+
+        # 6. Safe Archiver Telemetry
+        try:
+            from services.accounting_archiver_service import get_archiver_status
+            stats['archiver'] = get_archiver_status()
+        except Exception:
+            stats['archiver'] = {
+                'live_sessions_count': stats.get('radacct_count', 0),
+                'archived_sessions_count': 0,
+                'total_archived_traffic_gb': 0.0,
+                'older_90d_count': 0,
+                'radacct_size_mb': 0.0,
+                'archive_size_mb': 0.0,
+                'oldest_session': None,
+                'newest_session': None
+            }
+
+    except Exception as e:
+        print(f"[ERROR] get_maintenance_stats: {str(e)}")
+
+    stats['weekly_maintenance']=get_weekly_maintenance_status()
+    return stats
+
+
+def get_weekly_maintenance_status():
+    """Read-only receipt; a configured cadence is not a worker liveness claim."""
+    import json
+    from core.time_service import get_system_timezone
+    try:
+        rows=query_all("SELECT `key`,value FROM wisp_system_settings WHERE `key` IN ('history_cleanup_last_success','history_cleanup_last_result')")
+        values={r['key']:r['value'] for r in rows}
+        marker=float(values.get('history_cleanup_last_success') or 0)
+        receipt=json.loads(values.get('history_cleanup_last_result') or '{}')
+        state=receipt.get('state')
+        text={'initialized':'تهيئة الجدولة؛ لم ينفذ تنظيف بعد',
+              'success':'آخر تنفيذ ناجح','failed':'تعذر آخر تنفيذ؛ يحتاج مراجعة'}.get(state,'لا توجد نتيجة تنفيذ مسجلة')
+        if state=='success':
+            text+=f" — جلسات: {receipt.get('deleted_sessions',0)}، محاولات دخول: {receipt.get('deleted_auth',0)}، نسخ مكررة: {receipt.get('compacted_duplicates',0)}"
+            if receipt.get('compaction_pending'):text+='؛ معالجة التكرار لم تكتمل بعد'
+        zone=get_system_timezone()
+        date=lambda epoch:datetime.datetime.fromtimestamp(epoch,zone).strftime('%Y-%m-%d %H:%M')
+        return dict(state=state or 'unknown',summary=text,
+                    last_at=date(float(receipt['at'])) if receipt.get('at') else None,
+                    next_due=date(marker+604800) if marker else None)
+    except Exception:
+        return dict(state='unavailable',summary='تعذر قراءة نتيجة الصيانة',last_at=None,next_due=None)
+
+
+def get_detailed_table_sizes():
+    """
+    Queries information_schema.TABLES to return the top 5 key tables with clear Arabic names
+    and aggregates all other system tables into a single summary row.
+    """
+    TABLE_META = {
+        'radacct': {
+            'arabic_name': 'سجلات جلسات الاستهلاك والمحاسبة',
+            'desc': 'تفاصيل جلسات واستهلاك المشتركين وعدادات التحميل',
+            'icon': 'fa-chart-line',
+            'color': 'amber'
+        },
+        'wisp_vouchers': {
+            'arabic_name': 'كروت واشتراكات الشبكة',
+            'desc': 'بيانات الكروت، الصلاحيات، كلمات المرور، وحالات التشغيل',
+            'icon': 'fa-ticket',
+            'color': 'indigo'
+        },
+        'radusergroup': {
+            'arabic_name': 'مجموعات وباقات المستخدمين',
+            'desc': 'ربط المشتركين بالباقات والسرعات في FreeRADIUS',
+            'icon': 'fa-layer-group',
+            'color': 'purple'
+        },
+        'radcheck': {
+            'arabic_name': 'بيانات المصادقة وكلمات المرور',
+            'desc': 'سجلات التحقق وكلمات المرور في سيرفر الراديوس',
+            'icon': 'fa-key',
+            'color': 'emerald'
+        },
+        'radacct_archive': {
+            'arabic_name': 'أرشيف سجلات المحاسبة',
+            'desc': 'الأرشيف السابق؛ تدمج نسخه المكررة بعد التحقق من تفاصيلها',
+            'icon': 'fa-file-zipper',
+            'color': 'teal'
+        },
+        'wisp_traffic_history': {
+            'arabic_name': 'تاريخ الجلسات المحفوظ',
+            'desc': 'تفاصيل الجلسات المحفوظة في مخزن التاريخ الموحد',
+            'icon': 'fa-clock-rotate-left',
+            'color': 'teal'
+        },
+        'wisp_imported_session_history': {
+            'arabic_name': 'سجلات الجلسات المستوردة',
+            'desc': 'التاريخ المستورد؛ لا يحذف بالتنظيف الدوري العادي',
+            'icon': 'fa-file-import',
+            'color': 'sky'
+        },
+        'radpostauth': {
+            'arabic_name': 'سجلات محاولات الدخول',
+            'desc': 'سجلات عمليات الدخول المقبولة والمرفوضة للهوتسبوت',
+            'icon': 'fa-user-shield',
+            'color': 'sky'
+        }
+    }
+
+    try:
+        rows = query_all("""
+            SELECT
+                table_name,
+                COALESCE(table_rows, 0) as table_rows,
+                ROUND(data_length / 1024 / 1024, 2) AS data_mb,
+                ROUND(index_length / 1024 / 1024, 2) AS index_mb,
+                ROUND((data_length + index_length) / 1024 / 1024, 2) AS total_mb
+            FROM information_schema.TABLES
+            WHERE table_schema = DATABASE()
+            ORDER BY (data_length + index_length) DESC
+        """)
+
+        total_db_mb = sum(float(r['total_mb'] or 0.0) for r in rows) or 0.01
+
+        top_tables = []
+        other_rows = 0
+        other_data_mb = 0.0
+        other_index_mb = 0.0
+        other_total_mb = 0.0
+        other_count = 0
+
+        for r in rows:
+            tname = r['table_name']
+            t_mb = float(r['total_mb'] or 0.0)
+            d_mb = float(r['data_mb'] or 0.0)
+            i_mb = float(r['index_mb'] or 0.0)
+            r_cnt = int(r['table_rows'] or 0)
+
+            if tname in TABLE_META:
+                meta = TABLE_META[tname]
+                pct = round((t_mb / total_db_mb) * 100, 1)
+                top_tables.append({
+                    'table_name': tname,
+                    'arabic_name': meta['arabic_name'],
+                    'desc': meta['desc'],
+                    'icon': meta['icon'],
+                    'color': meta['color'],
+                    'table_rows': r_cnt,
+                    'data_mb': d_mb,
+                    'index_mb': i_mb,
+                    'total_mb': t_mb,
+                    'percentage': pct
+                })
+            else:
+                other_count += 1
+                other_rows += r_cnt
+                other_data_mb += d_mb
+                other_index_mb += i_mb
+                other_total_mb += t_mb
+
+        # Sort top tables in preferred priority order
+        order_keys = ['radacct', 'wisp_vouchers', 'radusergroup', 'radcheck', 'radpostauth']
+        top_tables.sort(key=lambda x: order_keys.index(x['table_name']) if x['table_name'] in order_keys else 99)
+
+        # Add summary row for other tables if any exist
+        if other_count > 0:
+            other_pct = round((other_total_mb / total_db_mb) * 100, 1)
+            top_tables.append({
+                'table_name': 'other_tables',
+                'arabic_name': 'بقية جداول وبيانات النظام الأخرى',
+                'desc': f'تشمل {other_count} جدولاً (المبيعات، الموزعين، الإعدادات، النسخ الاحتياطي، المشتركين...)',
+                'icon': 'fa-cubes',
+                'color': 'slate',
+                'table_rows': other_rows,
+                'data_mb': round(other_data_mb, 2),
+                'index_mb': round(other_index_mb, 2),
+                'total_mb': round(other_total_mb, 2),
+                'percentage': other_pct
+            })
+
+        return {
+            'success': True,
+            'total_db_mb': round(total_db_mb, 2),
+            'table_count': len(rows),
+            'tables': top_tables
+        }
+    except Exception as e:
+        print(f"[ERROR] get_detailed_table_sizes: {str(e)}")
+        return {'success': False, 'message': str(e), 'tables': [], 'total_db_mb': 0.0}
+
+
+def prune_historical_logs(days=30, prune_postauth=True, prune_audit=False):
+    from services.account_lifecycle_service import run_transaction, sql, job_lock, HISTORY_ELIGIBLE
+    days = max(1, int(days))
+    result = dict(success=True, retention_days=days, deleted_radacct=0, deleted_radpostauth=0, deleted_audit_logs=0)
+    started = time.time()
+    try:
+        with job_lock('history-maintenance') as acquired:
+            if not acquired:
+                raise ValueError('توجد عملية صيانة سجلات أخرى قيد التنفيذ.')
+            while True:
+                def chunk(conn):
+                    rows = sql(conn, 'SELECT a.radacctid FROM radacct a WHERE '+HISTORY_ELIGIBLE+' ORDER BY a.radacctid LIMIT 250 FOR UPDATE', (days,), 'all')
+                    if not rows:
+                        return 0
+                    ids = [row['radacctid'] for row in rows]
+                    marks = ','.join(['?']*len(ids))
+                    from services.traffic_history_service import preserve_sessions
+                    preserve_sessions(conn,'radacct',f'a.radacctid IN ({marks})',tuple(ids))
+                    return sql(conn, f'DELETE a FROM radacct a WHERE a.radacctid IN ({marks}) AND '+HISTORY_ELIGIBLE, tuple(ids)+(days,))
+                count = run_transaction(chunk)
+                result['deleted_radacct'] += count
+                if not count:
+                    break
+            for table, column, enabled, field in [('radpostauth','authdate',prune_postauth,'deleted_radpostauth'),('wisp_audit_logs','created_at',prune_audit,'deleted_audit_logs')]:
+                if enabled:
+                    while True:
+                        count=run_transaction(lambda conn: sql(conn,f'DELETE FROM {table} WHERE {column}<NOW()-INTERVAL ? DAY LIMIT 500',(days,)))
+                        result[field]+=count
+                        if count<500:break
+        result['message'] = f"تم حذف {result['deleted_radacct']} سجل محاسبة قديم مع حماية الدورة الحالية وخطوط الأساس."
+    except Exception as exc:
+        result['success']=False
+        result['message']=f'تعذر إكمال التنظيف: {exc}'
+    result['duration_seconds']=round(time.time()-started,2)
+    return result
+
+
+def optimize_database_tables(tables=None):
+    from services.account_lifecycle_service import job_lock
+    try:
+        with job_lock('factory-reset') as acquired, job_lock('expired-card-delete') as cleanup_idle:
+            if not acquired or not cleanup_idle:
+                return dict(success=False,message='توجد عملية حذف أو أرشفة أو تحسين أو إعادة مصنع قيد التنفيذ؛ أعد المحاولة بعد اكتمالها.')
+            return _optimize_database_tables_locked(tables)
+    except Exception as exc:
+        return dict(success=False,message='تعذر تحسين الجداول: '+str(exc))
+
+
+def _optimize_database_tables_locked(tables=None, progress_callback=None, factory=False):
+    """
+    Runs OPTIMIZE TABLE on database tables to rebuild InnoDB tablespaces,
+    defragment index structures, and reclaim unused disk space.
+    """
+    start_t = time.time()
+    import re
+    allowed = {
+            'radacct', 'radacct_archive','wisp_imported_session_history', 'radpostauth', 'radcheck', 'radusergroup',
+            'wisp_vouchers', 'wisp_voucher_sales', 'wisp_subscribers', 'wisp_audit_logs'
+    }
+    if factory:
+        allowed = set(FACTORY_RESET_TABLES) | {'wisp_packages','wisp_managers','wisp_resellers','radgroupcheck','radgroupreply'}
+    if tables is None:
+        tables = sorted(allowed)
+    if not isinstance(tables,(list,tuple)) or not tables or len(tables)>len(allowed):
+        return dict(success=False,message='قائمة جداول غير صالحة')
+
+    if any(not isinstance(table,str) or not re.fullmatch(r'[A-Za-z0-9_]+',table) for table in tables):
+        return dict(success=False,message='قائمة جداول غير صالحة')
+    # The factory coordinator may compact its own fixed wipe set, but callers
+    # of the public optimizer can never choose arbitrary system/license tables.
+    if any(table not in allowed for table in tables):
+        return dict(success=False,message='الجدول غير مشمول بعملية التحسين المسموحة.')
+    tables=list(dict.fromkeys(tables))
+    before_stats = get_detailed_table_sizes()
+    before_mb = before_stats.get('total_db_mb', 0.0)
+
+    optimized_results = []
+
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute('SET SESSION lock_wait_timeout=2')
+        cursor.execute('SET SESSION innodb_lock_wait_timeout=2')
+
+        for table_index, tbl in enumerate(tables):
+            if progress_callback:
+                progress_callback(table_index, len(tables), tbl)
+            t0 = time.time()
+            try:
+                # OPTIMIZE TABLE
+                cursor.execute(f"OPTIMIZE TABLE {tbl}")
+                res = cursor.fetchall()
+                if any(str(row.get('Msg_type','')).lower()=='error' for row in res):
+                    raise RuntimeError('; '.join(str(row.get('Msg_text','')) for row in res))
+                t_elapsed = round(time.time() - t0, 2)
+                optimized_results.append({
+                    'table': tbl,
+                    'status': 'OK',
+                    'duration_s': t_elapsed
+                })
+            except Exception as e_tbl:
+                optimized_results.append({
+                    'table': tbl,
+                    'status': f'Error: {str(e_tbl)}',
+                    'duration_s': round(time.time() - t0, 2)
+                })
+
+        conn.close()
+
+        after_stats = get_detailed_table_sizes()
+        after_mb = after_stats.get('total_db_mb', 0.0)
+        freed_mb = max(0.0, round(before_mb - after_mb, 2))
+        elapsed = round(time.time() - start_t, 2)
+
+        return {
+            'success': all(item['status']=='OK' for item in optimized_results),
+            'before_mb': before_mb,
+            'after_mb': after_mb,
+            'freed_mb': freed_mb,
+            'duration_seconds': elapsed,
+            'details': optimized_results,
+            'message': f"انتهت معالجة {len(tables)} جداول؛ راجع نتيجة كل جدول خلال {elapsed} ثانية. (الحجم الحالي: {after_mb} MB)."
+        }
+
+    except Exception as e:
+        return {
+            'success': False,
+            'message': f"خطأ أثناء تحسين الجداول: {str(e)}",
+            'duration_seconds': round(time.time() - start_t, 2)
+        }
+
+
+def run_auto_maintenance_job(retention_days=90):
+    result = prune_historical_logs(days=retention_days, prune_postauth=True)
+    if not result['success']:
+        raise RuntimeError(result['message'])
+    # Compaction is explicit maintenance, never an automatic consequence of pruning.
+    from services.traffic_history_service import compact_duplicate_history
+    compact = compact_duplicate_history()
+    return dict(result, duplicate_compaction=compact)
+
+
+def delete_expired_vouchers(delete_type='all', delete_acct=False, batch_limit=50000, min_age_days=0, progress_callback=None, cancel_callback=None, account_scope=None, admission_timeout=0):
+    from services.account_lifecycle_service import delete_account, job_lock, run_transaction, enqueue_deletion_disconnects
+    result=dict(success=True,deleted_vouchers=0,deleted_radcheck=0,deleted_radusergroup=0,deleted_radreply=0,deleted_radacct=0,pending=0,skipped=0,processed=0,total=0,queue_failures=0,pending_reasons={})
+    started=time.time()
+    last_report=None
+    if delete_type not in ('all','time','quota'):
+        return dict(result,success=False,message='نوع حذف غير صالح')
+    def report(force=False):
+        nonlocal last_report
+        result['duration_seconds']=round(time.time()-started,2)
+        result['message']=f"تمت معالجة {result['processed']} من {result['total']}؛ حذف {result['deleted_vouchers']} كرت، و{result['pending']} مؤجل للحماية، و{result['skipped']} تغيرت حالته. السجل المالي وملخص الاستهلاك محفوظان."
+        now=time.monotonic()
+        if progress_callback and (force or last_report is None or now-last_report>=.5):
+            progress_callback(dict(result))
+            last_report=now
+    try:
+        from services.maintenance_admission import maintenance_admission
+        with maintenance_admission(('factory-reset','expired-card-delete'), timeout=admission_timeout,
+                                   progress=progress_callback, cancelled=cancel_callback) as admission:
+            if not admission['acquired']:
+                if admission.get('cancelled') or admission_timeout:
+                    return dict(result, **{k:v for k,v in admission.items() if k!='acquired'})
+                raise ValueError('الحذف أو إعادة المصنع قيد التنفيذ بالفعل.')
+            where="status='expired'";params=[]
+            if account_scope is not None:
+                from services.automation_scope_service import predicate
+                clause, scope_values = predicate(account_scope)
+                where += ' AND (' + clause + ')'
+                params.extend(scope_values)
+            if min_age_days:
+                where+=' AND expires_at < NOW()-INTERVAL ? DAY';params.append(max(1,int(min_age_days)))
+            if delete_type != 'all':
+                from services.voucher_expiry_policy import category_sql
+                where+=' AND ('+category_sql()+')=?';params.append(delete_type)
+            rows=query_all('SELECT id,last_renewed_at,expires_at,expire_reason FROM wisp_vouchers WHERE '+where+' ORDER BY id LIMIT ?',tuple(params)+(max(1,min(int(batch_limit),50000)),))
+            result['total']=len(rows);report(force=True)
+            for offset in range(0,len(rows),20):
+                if cancel_callback and cancel_callback():
+                    result['cancelled']=True
+                    break
+                chunk=rows[offset:offset+20]
+                conn=get_connection()
+                try:
+                    def operation(transaction):
+                        staged=[]
+                        for row in chunk:
+                            state=delete_account('voucher',row['id'],expected_expired=True,delete_acct=delete_acct,min_age_days=min_age_days,expected_cycle=str(row.get('last_renewed_at') or ''),expected_reason=row.get('expire_reason'),expected_category=delete_type,connection=transaction,transaction_owned=True,queue_pending=False,expected_scope=account_scope)
+                            staged.append((row['id'],state))
+                        return staged
+                    committed=run_transaction(operation,connection=conn)
+                finally:conn.close()
+                # No counters or external disconnect queue effects precede commit.
+                for entity_id,state in committed:
+                    result['deleted_vouchers']+=bool(state.get('deleted'))
+                    result['pending']+=bool(state.get('pending'))
+                    for reason in state.get('pending_reasons',[]):
+                        result['pending_reasons'][reason]=result['pending_reasons'].get(reason,0)+1
+                    result['skipped']+=not state.get('deleted') and not state.get('pending')
+                    result['queue_failures']+=state.get('queue_failures',0)
+                    for field in ('deleted_radcheck','deleted_radusergroup','deleted_radreply'):result[field]+=state.get(field,0)
+                    result['processed']+=1
+                for entity_id,state in committed:
+                    if state.get('pending'):
+                        try:enqueue_deletion_disconnects('voucher',entity_id,state)
+                        except Exception:state['queue_failures']=max(1,len(state.get('sessions',[])))
+                        result['queue_failures']+=state.get('queue_failures',0)
+                # Persist at most twice/second, independently of the 20-card
+                # commit/cancellation boundary; always publish the last chunk.
+                report(force=offset+20>=len(rows))
+            if result['queue_failures']:
+                result['success']=False;result['error']='تعذر إدراج بعض مهام الفصل؛ الحسابات محفوظة وتحتاج إعادة المحاولة.'
+    except Exception as exc:
+        result['success']=False;result['error']=str(exc)
+        if result.get('current_card_id'):result['failed_card_id']=result['current_card_id']
+    result.pop('current_card_id',None)
+    result['duration_seconds']=round(time.time()-started,2)
+    result['message']=f"تم حذف {result['deleted_vouchers']} كرت؛ {result['pending']} مؤجل للحماية و{result['skipped']} تغيرت حالته. السجل المالي وملخص الاستهلاك محفوظان."
+    if result['pending']:
+        labels={'open_session':'جلسات مفتوحة','uncertain_close':'إغلاقات تحتاج تسوية','auth_reservation':'حجوزات دخول جارية','account_write_guard':'عملية تغيير حساب جارية','ambiguous_owner':'ملكية غير محسومة','unsettled_or_incomplete_history':'تاريخ محاسبة غير مكتمل','late_summary_delta':'محاسبة متأخرة تحتاج تسوية','large_history_requires_batch_purge':'تاريخ كبير يحتاج معالجة مجزأة'}
+        result['message']+=' أسباب التأجيل: '+ '، '.join(f"{labels.get(k,k)}: {v}" for k,v in result['pending_reasons'].items())+'.'
+    result['deletion_complete']=bool(result['success'] and not result.get('cancelled') and not result['pending'] and not result['skipped'])
+    if result.get('cancelled'):
+        result['remaining']=max(0,result['total']-result['processed'])
+        result['message']=f"أُلغيت العملية؛ حُذف {result['deleted_vouchers']} كرت، وبقي {result['remaining']} دون معالجة. السجل المالي وملخص الاستهلاك محفوظان."
+    if not result['success']:result['message']+=' لم تكتمل العملية: '+result['error']
+    return result
+
+
+def run_database_audit():
+    """
+    Deep Engineering Database Audit Engine.
+    Discovers:
+    1. Orphaned FreeRADIUS Records (exists in radcheck/radusergroup but missing from wisp_vouchers & wisp_subscribers).
+    2. Missing Auth / Limits (Active/Used/Unused vouchers with missing radcheck/radusergroup records).
+    3. Status Mismatch (Expired, Recharged, or Disabled in web DB, but still present in radcheck).
+    4. Stale Zombie Accounting Sessions (acctstoptime IS NULL with heartbeat > 10m ago).
+    """
+    start_t = time.time()
+    audit_results = {
+        'timestamp': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'success': True,
+        'truncated': False,
+        'total_issues': 0,
+        'orphaned_count': 0,
+        'missing_limits_count': 0,
+        'status_mismatch_count': 0,
+        'stale_sessions_count': 0,
+        'issues': [],
+        'duration_seconds': 0.0
+    }
+
+    try:
+        # -------------------------------------------------------------
+        # 1. Orphaned FreeRADIUS Records
+        # -------------------------------------------------------------
+        orphans = query_all("""
+            SELECT DISTINCT r.username, r.attribute, r.value
+            FROM radcheck r
+            LEFT JOIN wisp_vouchers v ON r.username = v.username
+            LEFT JOIN wisp_subscribers s ON r.username = s.username
+            WHERE v.id IS NULL
+              AND s.id IS NULL
+              AND r.username NOT IN ('healthcheck', 'probe_user', 'admin')
+            LIMIT 200
+        """)
+        for row in orphans:
+            audit_results['issues'].append({
+                'id': f"orphan_{row['username']}",
+                'username': row['username'],
+                'category': 'orphaned_radius',
+                'category_label': 'كرت يتيم (Orphaned)',
+                'severity': 'warning',
+                'details': f"موجود في جدول radcheck بقيمة ({row['attribute']}) ولكن غير موجود في الكروت أو المشتركين.",
+                'suggested_fix': 'حذف السجل اليتيم من FreeRADIUS',
+                'action_code': 'purge_orphan'
+            })
+
+        audit_results['orphaned_count'] = len(orphans)
+
+        # -------------------------------------------------------------
+        # 2. Missing Auth / Limits in FreeRADIUS
+        # -------------------------------------------------------------
+        missing_auth = query_all("""
+            SELECT t.id,t.username,t.status,p.name AS package_name,rc.id AS rc_id,rg.id AS rg_id
+            FROM (
+                SELECT id,username,status,package_id,expires_at FROM wisp_vouchers WHERE status IN ('active','used','unused')
+                UNION ALL
+                SELECT id,username,status,package_id,expires_at FROM wisp_subscribers WHERE status='active'
+            ) t
+            JOIN wisp_packages p ON t.package_id=p.id
+            LEFT JOIN radcheck rc ON t.username=rc.username AND rc.attribute='Cleartext-Password'
+            LEFT JOIN radusergroup rg ON t.username=rg.username
+            WHERE (t.expires_at IS NULL OR t.expires_at>CURRENT_TIMESTAMP)
+              AND (rc.id IS NULL OR rg.id IS NULL)
+            LIMIT 200
+        """)
+        for row in missing_auth:
+            missing_parts = []
+            if not row['rc_id']:
+                missing_parts.append("كلمة المرور في radcheck")
+            if not row['rg_id']:
+                missing_parts.append(f"مجموعة الباقة ({row['package_name']}) في radusergroup")
+
+            audit_results['issues'].append({
+                'id': f"missing_{row['username']}",
+                'username': row['username'],
+                'category': 'missing_limits',
+                'category_label': 'غياب قيود المصادقة',
+                'severity': 'danger',
+                'details': f"الكرت بحالة ({row['status']}) ولكنه يفتقد إلى: {', '.join(missing_parts)}.",
+                'suggested_fix': 'إعادة مزامنة وإنشاء قيود الكرت في FreeRADIUS',
+                'action_code': 'sync_auth_limits'
+            })
+
+        audit_results['missing_limits_count'] = len(missing_auth)
+
+        # -------------------------------------------------------------
+        # 3. Status Mismatches (Expired/Recharged/Disabled lingering in radcheck)
+        # -------------------------------------------------------------
+        mismatches = query_all("""
+            SELECT t.id,t.username,t.status,t.expire_reason,rc.attribute,rc.value
+            FROM (
+                SELECT id,username,status,expire_reason FROM wisp_vouchers WHERE status IN ('expired','recharged','disabled','suspended')
+                UNION ALL
+                SELECT id,username,status,NULL AS expire_reason FROM wisp_subscribers WHERE status IN ('expired','disabled','suspended')
+            ) t
+            JOIN radcheck rc ON t.username=rc.username AND rc.attribute='Cleartext-Password'
+            LIMIT 200
+        """)
+        for row in mismatches:
+            audit_results['issues'].append({
+                'id': f"mismatch_{row['username']}",
+                'username': row['username'],
+                'category': 'status_mismatch',
+                'category_label': 'تضارب حالة الكرت',
+                'severity': 'danger',
+                'details': f"حالة الكرت في النظام ({row['status']}) بينما كلمة مروره لا تزال نشطة في radcheck.",
+                'suggested_fix': 'إلغاء وتطهير سجل الدخول من FreeRADIUS',
+                'action_code': 'revoke_auth'
+            })
+
+        audit_results['status_mismatch_count'] = len(mismatches)
+
+        # -------------------------------------------------------------
+        # 4. Stale Zombie Accounting Sessions (> 10m no heartbeat)
+        # -------------------------------------------------------------
+        from services.autoheal_service import get_zombie_session_timeout
+        cutoff_str = get_heartbeat_cutoff(get_zombie_session_timeout())
+
+        stale_acct = query_all("""
+            SELECT radacctid, username, acctstarttime, acctupdatetime, nasipaddress, framedipaddress
+            FROM radacct
+            WHERE acctstoptime IS NULL
+              AND (acctupdatetime < ? OR (acctupdatetime IS NULL AND acctstarttime < ?))
+            LIMIT 200
+        """, (cutoff_str, cutoff_str))
+        for row in stale_acct:
+            audit_results['issues'].append({
+                'id': f"stale_acct_{row['radacctid']}",
+                'username': row['username'],
+                'category': 'stale_sessions',
+                'category_label': 'جلسة تحتاج تحقق المحاسبة',
+                'severity': 'warning',
+                'details': f"جلسة برقم #{row['radacctid']} تجاوزت مهلة تحديث SQL؛ لا يثبت ذلك انقطاعها من الراوتر.",
+                'suggested_fix': 'التحقق من الراوتر والمحاسبة دون اختلاق إغلاق',
+                'action_code': 'close_stale_session',
+                'session_id': row['radacctid']
+            })
+
+        audit_results['stale_sessions_count'] = len(stale_acct)
+
+        # -------------------------------------------------------------
+        # 5. Invalid Check Attributes in radcheck (Causes Login Rejection)
+        # -------------------------------------------------------------
+        allowed=sorted(VALID_CHECK_ATTRIBUTES)
+        invalid_attrs = query_all("SELECT id,username,attribute,value,op FROM radcheck WHERE attribute NOT IN (" + ','.join('?' for _ in allowed) + ") LIMIT 200", tuple(allowed))
+        for row in invalid_attrs:
+            audit_results['issues'].append({
+                'id': f"invalid_attr_{row['id']}",
+                'username': row['username'],
+                'category': 'invalid_check_attribute',
+                'category_label': 'سمة مصادقة خاطئة تسبب الرفض',
+                'severity': 'danger',
+                'details': f"السمة ({row['attribute']}) غير معروفة لقائمة التدقيق الحالية؛ تحقق من قاموس RADIUS قبل حذفها.",
+                'suggested_fix': f"حذف سمة {row['attribute']} الخاطئة من radcheck",
+                'action_code': 'purge_invalid_attr',
+                'record_id': row['id'],
+                'attribute_name': row['attribute']
+            })
+
+        audit_results['invalid_attrs_count'] = len(invalid_attrs)
+
+        # Total counts
+        audit_results['truncated'] = any(len(rows)>=200 for rows in (orphans,missing_auth,mismatches,stale_acct,invalid_attrs))
+        audit_results['total_issues'] = len(audit_results['issues'])
+        audit_results['duration_seconds'] = round(time.time() - start_t, 2)
+
+    except Exception as e:
+        audit_results.update(success=False,error=str(e),duration_seconds=round(time.time()-start_t,2))
+        print(f"[ERROR] run_database_audit: {str(e)}")
+
+    return audit_results
+
+
+def fix_audit_issue(action_code, username, extra_data=None):
+    from services.account_lifecycle_service import job_lock
+    try:
+        with job_lock('factory-reset') as idle:
+            if not idle:return dict(success=False,message='إعادة المصنع أو الصيانة قيد التنفيذ؛ أعد المحاولة لاحقًا.')
+            return _fix_audit_issue_locked(action_code,username,extra_data)
+    except Exception as exc:
+        return dict(success=False,message=str(exc))
+
+
+def _inspect_stale_session(username, session_id):
+    """Read exact SQL/NAS identity. No disconnect, counter seal or synthetic Stop."""
+    from services.nas_session_settlement import actual_stop
+    if not session_id:
+        return dict(success=False,message='يجب تحديد جلسة محاسبة واحدة للتحقق.')
+    original=query_one('SELECT * FROM radacct WHERE radacctid=? AND username=?',(int(session_id),username))
+    if not original:
+        return dict(success=False,message='الجلسة غير موجودة أو لا تطابق الحساب.')
+    outcome='unavailable'
+    nas=query_one('SELECT * FROM wisp_nas_devices WHERE ip_address=?',(original['nasipaddress'],))
+    if nas and nas.get('api_username') and nas.get('api_password'):
+        from core.mikrotik_api import RouterOSApiProtocol
+        api=RouterOSApiProtocol(nas['ip_address'],port=nas.get('api_port') or 8728,timeout=2)
+        try:
+            api.connect()
+            if not api.login(nas['api_username'],nas['api_password']):
+                raise RuntimeError('NAS observation unavailable')
+            hot=api.execute_command('/ip/hotspot/active/print',['?user='+username])
+            ppp=api.execute_command('/ppp/active/print',['?name='+username])
+            # Any matching RADIUS session on the exact framed address prevents
+            # an absence claim; ambiguous/missing fields remain pending.
+            matching=[v for v in hot+ppp if v.get('radius')=='true'
+                      and (v.get('user') or v.get('name'))==username
+                      and v.get('address')==original.get('framedipaddress')]
+            ambiguous=any((v.get('user') or v.get('name'))==username and
+                          (v.get('radius') is None or not v.get('address')) for v in hot+ppp)
+            outcome='active' if matching else ('unavailable' if ambiguous else 'absent')
+        except Exception:
+            outcome='unavailable'
+        finally:
+            try:api.close()
+            except Exception:pass
+    current=query_one('SELECT * FROM radacct WHERE radacctid=? AND username=?',(int(session_id),username))
+    identity=('acctuniqueid','acctsessionid','nasipaddress','framedipaddress','callingstationid','acctstarttime')
+    counters=('acctinputoctets','acctoutputoctets','acctsessiontime')
+    if not current or any(current.get(k)!=original.get(k) for k in identity):
+        return dict(success=False,message='تغيرت هوية الجلسة؛ أعد الفحص دون إجراء على المحاسبة.')
+    if any(int(current.get(k) or 0)<int(original.get(k) or 0) for k in counters):
+        return dict(success=False,message='تحتاج عدادات الجلسة مراجعة؛ لم تُعدّل المحاسبة.')
+    final=actual_stop(current)
+    if outcome=='absent' and final:
+        return dict(success=True,verified=True,message='تأكد غياب الجلسة ووصول المحاسبة النهائية؛ لم يلزم تعديل SQL.')
+    message={'active':'الجلسة ما زالت على الراوتر؛ لم تُفصل أو تُغلق بسبب تأخر SQL.',
+             'absent':'الجلسة غير موجودة على الراوتر؛ بانتظار Accounting-Stop، ولم تُختلق عدادات أو نهاية.',
+             'unavailable':'تعذر إثبات حالة الراوتر؛ المحاسبة محفوظة وتحتاج متابعة.'}[outcome]
+    return dict(success=False,pending=True,nas_state=outcome,accounting_final=final,message=message)
+
+
+def _fix_audit_issue_locked(action_code, username, extra_data=None):
+    from services.account_lifecycle_service import run_transaction, sql, expiry_reason
+    from services.autoheal_service import get_zombie_session_timeout
+    extra_data=extra_data or {}
+    if not username or username in SYSTEM_RESERVED_USERS:
+        return dict(success=False,message='حساب غير صالح للإصلاح')
+    if action_code=='close_stale_session':
+        return _inspect_stale_session(username,extra_data.get('session_id'))
+    try:
+        def operation(conn):
+            voucher=sql(conn,'SELECT *,CURRENT_TIMESTAMP checked_at FROM wisp_vouchers WHERE username=? FOR UPDATE',(username,),'one')
+            subscriber=sql(conn,'SELECT *,CURRENT_TIMESTAMP checked_at FROM wisp_subscribers WHERE username=? FOR UPDATE',(username,),'one')
+            row=voucher or subscriber
+            if action_code=='purge_orphan':
+                if row:raise ValueError('الحساب أصبح مرتبطًا؛ أُلغي حذف اليتيم.')
+            elif action_code=='revoke_auth':
+                if not row or row['status'] not in ('expired','disabled','suspended','recharged'):
+                    raise ValueError('الحساب صالح أو تغيرت حالته؛ لم تحذف المصادقة.')
+            elif action_code=='sync_auth_limits':
+                kind='voucher' if voucher else 'subscriber'
+                if voucher and subscriber:raise ValueError('اسم المستخدم مرتبط بكرت ومشترك؛ يلزم حل التعارض أولًا.')
+                states=('unused','active','used') if voucher else ('active',)
+                if not row or row['status'] not in states or expiry_reason(conn,kind,row):
+                    raise ValueError('الحساب غير مؤهل لمزامنة الدخول.')
+                pkg=sql(conn,'SELECT name FROM wisp_packages WHERE id=?',(row['package_id'],),'one')
+                if not pkg:raise ValueError('الباقة غير موجودة')
+                sql(conn,"DELETE FROM radcheck WHERE username=? AND (attribute='Cleartext-Password' OR (attribute='Auth-Type' AND value='Reject'))",(username,))
+                sql(conn,"INSERT INTO radcheck (username,attribute,op,value) VALUES (?,'Cleartext-Password',':=',?)",(username,row['password'] or username))
+                sql(conn,'DELETE FROM radusergroup WHERE username=?',(username,))
+                sql(conn,'INSERT INTO radusergroup (username,groupname,priority) VALUES (?,?,1)',(username,pkg['name']))
+                return dict(success=True,message='تمت المزامنة بعد التحقق من الحالة والرصيد.')
+            elif action_code=='purge_invalid_attr':
+                allowed=VALID_CHECK_ATTRIBUTES
+                if extra_data.get('record_id'):
+                    attr=sql(conn,'SELECT attribute FROM radcheck WHERE id=? AND username=? FOR UPDATE',(int(extra_data['record_id']),username),'one')
+                    if not attr or attr['attribute'] in allowed:raise ValueError('سمة صحيحة أو سجل غير مطابق؛ لم يحذف.')
+                    sql(conn,'DELETE FROM radcheck WHERE id=? AND username=?',(int(extra_data['record_id']),username))
+                else:
+                    attr=extra_data.get('attribute_name')
+                    if not attr or attr in allowed:raise ValueError('يجب تحديد سمة غير صحيحة بعينها.')
+                    sql(conn,'DELETE FROM radcheck WHERE username=? AND attribute=?',(username,attr))
+                return dict(success=True,message='تم حذف السمة المحددة فقط.')
+            else:raise ValueError('نوع إصلاح غير معروف')
+            for table in ('radcheck','radreply','radusergroup'):
+                sql(conn,f'DELETE FROM {table} WHERE username=?',(username,))
+            return dict(success=True,message='تم الإصلاح بعد إعادة فحص حالة الحساب.')
+        return run_transaction(operation)
+    except Exception as exc:
+        return dict(success=False,message=str(exc))
+
+
+def fix_all_audit_issues():
+    from services.voucher_service import check_and_update_expired_vouchers
+    from services.account_lifecycle_service import job_lock
+    started=time.time()
+    fixed=0;errors=[];pending=[]
+    try:
+        with job_lock('audit-fix-all') as acquired:
+            if not acquired:raise ValueError('توجد عملية إصلاح شامل قيد التنفيذ.')
+            if not check_and_update_expired_vouchers():raise ValueError('فحص الانتهاء قيد التنفيذ؛ أعد المحاولة لاحقًا.')
+            audit=run_database_audit()
+            if not audit.get('success'):raise RuntimeError(audit.get('error','تعذر إكمال الفحص'))
+            seen=set()
+            for issue in audit['issues']:
+                key=(issue['action_code'],issue['username'],issue.get('record_id'),issue.get('session_id'))
+                if key in seen:continue
+                seen.add(key)
+                result=fix_audit_issue(issue['action_code'],issue['username'],issue)
+                if result['success']:fixed+=1
+                elif result.get('pending'):pending.append(dict(issue_id=issue['id'],message=result['message']))
+                else:errors.append(dict(issue_id=issue['id'],message=result.get('message','تعذر الإصلاح')))
+            remaining=run_database_audit()
+            if not remaining.get('success'):
+                errors.append(dict(issue_id='verification',message=remaining.get('error','تعذر فحص النتيجة')))
+            complete=remaining.get('success') and not remaining.get('truncated') and remaining['total_issues']==0 and not errors
+            return dict(success=bool(complete),fixed_count=fixed,errors_count=len(errors),errors=errors,pending_count=len(pending),pending=pending,
+                        remaining_issues=remaining.get('total_issues'),truncated=remaining.get('truncated',False),
+                        duration_seconds=round(time.time()-started,2),
+                        message=f'تم إصلاح {fixed} بند؛ تعثر {len(errors)}. ' + ('لم يرصد الفحص المتاح مشكلات متبقية.' if complete else 'لم تكتمل المعالجة؛ أعد الفحص وراجع البنود المتبقية.'))
+    except Exception as exc:
+        return dict(success=False,fixed_count=fixed,errors_count=len(errors)+1,errors=errors,
+                    message=f'لم تكتمل المعالجة: {exc}',duration_seconds=round(time.time()-started,2))
+
+
+FACTORY_RESET_TABLES = ('wisp_automation_deliveries','wisp_automation_policy','wisp_automation_notices','wisp_automation_runs','wisp_automation_tasks','wisp_account_usage_seals','wisp_account_usage_summary','wisp_session_service_evidence','wisp_traffic_intervals','wisp_traffic_checkpoints','wisp_traffic_rollups','wisp_traffic_rollup_state','wisp_traffic_samples','wisp_traffic_history','wisp_sale_source_audit','wisp_sale_sources','wisp_account_mac_addresses','wisp_account_mac_policies','wisp_account_mac_receipts','wisp_voucher_names','wisp_voucher_edit_receipts','wisp_subscriber_names','wisp_subscriber_edit_receipts','wisp_online_policy_outbox','wisp_renewal_guards','wisp_userman_import_journal','wisp_userman_import_batches','wisp_quick_card_issues','radcheck','radreply','radusergroup','radacct','radacct_archive','wisp_imported_session_history','radpostauth','wisp_session_baselines','wisp_session_reservations','wisp_voucher_sales','wisp_vouchers','wisp_voucher_batches','wisp_subscribers','wisp_invoices','wisp_manager_invoices','wisp_reseller_transactions','wisp_global_sequence','user_audit_logs','wisp_loyalty_wallets','wisp_loyalty_transactions','wisp_automation_logs','wisp_deletion_requests','wisp_wallet_ledger','wisp_reseller_wallets','wisp_notification_logs','wisp_whatsapp_logs')
+
+
+def _wipe_factory_database(keep_packages=True, keep_resellers=False, job_id=None):
+    """Atomic wipe; called only by the reset coordinator after safe preparation."""
+    from services.account_lifecycle_service import sql, run_transaction
+    def wipe(conn):
+        existing={row['TABLE_NAME'] for row in sql(conn,"SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_TYPE='BASE TABLE'",fetch='all')}
+        tables=set(FACTORY_RESET_TABLES) & existing
+        if not keep_packages:tables.add('wisp_packages')
+        refs=sql(conn,'SELECT TABLE_NAME,REFERENCED_TABLE_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA=DATABASE() AND REFERENCED_TABLE_NAME IS NOT NULL',fetch='all')
+        ordered=[];visiting=set()
+        def visit(table):
+            if table in ordered:return
+            if table in visiting:raise ValueError('توجد دورة مفاتيح خارجية تتطلب ترحيلًا قبل إعادة المصنع.')
+            visiting.add(table)
+            for ref in refs:
+                if ref['REFERENCED_TABLE_NAME']==table and ref['TABLE_NAME'] in tables:visit(ref['TABLE_NAME'])
+            visiting.remove(table);ordered.append(table)
+        for table in sorted(tables):visit(table)
+        for table in ordered:
+            if table in ('radcheck','radreply','radusergroup'):
+                sql(conn,f"DELETE FROM `{table}` WHERE username NOT IN ('healthcheck','probe_user')")
+            else:
+                sql(conn,f'DELETE FROM `{table}`')
+        sql(conn,'UPDATE wisp_managers SET wallet_balance=0')
+        if 'wisp_resellers' in existing:sql(conn,'UPDATE wisp_resellers SET balance=0')
+        if not keep_resellers:
+            sql(conn,"DELETE FROM wisp_managers WHERE id>1 AND LOWER(username) NOT IN ('admin','super_admin','root')")
+            if 'wisp_resellers' in existing:sql(conn,'DELETE FROM wisp_resellers')
+        sql(conn,'DELETE FROM radgroupreply');sql(conn,'DELETE FROM radgroupcheck')
+        if keep_packages:
+            from core.radius_sync import sync_package_to_radius
+            for row in sql(conn,'SELECT id FROM wisp_packages ORDER BY id',fetch='all'):sync_package_to_radius(row['id'],conn=conn)
+        if job_id:
+            # Commit the wipe receipt WITH the business transaction. Recovery
+            # must distinguish a lost response from an uncommitted reset.
+            import json
+            receipt=sql(conn,'SELECT progress FROM wisp_maintenance_jobs WHERE job_id=? FOR UPDATE',(job_id,),'one')
+            if not receipt:raise ValueError('سجل إعادة المصنع غير موجود؛ لم يُعتمد المسح.')
+            progress=json.loads(receipt['progress'])
+            progress.update(data_reset=True,state_archive_pending=True,stage='archiving_state',
+                            percent=75,tables_reset=len(ordered))
+            sql(conn,'UPDATE wisp_maintenance_jobs SET progress=?,updated_at=NOW(6) WHERE job_id=?',
+                (json.dumps(progress,ensure_ascii=False),job_id))
+        # Retain monotonic IDs, constraints, license, NAS and the rollback archive.
+        return len(ordered)
+    return run_transaction(wipe)
+
+def _reclaim_factory_space(keep_packages=True, keep_resellers=False, progress_callback=None):
+    # The coordinator already owns factory-reset and cleanup locks.
+    existing={row['TABLE_NAME'] for row in query_all("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_TYPE='BASE TABLE'")}
+    tables=set(FACTORY_RESET_TABLES) | {'radgroupcheck', 'radgroupreply'}
+    if not keep_packages:tables.add('wisp_packages')
+    if not keep_resellers:tables.update(('wisp_managers','wisp_resellers'))
+    return _optimize_database_tables_locked(sorted(tables & existing), progress_callback, factory=True)
+
+
+def factory_reset_database(keep_packages=True, keep_resellers=False, admin_user="admin"):
+    from services.factory_reset_service import start_factory_reset
+    job, created = start_factory_reset(keep_packages, keep_resellers, admin_user)
+    return dict(success=True, job=job, created=created)

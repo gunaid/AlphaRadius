@@ -1,0 +1,924 @@
+# -*- coding: utf-8 -*-
+"""
+Voucher & Scratch Cards service: batch generation, PIN/User-Pass algorithms,
+QR code generation data, printing templates, and sales tracking.
+"""
+
+import secrets
+import re
+import sqlite3
+from pymysql.err import IntegrityError as MySQLIntegrityError
+import string
+import datetime
+from core.time_service import get_db_storage_now
+import time
+from database.db import query_all, query_one, execute_write, execute_many, log_audit
+from core.radius_sync import sync_voucher_to_radius, delete_user_from_radius
+
+from core.rate_limit import build_mikrotik_rate_limit
+from database.db import db_session, adapt_query, is_mysql_conn
+from urllib.parse import urlencode
+
+
+class _VoucherWriter:
+    """Connection-bound writes; never commit a fragment of a card operation."""
+    def __init__(self, conn):
+        self.conn = conn
+    def one(self, statement, params=()):
+        cur = self.conn.cursor()
+        try:
+            cur.execute(adapt_query(statement, self.conn), params)
+            row = cur.fetchone()
+            return dict(row) if row else None
+        finally:
+            cur.close()
+    def write(self, statement, params=()):
+        cur = self.conn.cursor()
+        try:
+            cur.execute(adapt_query(statement, self.conn), params)
+            return cur.lastrowid
+        finally:
+            cur.close()
+    def many(self, statement, params):
+        cur = self.conn.cursor()
+        try:
+            cur.executemany(adapt_query(statement, self.conn), params)
+        finally:
+            cur.close()
+    def audit(self, admin_id, username, action, module, details):
+        self.write("INSERT INTO wisp_audit_logs (admin_id,username,action,module,details) VALUES (?,?,?,?,?)",
+                   (admin_id, username, action, module, details))
+
+
+from core.ownership import scoped_query_all as query_all, scoped_query_one as query_one
+
+
+def _new_voucher_serial(month, reserved):
+    for _ in range(64):
+        serial = f"{month}{secrets.randbelow(100000000):08d}"
+        if serial not in reserved:
+            reserved.add(serial)
+            return serial
+    raise ValueError("تعذر توليد سيريال متاح للكرت.")
+
+
+def _write_vouchers(tx, statement, rows, month, reserved):
+    # Limit the number of inserts to replay when an existing serial is hit.
+    # The wallet, invoice and batch header are outside this savepoint.
+    for start in range(0, len(rows), 256):
+        chunk = rows[start:start + 256]
+        tx.write("SAVEPOINT voucher_serial_chunk")
+        for attempt in range(16):
+            try:
+                tx.many(statement, chunk)
+                break
+            except MySQLIntegrityError as exc:
+                if exc.args[0] != 1062:
+                    raise
+                match = re.fullmatch(
+                    r"Duplicate entry '([0-9]{12})' for key '(?:wisp_vouchers\.)?idx_voucher_serial'",
+                    str(exc.args[1]),
+                )
+                if not match or attempt == 15:
+                    raise
+                tx.write("ROLLBACK TO SAVEPOINT voucher_serial_chunk")
+                conflicts = {match.group(1)}
+            except sqlite3.IntegrityError as exc:
+                if str(exc) != "UNIQUE constraint failed: wisp_vouchers.serial_number" or attempt == 15:
+                    raise
+                tx.write("ROLLBACK TO SAVEPOINT voucher_serial_chunk")
+                conflicts = {row[3] for row in chunk if tx.one(
+                    "SELECT id FROM wisp_vouchers WHERE serial_number=?", (row[3],)
+                )}
+            for i, row in enumerate(chunk):
+                if row[3] in conflicts:
+                    chunk[i] = (*row[:3], _new_voucher_serial(month, reserved), *row[4:])
+        tx.write("RELEASE SAVEPOINT voucher_serial_chunk")
+
+def generate_random_code(length=8, char_type='numbers'):
+    if char_type == 'numbers':
+        chars = string.digits
+        first = secrets.choice('123456789')
+        rest = ''.join(secrets.choice(chars) for _ in range(length - 1))
+        return first + rest
+    elif char_type == 'alphanumeric':
+        chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'
+        return ''.join(secrets.choice(chars) for _ in range(length))
+    else:
+        chars = '23456789abcdefghjkmnpqrstuvwxyz'
+        return ''.join(secrets.choice(chars) for _ in range(length))
+
+def generate_voucher_batch(name, package_id, count, prefix='', pin_only=True,
+                           char_type='numbers', code_length=8, reseller_id=None,
+                           created_by='admin', same_user_pass=False, pass_length=None, _conn=None):
+    import math
+    from core.ownership import generation_owner
+    reseller_id = generation_owner(reseller_id, package_id)
+    if reseller_id:
+        from core.license_feature_policy import require as _require_feature
+        _require_feature('reseller_wallets')
+    from contextlib import nullcontext
+    with (nullcontext(_conn) if _conn is not None else db_session()) as conn:
+        tx = _VoucherWriter(conn)
+        query_one, execute_write, execute_many, log_audit = tx.one, tx.write, tx.many, tx.audit
+        if generation_owner(None, package_id) is not None:
+            from services.quick_card_service import get_issue_policy
+            policy = get_issue_policy(tx)
+            prefix = policy['prefix']
+            code_length = policy['total_length'] - len(prefix)
+            char_type = policy['char_type']
+            pin_only = policy['format_type'] == 'pin_only'
+            same_user_pass = policy['format_type'] == 'same_user_pass'
+            pass_length = policy['password_length']
+        lock = " FOR UPDATE" if is_mysql_conn(conn) else ""
+        pkg = query_one('SELECT * FROM wisp_packages WHERE id = ?' + lock, (package_id,))
+        if not pkg:
+            raise ValueError('الباقة المحددة غير موجودة.')
+        
+        count = int(count)
+        code_length = int(code_length)
+        pass_length = int(pass_length or code_length)
+        if count > 5000 or not 4 <= code_length <= 32 or not 4 <= pass_length <= 32 or char_type not in ('numbers','alphanumeric','letters'):
+            raise ValueError('عدد الكروت أو طول الرمز أو نوع الأحرف غير صالح.')
+        if count <= 0:
+            raise ValueError('العدد المطلوب توليده يجب أن يكون أكبر من الصفر.')
+    
+        # Verify license validity and permissions
+        from services.license_guard_service import get_active_license_status
+        lic_st = get_active_license_status()
+        if not lic_st.get('valid'):
+            raise ValueError(lic_st.get('message', "النظام مقفل أو غير مرخص. لا يمكن توليد كروت جديدة."))
+        if lic_st.get('status') == 'revoked':
+            raise ValueError("الترخيص محظور من قِبل المطور. لا يمكن توليد كروت جديدة.")
+        
+        same_user_pass = bool(same_user_pass)
+        now_dt = get_db_storage_now().replace(tzinfo=None)
+        batch_num = f"B{now_dt.strftime('%y%m%d%H%M%S')}-{secrets.randbelow(1000):03d}"
+    
+        automatic_name = not name or not str(name).strip()
+        name = str(name).strip() if not automatic_name else f"{pkg['name']} — {count} كرت"
+
+        # Batch invoices capture issuance cost; commercial card policy waits for first use.
+        rate_str = build_mikrotik_rate_limit(
+            download=pkg['rate_download'],
+            upload=pkg['rate_upload'],
+            burst_down=pkg.get('burst_download'),
+            burst_up=pkg.get('burst_upload'),
+            threshold_down=pkg.get('burst_threshold_down'),
+            threshold_up=pkg.get('burst_threshold_up'),
+            burst_time=pkg.get('burst_time', 16),
+            priority=pkg.get('priority', 8),
+            min_down=pkg.get('min_download'),
+            min_up=pkg.get('min_upload')
+        )
+        pkg_price = float(pkg['price'] or 0.0)
+        pkg_cost = float(pkg.get('cost') or 0.0)
+        pkg_quota = int(pkg.get('volume_quota_mb') or 0)
+        pkg_uptime = int(pkg.get('uptime_limit_mins') or 0)
+        pkg_val = int(pkg.get('validity_value') if pkg.get('validity_value') is not None else (pkg.get('validity_days') or 30))
+        pkg_unit = pkg.get('validity_unit') or 'days'
+        pkg_days = int(pkg.get('validity_days') if pkg.get('validity_days') is not None else 30)
+        pkg_simul = int(pkg.get('simultaneous_sessions') or 1)
+        pkg_mgroup = str(pkg.get('mikrotik_group') or '').strip()
+    
+        batch_id = execute_write('''
+            INSERT INTO wisp_voucher_batches (
+                batch_number, name, package_id, reseller_id, card_count,
+                prefix, pin_only, char_type, code_length, created_by,
+                price, cost, volume_quota_mb, uptime_limit_mins,
+                validity_value, validity_unit, validity_days,
+                rate_download, rate_upload, rate_limit_str,
+                simultaneous_sessions, mikrotik_group
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            batch_num, name, package_id, reseller_id or None, count,
+            prefix, 1 if (pin_only or same_user_pass) else 0, char_type, code_length, created_by,
+            pkg_price, pkg_cost, pkg_quota, pkg_uptime,
+            pkg_val, pkg_unit, pkg_days,
+            pkg['rate_download'], pkg['rate_upload'], rate_str,
+            pkg_simul, pkg_mgroup
+        ))
+    
+        if reseller_id:
+            mgr = query_one('SELECT * FROM wisp_managers WHERE id = ?' + lock, (reseller_id,))
+            if mgr:
+                if not mgr.get('is_active') or mgr.get('is_deleted'):
+                    raise ValueError('حساب الموزع موقوف أو محذوف؛ لم تنشأ الحزمة.')
+                import json
+                allowed = mgr.get('allowed_packages')
+                if allowed:
+                    try:
+                        allowed_ids = json.loads(allowed) if str(allowed).startswith('[') else str(allowed).split(',')
+                        allowed_ids = {int(p) for p in allowed_ids}
+                    except (TypeError, ValueError):
+                        raise ValueError('قائمة باقات الموزع غير صالحة.')
+                    if allowed_ids and int(package_id) not in allowed_ids:
+                        raise ValueError('الباقة غير مسموحة لهذا الموزع.')
+                total_cost = round(count * float(pkg.get('cost') if pkg.get('cost') is not None else (float(pkg['price']) * 0.8)), 2)
+                cur_bal = float(mgr.get('wallet_balance') or 0.0)
+                if not math.isfinite(total_cost) or total_cost < 0 or total_cost > cur_bal:
+                    raise ValueError('الرصيد غير كافٍ لشراء الحزمة؛ اشحن المحفظة نقدًا أو ضمن سقف الآجل أولًا.')
+                new_bal = round(cur_bal - total_cost, 2)
+                execute_write('UPDATE wisp_managers SET wallet_balance = ? WHERE id = ?', (new_bal, reseller_id))
+                inv_number = f"INV-CRD-{reseller_id}-{get_db_storage_now().replace(tzinfo=None).strftime('%y%m%d%H%M%S')}-{secrets.token_hex(2).upper()}"
+                execute_write('''
+                    INSERT INTO wisp_manager_invoices (
+                        invoice_number, manager_id, transaction_type, amount,
+                        payment_type, balance_before, balance_after, notes, is_voided, created_by
+                    ) VALUES (?, ?, 'card_purchase', ?, 'cash', ?, ?, ?, 0, ?)
+                ''', (
+                    inv_number, reseller_id, total_cost, cur_bal, new_bal,
+                    f'شراء دفعة كروت {name} ({count} كرت - دفعة #{batch_num})', created_by
+                ))
+            else:
+                reseller = query_one('SELECT * FROM wisp_resellers WHERE id = ?' + lock, (reseller_id,))
+                if reseller:
+                    total_cost = count * float(pkg.get('cost') if pkg.get('cost') is not None else (float(pkg['price']) * 0.8))
+                    if not math.isfinite(total_cost) or total_cost < 0 or float(reseller['balance'] or 0) < total_cost:
+                        raise ValueError('رصيد الموزع القديم غير كافٍ.')
+                    new_balance = float(reseller['balance']) - total_cost
+                    execute_write('UPDATE wisp_resellers SET balance = ? WHERE id = ?', (new_balance, reseller_id))
+                    execute_write('''
+                        INSERT INTO wisp_reseller_transactions (reseller_id, type, amount, balance_after, description, reference_id)
+                        VALUES (?, 'card_purchase', ?, ?, ?, ?)
+                    ''', (reseller_id, total_cost, new_balance, f'شراء دفعة كروت {name} ({count} كرت)', batch_num))
+                else:
+                    raise ValueError('الموزع المحدد غير موجود؛ لم تُنشأ الحزمة.')
+
+        vouchers_data = []
+        radcheck_data = []
+        radreply_data = []
+        radusergroup_data = []
+    
+        pkg_name = pkg['name']
+    
+        issued = set()
+        serial_month = now_dt.strftime('%y%m')
+        reserved_serials = set()
+        for i in range(count):
+            serial = _new_voucher_serial(serial_month, reserved_serials)
+        
+            for attempt in range(100):
+                if pin_only:
+                    pin = f"{prefix}{generate_random_code(code_length, char_type)}"
+                    user = pin
+                    pwd = pin
+                elif same_user_pass:
+                    user = f"{prefix}{generate_random_code(code_length, char_type)}"
+                    pwd = user
+                    pin = user
+                else:
+                    user = f"{prefix}{generate_random_code(code_length, char_type)}"
+                    p_len = int(pass_length) if pass_length else code_length
+                    pwd = generate_random_code(p_len, 'numbers' if char_type == 'numbers' else 'alphanumeric')
+                    pin = pwd
+            
+                if user.lower() not in issued and not query_one("SELECT id FROM wisp_vouchers WHERE LOWER(username)=LOWER(?) UNION ALL SELECT id FROM wisp_subscribers WHERE LOWER(username)=LOWER(?)", (user,user)):
+                    issued.add(user.lower())
+                    break
+            else:
+                raise ValueError("تعذر توليد رموز فريدة؛ زد طول الرمز.")
+
+            vouchers_data.append((
+                batch_id, package_id, reseller_id or None, serial, user, pwd, pin, 'unused',
+                None, None, None, pkg_uptime,
+                pkg_val, pkg_unit, pkg_days,
+                None, None, None,
+                pkg_simul, pkg_mgroup or ''
+            ))
+        
+            # 1. Direct radcheck attributes (Password only, Simultaneous-Use is handled in radgroupcheck)
+            radcheck_data.append((user, 'Cleartext-Password', ':=', pwd))
+        
+            # 2. Assign package group (Reply attributes and Simultaneous-Use apply from group)
+            radusergroup_data.append((user, pkg_name, 1))
+        
+        _write_vouchers(tx, '''
+            INSERT INTO wisp_vouchers (
+                batch_id, package_id, reseller_id, serial_number, username, password, pin_code, status,
+                snap_price, snap_cost, snap_volume_quota_mb, snap_uptime_limit_mins,
+                snap_validity_value, snap_validity_unit, snap_validity_days,
+                snap_rate_download, snap_rate_upload, snap_rate_limit_str,
+                snap_simultaneous_sessions, snap_mikrotik_group
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', vouchers_data, serial_month, reserved_serials)
+    
+        execute_many('INSERT INTO radcheck (username, attribute, op, value) VALUES (?, ?, ?, ?)', radcheck_data)
+        execute_many('INSERT INTO radusergroup (username, groupname, priority) VALUES (?, ?, ?)', radusergroup_data)
+    
+        if automatic_name:
+            owner = query_one('SELECT username FROM wisp_managers WHERE id = ?', (reseller_id,)) if reseller_id else None
+            owner_part = f" — {owner['username']}" if owner else (f" — {reseller_id}" if reseller_id else '')
+            name = f"{pkg['name']} — {count} كرت{owner_part} — #{batch_id}"
+            execute_write('UPDATE wisp_voucher_batches SET name = ? WHERE id = ?', (name, batch_id))
+
+        log_audit(1, created_by, 'GENERATE_BATCH', 'vouchers', f'Generated batch {batch_num} with {count} cards for package {pkg_name}')
+        return batch_id, batch_num
+
+def get_batches(search=None, package_id=None, reseller_id=None):
+    query = '''
+        SELECT b.*, 
+               COALESCE(st.total_cards, 0) as actual_card_count,
+               p.name as package_name, 
+               COALESCE(p.price, b.price) as package_price, 
+               COALESCE(p.rate_download, b.rate_download) as rate_download, 
+               COALESCE(p.rate_upload, b.rate_upload) as rate_upload,
+               COALESCE(p.volume_quota_mb, b.volume_quota_mb) as volume_quota_mb,
+               COALESCE(p.validity_days, b.validity_days) as validity_days,
+               COALESCE(p.validity_value, b.validity_value) as validity_value,
+               COALESCE(p.validity_unit, b.validity_unit) as validity_unit,
+               COALESCE(NULLIF(m.full_name, ''), m.username, r.name) as reseller_name,
+               COALESCE(st.unused_count, 0) as unused_count,
+               COALESCE(st.active_count, 0) as active_count,
+               COALESCE(st.expired_count, 0) as expired_count,
+               COALESCE(st.recharged_count, 0) as recharged_count,
+               COALESCE(st.disabled_count, 0) as disabled_count
+        FROM wisp_voucher_batches b
+        LEFT JOIN wisp_packages p ON b.package_id = p.id
+        LEFT JOIN wisp_resellers r ON b.reseller_id = r.id
+        LEFT JOIN wisp_managers m ON b.reseller_id = m.id
+        LEFT JOIN (
+            SELECT batch_id,
+                   COUNT(*) as total_cards,
+                   SUM(CASE WHEN status = 'unused' THEN 1 ELSE 0 END) as unused_count,
+                   SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active_count,
+                   SUM(CASE WHEN status = 'expired' THEN 1 ELSE 0 END) as expired_count,
+                   SUM(CASE WHEN status = 'recharged' THEN 1 ELSE 0 END) as recharged_count,
+                   SUM(CASE WHEN status IN ('suspended','disabled') THEN 1 ELSE 0 END) as disabled_count
+            FROM wisp_vouchers
+            GROUP BY batch_id
+        ) st ON b.id = st.batch_id
+        WHERE 1=1
+    '''
+    params = []
+    if search:
+        search_pattern = f'%{search}%'
+        query += ''' AND (
+            b.name LIKE ? 
+            OR b.batch_number LIKE ? 
+            OR EXISTS (
+                SELECT 1 FROM wisp_vouchers v 
+                WHERE v.batch_id = b.id 
+                  AND (v.username LIKE ? OR v.serial_number LIKE ? OR v.pin_code LIKE ? OR v.password LIKE ?)
+            )
+        )'''
+        params.extend([search_pattern, search_pattern, search_pattern, search_pattern, search_pattern, search_pattern])
+    if package_id:
+        try:
+            query += ' AND b.package_id = ?'
+            params.append(int(package_id))
+        except (ValueError, TypeError):
+            pass
+    if reseller_id:
+        try:
+            query += ' AND b.reseller_id = ?'
+            params.append(int(reseller_id))
+        except (ValueError, TypeError):
+            pass
+    query += ' ORDER BY b.id DESC'
+    batches = query_all(query, tuple(params))
+    for batch in batches:
+        batch['card_count'] = batch.pop('actual_card_count', 0)
+    return batches
+
+def get_voucher_summary_counts():
+    row = query_one('''
+        SELECT 
+            (SELECT COUNT(*) FROM wisp_voucher_batches) as total_batches,
+            (SELECT COUNT(*) FROM wisp_vouchers) as total_cards,
+            (SELECT COUNT(*) FROM wisp_vouchers WHERE status = 'unused') as unused_cards,
+            (SELECT COUNT(*) FROM wisp_vouchers WHERE status = 'active') as active_cards,
+            (SELECT COUNT(*) FROM wisp_vouchers WHERE status = 'expired') as expired_cards,
+            (SELECT COUNT(*) FROM wisp_vouchers WHERE status = 'recharged') as recharged_cards
+    ''')
+    if not row:
+        return {'total_batches': 0, 'total_cards': 0, 'unused_cards': 0, 'active_cards': 0, 'expired_cards': 0, 'recharged_cards': 0}
+    return row
+
+def get_vouchers(batch_id=None, status=None, search=None, limit=100):
+    query = '''
+        SELECT v.*, p.name as package_name, 
+               COALESCE(v.snap_price, p.price, b.price) as price, 
+               COALESCE(v.snap_volume_quota_mb, p.volume_quota_mb, b.volume_quota_mb) as volume_quota_mb,
+               b.batch_number, COALESCE(NULLIF(m.full_name, ''), m.username, r.name) as reseller_name
+        FROM wisp_vouchers v
+        LEFT JOIN wisp_packages p ON v.package_id = p.id
+        LEFT JOIN wisp_voucher_batches b ON v.batch_id = b.id
+        LEFT JOIN wisp_resellers r ON v.reseller_id = r.id
+        LEFT JOIN wisp_managers m ON v.reseller_id = m.id
+        WHERE 1=1
+    '''
+    params = []
+    if batch_id:
+        query += ' AND v.batch_id = ?'
+        params.append(batch_id)
+    if status:
+        query += ' AND v.status = ?'
+        params.append(status)
+    if search:
+        query += ' AND (v.username LIKE ? OR v.serial_number LIKE ? OR v.pin_code LIKE ? OR v.password LIKE ?)'
+        like_str = f'%{search}%'
+        params.extend([like_str, like_str, like_str, like_str])
+        
+    query += ' ORDER BY v.id DESC LIMIT ?'
+    params.append(limit)
+    return query_all(query, tuple(params))
+
+def get_batch_cards_for_print(batch_id):
+    batch = query_one('''
+        SELECT b.*, p.name as package_name, 
+               COALESCE(b.price, p.price) as package_price,
+               COALESCE(b.validity_value, p.validity_value) as validity_value,
+               COALESCE(b.validity_unit, p.validity_unit) as validity_unit,
+               COALESCE(b.validity_days, p.validity_days) as validity_days,
+               COALESCE(b.rate_download, p.rate_download) as rate_download,
+               COALESCE(b.rate_upload, p.rate_upload) as rate_upload,
+               COALESCE(b.volume_quota_mb, p.volume_quota_mb) as volume_quota_mb
+        FROM wisp_voucher_batches b
+        LEFT JOIN wisp_packages p ON b.package_id = p.id
+        WHERE b.id = ?
+    ''', (batch_id,))
+    
+    if not batch:
+        return None, [], None
+        
+    cards = query_all('''SELECT v.*, p.name as current_package_name, p.price as live_price, p.volume_quota_mb as live_quota, p.rate_download as live_down, p.rate_upload as live_up FROM wisp_vouchers v
+        LEFT JOIN wisp_packages p ON p.id=v.package_id WHERE v.batch_id=? ORDER BY v.id ASC''', (batch_id,))
+    
+    hotspot_domain = query_one("SELECT `value` FROM wisp_system_settings WHERE `key` = 'hotspot_domain'")
+    isp_name = query_one("SELECT `value` FROM wisp_system_settings WHERE `key` = 'isp_name'")
+    currency = query_one("SELECT `value` FROM wisp_system_settings WHERE `key` = 'currency_symbol'")
+
+    
+    domain = hotspot_domain['value'] if hotspot_domain else 'wifi.hotspot'
+    net_name = isp_name['value'] if isp_name else 'شبكة الأفق الذكية'
+    curr = currency['value'] if currency else 'ر.س'
+    
+    template = query_one('SELECT * FROM wisp_card_templates WHERE is_default = 1 LIMIT 1')
+    
+    v_val = batch.get('validity_value') if batch.get('validity_value') is not None else batch.get('validity_days')
+    v_val = 30 if v_val is None else v_val
+    v_unit = batch.get('validity_unit') or 'days'
+    unit_ar = 'ساعة' if v_unit == 'hours' else ('دقيقة' if v_unit == 'minutes' else ('أشهر' if v_unit == 'months' else 'يوم'))
+
+    for c in cards:
+        c_price = c.get('snap_price') if c.get('snap_price') is not None else c.get('live_price', batch['package_price'])
+        c_quota_mb = c.get('snap_volume_quota_mb') if c.get('snap_volume_quota_mb') is not None else (c.get('live_quota') or 0)
+        c_rate_down = c.get('snap_rate_download') if c.get('snap_rate_download') is not None else c.get('live_down')
+        c_rate_up = c.get('snap_rate_upload') if c.get('snap_rate_upload') is not None else c.get('live_up')
+        c_val = c.get('snap_validity_value') if c.get('snap_validity_value') is not None else v_val
+        c_unit = c.get('snap_validity_unit') or v_unit
+        c_unit_ar = 'ساعة' if c_unit == 'hours' else ('دقيقة' if c_unit == 'minutes' else ('أشهر' if c_unit == 'months' else 'يوم'))
+
+        c['login_url'] = f"http://{domain}/login?" + urlencode(dict(username=c['username'], password=c['password']))
+        c['isp_name'] = net_name
+        c['currency'] = curr
+        c['package_name'] = c.get('current_package_name') or batch['package_name']
+        c['price'] = c_price
+        c['speed'] = f"{c_rate_down or '0'} / {c_rate_up or '0'}"
+        c['quota'] = f"{c_quota_mb / 1024:g} GB" if c_quota_mb >= 1024 else (f"{c_quota_mb} MB" if c_quota_mb > 0 else "غير محدود")
+        c['validity'] = "غير محدود" if int(c_val or 0)==0 else f"{c_val} {c_unit_ar}"
+        
+    return batch, cards, template
+
+def delete_batch(batch_id, admin_username='admin'):
+    from services.account_lifecycle_service import delete_voucher_batch
+    ok = delete_voucher_batch(batch_id, admin_username)
+    if ok:
+        log_audit(1, admin_username, 'DELETE_BATCH', 'vouchers', f'Deleted batch {batch_id}; refund committed atomically')
+    return ok
+
+def update_voucher_batch(batch_id, name, package_id, admin_username='admin'):
+    from database.db import db_session, adapt_query, is_mysql_conn
+    with db_session() as conn:
+        cur = conn.cursor()
+        lock = ' FOR UPDATE' if is_mysql_conn(conn) else ''
+        def run(sql, args=()):
+            cur.execute(adapt_query(sql, conn), args)
+        run('SELECT * FROM wisp_voucher_batches WHERE id = ?' + lock, (batch_id,))
+        batch = cur.fetchone()
+        if not batch:
+            raise ValueError('الدفعة غير موجودة.')
+        run('SELECT * FROM wisp_packages WHERE id = ?', (package_id,))
+        new_pkg = cur.fetchone()
+        if not new_pkg:
+            raise ValueError('الباقة المحددة غير موجودة.')
+        name = (name or batch['name']).strip()
+        if int(package_id) != int(batch['package_id']):
+            run('SELECT * FROM wisp_vouchers WHERE batch_id = ? ORDER BY id' + lock, (batch_id,))
+            cards = cur.fetchall()
+            # Batch reassignment is an issued-contract change, not a renewal.
+            # Used cards must go through the individual settlement-aware path.
+            if any(c['status'] != 'unused' or c.get('first_used_at') or c.get('policy_frozen_at') for c in cards):
+                raise ValueError('تحتوي الدفعة كروتًا مستخدمة؛ غيّر باقتها من عمليات الكرت لتسوية الاستهلاك. لم تُعدّل الدفعة.')
+            run('''SELECT 1 FROM radacct_owned a JOIN wisp_vouchers v ON v.username=a.username
+                WHERE v.batch_id=? LIMIT 1''', (batch_id,))
+            if cur.fetchone():
+                raise ValueError('توجد محاسبة لكرت في الدفعة؛ استخدم تغيير الباقة الفردي.')
+            run('''SELECT 1 FROM wisp_session_reservations r JOIN wisp_vouchers v ON v.username=r.username
+                WHERE v.batch_id=? AND r.expires_at>NOW() LIMIT 1''', (batch_id,))
+            if cur.fetchone():
+                raise ValueError('يوجد تسجيل دخول جارٍ لكرت في الدفعة؛ أعد المحاولة بعد اكتماله.')
+            rate = build_mikrotik_rate_limit(
+                download=new_pkg.get('rate_download') or '0', upload=new_pkg.get('rate_upload') or '0',
+                burst_down=new_pkg.get('burst_download'), burst_up=new_pkg.get('burst_upload'),
+                threshold_down=new_pkg.get('burst_threshold_down'), threshold_up=new_pkg.get('burst_threshold_up'),
+                burst_time=new_pkg.get('burst_time') or 16, priority=new_pkg.get('priority') or 8,
+                min_down=new_pkg.get('min_download'), min_up=new_pkg.get('min_upload'))
+            fields = ('price', 'cost', 'volume_quota_mb', 'uptime_limit_mins',
+                      'validity_value', 'validity_unit', 'validity_days',
+                      'rate_download', 'rate_upload', 'rate_limit_str',
+                      'simultaneous_sessions', 'mikrotik_group')
+            policy = dict(new_pkg)
+            policy['rate_limit_str'] = rate
+            if policy.get('validity_value') is None:
+                policy['validity_value'] = policy.get('validity_days') if policy.get('validity_days') is not None else 30
+            policy['validity_unit'] = policy.get('validity_unit') or 'days'
+            values = tuple(policy.get(f) for f in fields)
+            run('UPDATE wisp_vouchers SET package_id=?, ' + ','.join('snap_'+f+'=?' for f in fields)
+                + ' WHERE batch_id=?', (package_id,) + values + (batch_id,))
+            run('UPDATE wisp_voucher_batches SET ' + ','.join(f+'=?' for f in fields)
+                + ' WHERE id=?', values + (batch_id,))
+            for card in cards:
+                run('DELETE FROM radusergroup WHERE username=?', (card['username'],))
+                run('INSERT INTO radusergroup(username,groupname,priority) VALUES(?,?,1)',
+                    (card['username'], new_pkg['name']))
+                # Remove only package overrides, leaving identity/MAC checks intact.
+                run("DELETE FROM radreply WHERE username=? AND attribute IN ('Mikrotik-Rate-Limit','Mikrotik-Group','Session-Timeout','Mikrotik-Total-Limit','Mikrotik-Total-Limit-Gigawords')", (card['username'],))
+        run('UPDATE wisp_voucher_batches SET name=?,package_id=? WHERE id=?', (name,package_id,batch_id))
+
+    log_audit(1, admin_username, 'UPDATE_BATCH', 'vouchers', f'Updated batch {batch_id} to name "{name}" and package "{new_pkg["name"]}"')
+    return True
+
+def update_voucher_card(card_id, new_username, new_password, admin_username='admin', bound_mac=None):
+    new_username, new_password = str(new_username or '').strip(), str(new_password or '').strip()
+    if not new_username or not new_password or len(new_username)>64 or len(new_password)>128:
+        raise ValueError('اسم المستخدم وكلمة المرور مطلوبان ضمن الأطوال المسموحة.')
+    if bound_mac is not None:
+        bound_mac = str(bound_mac).strip().upper()
+        import re
+        if bound_mac and not re.fullmatch(r'(?:[0-9A-F]{2}:){5}[0-9A-F]{2}', bound_mac):
+            raise ValueError('عنوان الماك غير صالح.')
+    with db_session() as conn:
+        tx = _VoucherWriter(conn)
+        lock = ' FOR UPDATE' if is_mysql_conn(conn) else ''
+        card = tx.one('SELECT * FROM wisp_vouchers WHERE id=?'+lock, (card_id,))
+        if not card:
+            raise ValueError('الكرت غير موجود.')
+        if bound_mac is not None:
+            from services.account_mac_service import reject_legacy_mac_change
+            reject_legacy_mac_change('voucher', card, bound_mac, conn)
+        old_username = card['username']
+        if old_username != new_username:
+            if card['status'] != 'unused' or card.get('first_used_at') or card.get('policy_frozen_at') or tx.one('SELECT radacctid FROM radacct WHERE LOWER(username)=LOWER(?) LIMIT 1',(old_username,)):
+                raise ValueError('لا يمكن تغيير اسم كرت مستخدم؛ سجل المحاسبة مرتبط به.')
+            if tx.one('SELECT id FROM wisp_vouchers WHERE LOWER(username)=LOWER(?) AND id<>? UNION ALL SELECT id FROM wisp_subscribers WHERE LOWER(username)=LOWER(?)', (new_username,card_id,new_username)):
+                raise ValueError('اسم المستخدم مستخدم لحساب آخر.')
+            for table in ('radcheck','radreply','radusergroup'):
+                tx.write(f'DELETE FROM {table} WHERE username=?', (old_username,))
+        pin = new_password if card.get('pin_code')==card.get('password') else card.get('pin_code')
+        tx.write('UPDATE wisp_vouchers SET username=?,password=?,pin_code=?,bound_mac=? WHERE id=?',
+                 (new_username,new_password,pin,card.get('bound_mac') if bound_mac is None else bound_mac or None,card_id))
+        if not sync_voucher_to_radius(card_id, conn=conn):
+            raise RuntimeError('تعذر مزامنة الكرت مع الراديوس.')
+        tx.write('INSERT INTO user_audit_logs (user_type,user_id,username,admin_name,action,change_details) VALUES (?,?,?,?,?,?)',
+                 ('voucher',card_id,new_username,admin_username,'UPDATE_PROFILE','تعديل بيانات الكرت ومزامنة الراديوس'))
+    return True
+
+def calculate_package_expiration(validity_value, validity_unit='days', start_dt=None):
+    """
+    Calculates exact expiration datetime and FreeRADIUS Expiration attribute value.
+    If validity_value is 0 or None, returns (None, None) for unlimited validity.
+    Returns: (expiry_iso_str, freeradius_expiration_str)
+    e.g. ('2026-09-04 14:00:00', '04 Sep 2026 14:00:00') or (None, None)
+    """
+    try:
+        val = int(validity_value or 0)
+    except (ValueError, TypeError):
+        val = 0
+
+    if val <= 0:
+        return None, None
+
+    if start_dt is None:
+        try:
+            from core.time_service import get_system_now
+            start_dt = get_db_storage_now()
+        except Exception:
+            start_dt = get_db_storage_now().replace(tzinfo=None)
+    
+    unit = str(validity_unit or 'days').lower().strip()
+    
+    if unit in ['minutes', 'minute', 'دقائق', 'دقيقة']:
+        delta = datetime.timedelta(minutes=val)
+    elif unit in ['hours', 'hour', 'ساعات', 'ساعة']:
+        delta = datetime.timedelta(hours=val)
+    elif unit in ['months', 'month', 'أشهر', 'شهر']:
+        delta = datetime.timedelta(days=val * 30)
+    else:  # days
+        delta = datetime.timedelta(days=val)
+        
+    expiry_dt = start_dt + delta
+    expiry_iso = expiry_dt.strftime('%Y-%m-%d %H:%M:%S')
+    freeradius_exp = expiry_dt.strftime('%d %b %Y %H:%M:%S')
+    
+    return expiry_iso, freeradius_exp
+
+def check_and_update_expired_vouchers():
+    from services.account_lifecycle_service import sweep_expired_accounts
+    return sweep_expired_accounts()
+
+
+def activate_voucher_card(username, bound_mac=None, nas_ip=None):
+    """
+    Activates a voucher card upon first login or manual activation.
+    1. Locks the row with SELECT ... FOR UPDATE within an atomic transaction.
+    2. Checks idempotency: if status != 'unused', returns False.
+    3. Freezes current package quota, speed and commercial policy at first accepted use.
+    4. Calculates exact expiration date from validity_value and validity_unit natively in SQL.
+    5. Updates status = 'active', first_used_at, and expires_at.
+    6. Writes snapshotted rate-limit and VSAs to radreply.
+    7. Records the card sale and revenue in wisp_voucher_sales table.
+    """
+    if not username:
+        return False
+
+    from database.db import db_session, adapt_query, is_mysql_conn
+
+    try:
+        with db_session() as conn:
+            cursor = conn.cursor()
+            lock_clause = "FOR UPDATE" if is_mysql_conn(conn) else ""
+            # Resolve identity before locking: never lock a username/PIN join scan.
+            username_predicate = 'username = ?' if is_mysql_conn(conn) else 'LOWER(username) = LOWER(?)'
+            cursor.execute(adapt_query('SELECT id FROM wisp_vouchers WHERE ' + username_predicate + ' LIMIT 1', conn), (username,))
+            identity = cursor.fetchone()
+            if not identity:
+                cursor.execute(adapt_query('SELECT id FROM wisp_vouchers WHERE pin_code = ? LIMIT 1', conn), (username,))
+                identity = cursor.fetchone()
+            if not identity:
+                return False
+            cursor.execute(adapt_query('SELECT * FROM wisp_vouchers WHERE id = ? ' + lock_clause, conn), (identity['id'],))
+            card = cursor.fetchone()
+            if not card:
+                return False
+
+            if not isinstance(card, dict):
+                card = dict(card)
+
+            if card['status'] != 'unused':
+                return False
+
+            # Metadata is read separately; the voucher remains locked by primary key.
+            cursor.execute(adapt_query('''
+                SELECT
+                       p.name as package_name, p.price, p.cost,
+                       p.validity_value, p.validity_unit, p.validity_days,
+                       p.volume_quota_mb, p.uptime_limit_mins,
+                       p.rate_download, p.rate_upload, p.burst_download, p.burst_upload,
+                       p.burst_threshold_down, p.burst_threshold_up, p.burst_time,
+                       p.priority, p.min_download, p.min_upload,
+                       p.simultaneous_sessions, p.mikrotik_group,
+                       b.name as batch_name, b.id as batch_id
+                FROM wisp_packages p JOIN wisp_voucher_batches b ON b.id = ?
+                WHERE p.id = ?
+            ''', conn), (card['batch_id'], card['package_id']))
+            metadata = cursor.fetchone()
+            if not metadata:
+                return False
+            card.update(dict(metadata))
+
+            if is_mysql_conn(conn):
+                cursor.execute('SELECT fn_freeze_voucher_policy(%s) AS result', (card['username'],))
+                if cursor.fetchone()['result'] not in (2, 3):
+                    raise ValueError('Voucher policy unavailable')
+                cursor.execute('SELECT * FROM wisp_vouchers WHERE id=%s FOR UPDATE', (card['id'],))
+                card.update(dict(cursor.fetchone()))
+
+            def policy(field, default=None):
+                saved = card.get('snap_' + field)
+                if saved is not None:
+                    return saved
+                live = card.get(field)
+                return default if live is None else live
+
+            cursor.execute(adapt_query("""
+                SELECT COALESCE(
+                    (SELECT MIN(acctstarttime) FROM radacct WHERE LOWER(username) = LOWER(?)),
+                    (SELECT MIN(authdate) FROM radpostauth WHERE LOWER(username) = LOWER(?)
+                     AND reply = 'Access-Accept' AND authdate >= COALESCE(?, authdate)),
+                    CURRENT_TIMESTAMP) AS activation_at
+            """, conn), (card['username'], card['username'], card.get('created_at')))
+            activation_row = cursor.fetchone()
+            activation_at = card.get('first_used_at') or activation_row['activation_at']
+            val = int(policy('validity_value', policy('validity_days', 30)))
+            unit = policy('validity_unit', 'days') or 'days'
+            quota_mb = int(policy('volume_quota_mb', 0) or 0)
+            uptime_mins = int(policy('uptime_limit_mins', 0) or 0)
+            pkg_price = float(policy('price', 0.0) or 0.0)
+            pkg_cost = float(policy('cost', 0.0) or 0.0)
+            simul = int(policy('simultaneous_sessions', 1) or 1)
+            mgroup = str(policy('mikrotik_group', '') or '').strip()
+            
+            from services.rate_policy_service import snapshot_rate_limit, package_rate_limit
+            if card.get('policy_frozen_at') is not None:
+                rate_str = snapshot_rate_limit(card.get('snap_rate_limit_str'),
+                                               card.get('snap_rate_download'), card.get('snap_rate_upload'))
+            else:
+                rate_str = package_rate_limit(dict(card,
+                    rate_download=policy('rate_download', '0'), rate_upload=policy('rate_upload', '0')))
+    
+            # 1. Update card status and freeze snapshot on voucher record
+            update_sql = adapt_query('''
+                UPDATE wisp_vouchers
+                SET status = 'active',
+                    first_used_at = IFNULL(first_used_at, ?),
+                    last_renewed_at = IFNULL(last_renewed_at, ?),
+                    expires_at = IFNULL(expires_at, 
+                        CASE 
+                            WHEN ? <= 0 THEN NULL
+                            WHEN ? = 'minutes' THEN DATE_ADD(?, INTERVAL ? MINUTE)
+                            WHEN ? = 'hours' THEN DATE_ADD(?, INTERVAL ? HOUR)
+                            WHEN ? = 'months' THEN DATE_ADD(?, INTERVAL ? MONTH)
+                            ELSE DATE_ADD(?, INTERVAL ? DAY)
+                        END
+                    ),
+                    expire_reason = '',
+                    bound_mac = IFNULL(bound_mac, ''),
+                    snap_price = ?,
+                    snap_cost = ?,
+                    snap_volume_quota_mb = ?,
+                    snap_uptime_limit_mins = ?,
+                    snap_validity_value = ?,
+                    snap_validity_unit = ?,
+                    snap_validity_days = ?,
+                    snap_rate_download = ?,
+                    snap_rate_upload = ?,
+                    snap_rate_limit_str = ?,
+                    snap_simultaneous_sessions = ?,
+                    snap_mikrotik_group = ?
+                WHERE id = ? AND batch_id = ?
+            ''', conn)
+            cursor.execute(update_sql, (
+                activation_at, activation_at, val,
+                unit, activation_at, val, unit, activation_at, val, unit, activation_at, val, activation_at, val,
+                pkg_price, pkg_cost, quota_mb, uptime_mins,
+                val, unit, policy('validity_days', val), str(policy('rate_download', '0')), str(policy('rate_upload', '0')),
+                rate_str, simul, mgroup,
+                card['id'], card['batch_id']
+            ))
+
+            # 1.1 Ensure global sequence ID is assigned
+            seq_ins = adapt_query('''
+                INSERT INTO wisp_global_sequence (entity_type, entity_id, created_at)
+                VALUES ('voucher', ?, CURRENT_TIMESTAMP)
+                ON DUPLICATE KEY UPDATE seq_id = seq_id
+            ''', conn)
+            cursor.execute(seq_ins, (card['id'],))
+
+            seq_sel = adapt_query("SELECT seq_id FROM wisp_global_sequence WHERE entity_type = 'voucher' AND entity_id = ?", conn)
+            cursor.execute(seq_sel, (card['id'],))
+            seq_row = cursor.fetchone()
+            if seq_row:
+                s_id = seq_row['seq_id'] if isinstance(seq_row, dict) else seq_row[0]
+                seq_up = adapt_query("UPDATE wisp_vouchers SET global_seq_id = ? WHERE id = ?", conn)
+                cursor.execute(seq_up, (s_id, card['id']))
+
+            # 2. Write frozen rate-limit & reply attributes to radreply
+            if rate_str:
+                rr_rate = adapt_query(
+                    'INSERT INTO radreply (username, attribute, op, value) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE value = ?',
+                    conn
+                )
+                cursor.execute(rr_rate, (card['username'], 'MikroTik-Rate-Limit', ':=', rate_str, rate_str))
+
+            rr_int = adapt_query(
+                'INSERT INTO radreply (username, attribute, op, value) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE value = ?',
+                conn
+            )
+            cursor.execute(rr_int, (card['username'], 'Acct-Interim-Interval', ':=', '180', '180'))
+
+            if mgroup:
+                rr_grp = adapt_query(
+                    'INSERT INTO radreply (username, attribute, op, value) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE value = ?',
+                    conn
+                )
+                cursor.execute(rr_grp, (card['username'], 'Mikrotik-Group', ':=', mgroup, mgroup))
+
+            # 3. Remove any static Expiration attribute in radcheck so FreeRADIUS computes dynamic Session-Timeout from MariaDB
+            del_rc = adapt_query("DELETE FROM radcheck WHERE LOWER(username) = LOWER(?) AND attribute = 'Expiration'", conn)
+            cursor.execute(del_rc, (card['username'],))
+
+            # 4. Record sale revenue in wisp_voucher_sales
+            chk_sale = adapt_query('SELECT 1 FROM wisp_voucher_sales WHERE voucher_id = ?', conn)
+            cursor.execute(chk_sale, (card['id'],))
+            existing_sale = cursor.fetchone()
+            if not existing_sale:
+                ins_sale = adapt_query('''
+                    INSERT INTO wisp_voucher_sales (
+                        first_activation_voucher_id, voucher_id, batch_id, batch_name, username, serial_number,
+                        package_name, price, cost, reseller_id, activated_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                ''', conn)
+                cursor.execute(ins_sale, (
+                    card['id'], card['id'], card['batch_id'], card['batch_name'], card['username'],
+                    card['serial_number'], card['package_name'], pkg_price,
+                    pkg_cost, card['reseller_id']
+                ))
+                from services.sales_source_service import record_sale_source
+                record_sale_source(conn, 'voucher', cursor.lastrowid, card['username'])
+
+            log_audit(1, 'system', 'ACTIVATE_VOUCHER', 'vouchers',
+                      f'Card {card["username"]} activated with frozen package snapshot ({quota_mb}MB / {rate_str or "Unlimited"}).')
+
+            # Trigger Telegram alert for voucher activation
+            try:
+                from services.bot_notifications_service import trigger_recharge_notification
+                trigger_recharge_notification(
+                    username=card['username'],
+                    package_name=card.get('package_name', 'كرت إنترنت'),
+                    price=float(pkg_price or 0.0),
+                    card_number=card.get('serial_number') or card.get('username'),
+                    recharge_type='voucher'
+                )
+            except Exception as e_tg:
+                print(f"[Telegram Voucher Activate Alert Error]: {e_tg}")
+
+            return True
+    except Exception as e:
+        print(f"[Voucher Activation Error in services/voucher_service]: {e}")
+        return False
+
+def sync_voucher_sales(batch_size=5000):
+    """Backfills all activated/expired vouchers into wisp_voucher_sales if missing in efficient chunks."""
+    has_missing = query_one("""
+        SELECT 1 FROM wisp_vouchers v
+        LEFT JOIN wisp_voucher_sales s ON s.voucher_id = v.id
+        WHERE v.status IN ('active', 'expired') AND s.id IS NULL
+        LIMIT 1
+    """)
+    if not has_missing:
+        return
+
+    while True:
+        affected = execute_write('''
+            INSERT INTO wisp_voucher_sales (
+                voucher_id, batch_id, batch_name, username, serial_number,
+                package_name, price, cost, reseller_id, activated_at
+            )
+            SELECT v.id, v.batch_id, b.name, v.username, v.serial_number,
+                   p.name, COALESCE(v.snap_price, p.price), COALESCE(v.snap_cost, p.cost), v.reseller_id,
+                   COALESCE(v.first_used_at, v.created_at)
+            FROM wisp_vouchers v
+            JOIN wisp_packages p ON v.package_id = p.id
+            JOIN wisp_voucher_batches b ON v.batch_id = b.id
+            LEFT JOIN wisp_voucher_sales s ON s.voucher_id = v.id
+            WHERE v.status IN ('active', 'expired')
+              AND s.id IS NULL
+            LIMIT 5000
+        ''')
+        if not affected or affected <= 0:
+            break
+
+_LAST_VOUCHER_SYNC_TIME = 0
+
+def sync_voucher_activations(force=False):
+    """
+    Scans radacct sessions and radpostauth for newly logged in unused cards,
+    and automatically activates them, calculates validity, and logs sales.
+    Throttled to run at most once every 60 seconds to keep page loads fast.
+    """
+    global _LAST_VOUCHER_SYNC_TIME
+    now = time.time()
+    if not force and (now - _LAST_VOUCHER_SYNC_TIME < 60):
+        return
+
+    _LAST_VOUCHER_SYNC_TIME = now
+    try:
+        has_acct = query_one("SELECT 1 FROM radacct LIMIT 1")
+        if has_acct:
+            cards_to_activate = query_all('''
+                SELECT DISTINCT v.username, 
+                       COALESCE(r.nasipaddress, '') as nas_ip
+                FROM wisp_vouchers v
+                INNER JOIN radacct r ON v.username = r.username
+                WHERE v.status = 'unused' AND r.acctstarttime >= v.created_at
+                LIMIT 50
+            ''')
+            for c in cards_to_activate:
+                activate_voucher_card(c['username'], bound_mac=None, nas_ip=c.get('nas_ip'))
+
+        postauth_cards = query_all('''
+            SELECT DISTINCT v.username, 
+                   '' as nas_ip
+            FROM wisp_vouchers v
+            INNER JOIN radpostauth p ON v.username = p.username
+            WHERE v.status = 'unused' AND p.reply = 'Access-Accept' AND p.authdate >= v.created_at
+            LIMIT 50
+        ''')
+        for c in postauth_cards:
+            activate_voucher_card(c['username'], bound_mac=None, nas_ip=c.get('nas_ip'))
+
+    except Exception:
+        pass
+

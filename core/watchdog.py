@@ -1,0 +1,369 @@
+# -*- coding: utf-8 -*-
+"""
+Internal Watchdog & Self-Healing Service.
+Provides automated health monitoring, DB pool reconnects, disk space tracking,
+and audit logging into wisp_system_alerts.
+"""
+
+import os
+import sys
+import time
+import shutil
+import socket
+import datetime
+import threading
+import subprocess
+import json
+
+from database.db import get_connection, query_all, query_one, execute_write, execute_update
+
+WATCHDOG_INTERVAL_SECONDS = 60  # Run every 1 minute for proactive health and session reaping
+_watchdog_thread = None
+_stop_event = threading.Event()
+
+# Cache previous states to prevent alert flooding
+_last_db_state = True
+_last_radius_state = True
+_last_disk_alert_time = 0
+_last_auto_cleanup_time = 0
+
+def log_system_alert(alert_type, severity, message, source='watchdog', resolved=False):
+    """Insert an alert event into wisp_system_alerts."""
+    try:
+        execute_write(
+            "INSERT INTO wisp_system_alerts (alert_type, severity, source, message, is_resolved, resolved_at) VALUES (?, ?, ?, ?, ?, ?)",
+            (alert_type, severity, source, message, int(resolved), datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') if resolved else None)
+        )
+        print(f"  [Watchdog Alert] [{severity.upper()}] {alert_type}: {message}")
+    except Exception as e:
+        print(f"  [Watchdog] Error logging alert: {e}")
+
+def check_database_health():
+    """Verify database responsiveness and auto-reconnect if needed."""
+    global _last_db_state
+    is_healthy = False
+
+    try:
+        conn = get_connection()
+        if conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT 1")
+            res = cursor.fetchone()
+            conn.close()
+            if res:
+                is_healthy = True
+    except Exception as e:
+        is_healthy = False
+        print(f"  [Watchdog] DB Healthcheck failed: {e}")
+
+    if not is_healthy and _last_db_state:
+        # DB just went down
+        log_system_alert(
+            alert_type='DB_DISCONNECT',
+            severity='critical',
+            message='فقدت الواجهة الخلفية الاتصال بقاعدة البيانات MariaDB. جارٍ محاولة إعادة التهيئة والتعافي التلقائي...'
+        )
+        _last_db_state = False
+    elif is_healthy:
+        # DB recovered
+        now_str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        try:
+            execute_write(
+                "UPDATE wisp_system_alerts SET is_resolved = 1, resolved_at = ? WHERE alert_type = 'DB_DISCONNECT' AND is_resolved = 0",
+                (now_str,)
+            )
+        except Exception:
+            pass
+        if not _last_db_state:
+            log_system_alert(
+                alert_type='DB_RECOVERY', resolved=True,
+                severity='info',
+                message='تمت استعادة الاتصال بقاعدة البيانات MariaDB بنجاح وعادت كافة العمليات للعمل الطبيعي.'
+        )
+        _last_db_state = True
+
+    return is_healthy
+
+def check_disk_space():
+    """Verify disk space on storage volume and alert if free space < 10%."""
+    global _last_disk_alert_time
+    now = time.time()
+    now_str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    try:
+        target_path = str(__import__('core.config', fromlist=['STORAGE_DIR']).STORAGE_DIR)
+        total, used, free = shutil.disk_usage(target_path)
+        free_pct = (free / total) * 100.0 if total > 0 else 100.0
+        free_gb = free / (1024 ** 3)
+        total_gb = total / (1024 ** 3)
+
+        if free_pct < 10.0:
+            if now - _last_disk_alert_time > 3600:
+                log_system_alert(
+                    alert_type='DISK_SPACE_CRITICAL',
+                    severity='danger',
+                    message=f'تحذير: المساحة المتبقية على القرص منخفضة جداً ({free_pct:.1f}% متبقية - {free_gb:.2f} GB من أصل {total_gb:.2f} GB).'
+                )
+                _last_disk_alert_time = now
+            return False, free_pct
+        else:
+            # Auto-resolve previous disk critical alert if any
+            try:
+                execute_write(
+                    "UPDATE wisp_system_alerts SET is_resolved = 1, resolved_at = ? WHERE alert_type = 'DISK_SPACE_CRITICAL' AND is_resolved = 0",
+                    (now_str,)
+                )
+            except Exception:
+                pass
+            return True, free_pct
+    except Exception as e:
+        return False, 0.0
+
+def check_radius_engine_health():
+    """Probe FreeRADIUS UDP port to verify responsiveness."""
+    global _last_radius_state
+    from services.health_probe_service import radius_probe
+    host = os.environ.get('RADIUS_HOST') or os.environ.get('RADIUS_SERVER_IP') or 'radius_core'
+    port = int(os.environ.get('RADIUS_AUTH_PORT', 1812))
+    is_responsive, _ = radius_probe(port)
+    if is_responsive is None:
+        # Missing probe credentials are unknown, not evidence of a down engine.
+        # Preserve any last verified transition until a real probe is available.
+        return None
+
+    if not is_responsive and _last_radius_state:
+        log_system_alert(
+            alert_type='RADIUS_UNRESPONSIVE',
+            severity='danger',
+            message=f'محرك FreeRADIUS على {host}:{port} لا يستجيب لطلبات الفحص. يجب التحقق من المسار وإعدادات الفحص وحالة الحاوية؛ لا يثبت ذلك وحده توقف المحرك.'
+        )
+        _last_radius_state = False
+    elif is_responsive:
+        now_str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        try:
+            execute_write(
+                "UPDATE wisp_system_alerts SET is_resolved = 1, resolved_at = ? WHERE alert_type = 'RADIUS_UNRESPONSIVE' AND is_resolved = 0",
+                (now_str,)
+            )
+        except Exception:
+            pass
+        if not _last_radius_state:
+            log_system_alert(
+                alert_type='RADIUS_RECOVERY', resolved=True,
+                severity='info',
+                message='عادت استجابة محرك FreeRADIUS للعمل الطبيعي بنجاح بعد التعافي التلقائي.'
+        )
+        _last_radius_state = True
+
+    return is_responsive
+
+def check_auto_database_cleanup():
+    from services.account_lifecycle_service import job_lock
+    with job_lock('weekly-maintenance') as acquired:
+        if not acquired:return
+        now=time.time()
+        row=query_one("SELECT value FROM wisp_system_settings WHERE `key`='history_cleanup_last_success'")
+        if not row:
+            execute_write("INSERT IGNORE INTO wisp_system_settings (`key`,value) VALUES ('history_cleanup_last_success',?)",(str(now),))
+            _record_cleanup_result(dict(state='initialized',at=now))
+            return
+        if now-float(row['value'] or now)<604800:return
+        from services.db_maintenance_service import run_auto_maintenance_job
+        try:
+            result=run_auto_maintenance_job(retention_days=90)
+            if result:
+                _record_cleanup_result(dict(state='success',at=time.time(),
+                    deleted_sessions=result.get('deleted_radacct',0),
+                    deleted_auth=result.get('deleted_radpostauth',0),
+                    compacted_duplicates=result.get('duplicate_compaction',{}).get('removed',0),
+                    compaction_pending=result.get('duplicate_compaction',{}).get('pending',False)))
+                execute_write("UPDATE wisp_system_settings SET value=? WHERE `key`='history_cleanup_last_success'",(str(now),))
+        except Exception as exc:
+            _record_cleanup_result(dict(state='failed',at=time.time(),error_type=type(exc).__name__))
+            raise
+
+
+def _record_cleanup_result(result):
+    execute_write("""INSERT INTO wisp_system_settings (`key`,value)
+        VALUES ('history_cleanup_last_result',?) ON DUPLICATE KEY UPDATE value=VALUES(value)""",
+        (json.dumps(result,separators=(',',':')),))
+
+def enforce_license_compliance_hook():
+    """
+    License Compliance Enforcement (PoD Disconnect Hook):
+    If the license status is invalid (revoked, expired, grace_expired, clock_tampered, unlicensed),
+    we immediately terminate active sessions via RFC 5176 Disconnect-Request (PoD)
+    through the non-blocking CoA queue engine.
+    Ensures network session isolation when a license is voided without altering FreeRADIUS binaries.
+    """
+    try:
+        from services.license_guard_service import get_active_license_status
+        from services.coa_queue_service import enqueue_disconnect
+
+        lic = get_active_license_status()
+        if lic and lic.get('valid'):
+            now_str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            changed = execute_update("UPDATE wisp_system_alerts SET is_resolved=1, resolved_at=? WHERE alert_type='LICENSE_NON_COMPLIANT_POD' AND is_resolved=0", (now_str,))
+            if changed:
+                log_system_alert('LICENSE_RECOVERY', 'info', 'الترخيص صالح وموثق مجددًا؛ تم إغلاق تنبيه عدم الامتثال السابق.', source='watchdog_license', resolved=True)
+            return
+        if not lic or not lic.get('valid'):
+            status_name = lic.get('status', 'invalid') if lic else 'unlicensed'
+            msg = lic.get('message', 'License invalid') if lic else 'No active license found'
+
+            # Find running sessions in radacct
+            active_sessions = query_all("""
+                SELECT radacctid, username, nasipaddress, framedipaddress, acctsessionid, callingstationid
+                FROM radacct
+                WHERE acctstoptime IS NULL
+                ORDER BY radacctid DESC
+                LIMIT 100
+            """)
+
+            if active_sessions:
+                count = len(active_sessions)
+                print(f"  🚨 [Watchdog License Guard] License non-compliant ({status_name}). Enqueuing PoD disconnect for {count} active sessions...")
+                for sess in active_sessions:
+                    u = sess.get('username')
+                    if not u:
+                        continue
+                    enqueue_disconnect(
+                        username=u,
+                        nas_ip=sess.get('nasipaddress'),
+                        framed_ip=sess.get('framedipaddress'),
+                        session_id=sess.get('acctsessionid'),
+                        mac_address=sess.get('callingstationid'),
+                        reason=f"License Enforcement: System {status_name}",
+                        admin_username='watchdog_license_guard'
+                    )
+
+                log_system_alert(
+                    alert_type='LICENSE_NON_COMPLIANT_POD',
+                    severity='critical',
+                    source='watchdog_license',
+                    message=f"تم إرسال أوامر فصل فورية (PoD / Disconnect) لعدد {count} جلسة نشطة بسبب عدم صلاحية الترخيص ({status_name}: {msg})."
+                )
+    except Exception as e:
+        print(f"  [Watchdog] Error in license compliance enforcement hook: {e}")
+
+def reconcile_container_alerts():
+    from services.autoheal_service import get_container_fleet_status
+    now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    # Historical completion events were incorrectly inserted as ongoing incidents.
+    execute_write("UPDATE wisp_system_alerts SET is_resolved=1, resolved_at=COALESCE(resolved_at, created_at) WHERE is_resolved=0 AND alert_type IN ('DB_RECOVERY','RADIUS_RECOVERY','ZOMBIE_SESSIONS_PURGED','CONTAINER_MANUAL_RESTART')")
+    for container in get_container_fleet_status():
+        if container['id'] in ('N/A', 'internal'):
+            continue
+        source = 'container:' + container['name']
+        if container['is_healthy']:
+            execute_write("UPDATE wisp_system_alerts SET is_resolved=1, resolved_at=? WHERE source=? AND is_resolved=0 AND alert_type IN ('CONTAINER_HEALTH_FAILURE','CONTAINER_RESTART_PENDING')", (now, source))
+        elif container['state'] != 'running' or 'unhealthy' in container['status'].lower():
+            existing = query_one("SELECT id FROM wisp_system_alerts WHERE source=? AND is_resolved=0 AND alert_type='CONTAINER_HEALTH_FAILURE' LIMIT 1", (source,))
+            if not existing:
+                log_system_alert('CONTAINER_HEALTH_FAILURE', 'danger', container['name'] + ': ' + container['health_label'], source=source)
+
+def run_watchdog_cycle():
+    """Execute one full watchdog cycle with auto-healing and auto-resolution."""
+    from services.factory_reset_service import factory_reset_active
+    if os.environ.get('MAX_MAINTENANCE_MODE') == '1':
+        return {'status':'maintenance'}
+    try:
+        if factory_reset_active():
+            return {'status':'factory-reset'}
+        db_ok = check_database_health()
+        disk_ok, free_pct = check_disk_space()
+        radius_ok = check_radius_engine_health()
+        reconcile_container_alerts()
+        check_auto_database_cleanup()
+
+        # Auto-heal zombie sessions in background (reap sessions based on dynamic setting, default 15m)
+        try:
+            from services.autoheal_service import purge_stale_zombie_sessions
+            purge_stale_zombie_sessions()
+        except Exception:
+            pass
+
+        # Card Expiry & Depleted Quota Lifecycle Daemon (Pillar 4)
+        try:
+            from services.voucher_service import check_and_update_expired_vouchers
+            check_and_update_expired_vouchers()
+        except Exception as exp_err:
+            print(f"  [Watchdog] Error in expired account sweep: {exp_err}")
+
+        # Ensure L2TP VPN host route
+        try:
+            from services.l2tp_service import ensure_l2tp_host_route
+            ensure_l2tp_host_route()
+        except Exception:
+            pass
+
+        # License Compliance Enforcement (PoD Disconnect for Revoked/Expired systems)
+        try:
+            enforce_license_compliance_hook()
+        except Exception as lic_err:
+            print(f"  [Watchdog] Error in license compliance hook: {lic_err}")
+
+        return {
+            'timestamp': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'db_healthy': db_ok,
+            'disk_healthy': disk_ok,
+            'disk_free_pct': round(free_pct, 1),
+            'radius_healthy': radius_ok
+        }
+    except Exception as e:
+        print(f"  [Watchdog] Error in watchdog cycle: {e}")
+        return {'timestamp': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 'error': str(e)}
+
+def _watchdog_loop():
+    """Background daemon loop."""
+    print("  🚀 [Watchdog] Internal Self-Healing & System Health Monitor started (Interval: 1m).")
+    # Initial run
+    time.sleep(10)
+    run_watchdog_cycle()
+
+    while not _stop_event.is_set():
+        if _stop_event.wait(WATCHDOG_INTERVAL_SECONDS):
+            break
+        run_watchdog_cycle()
+
+def start_watchdog_thread():
+    """Start the background watchdog daemon thread."""
+    global _watchdog_thread
+    if _watchdog_thread is None or not _watchdog_thread.is_alive():
+        _stop_event.clear()
+        _watchdog_thread = threading.Thread(target=_watchdog_loop, name='WatchdogDaemon', daemon=True)
+        _watchdog_thread.start()
+
+def get_system_alerts(limit=30, unresolved_only=False, state=None):
+    """Retrieve system alerts from wisp_system_alerts table."""
+    try:
+        if state == 'resolved':
+            return query_all('SELECT * FROM wisp_system_alerts WHERE is_resolved = 1 ORDER BY id DESC LIMIT ?', (limit,))
+        if state == 'failed':
+            return query_all("SELECT * FROM wisp_system_alerts WHERE is_resolved=0 AND alert_type LIKE ? ORDER BY id DESC LIMIT ?", ('%FAILED', limit))
+        if state == 'unresolved':
+            return query_all("SELECT * FROM wisp_system_alerts WHERE is_resolved=0 AND alert_type NOT LIKE ? ORDER BY id DESC LIMIT ?", ('%FAILED', limit))
+        if unresolved_only:
+            return query_all("SELECT * FROM wisp_system_alerts WHERE is_resolved = 0 ORDER BY id DESC LIMIT ?", (limit,))
+        return query_all("SELECT * FROM wisp_system_alerts ORDER BY id DESC LIMIT ?", (limit,))
+    except Exception:
+        return []
+
+def resolve_system_alert(alert_id):
+    """Mark an alert as resolved."""
+    try:
+        now_str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        changed = execute_update("UPDATE wisp_system_alerts SET is_resolved = 1, resolved_at = ?, source = CONCAT(COALESCE(source, 'watchdog'), ':manual') WHERE id = ? AND is_resolved=0", (now_str, alert_id))
+        if not changed:
+            return False, "التنبيه غير موجود أو محلول بالفعل."
+        return True, "تم تمييز التنبيه كمحلول بنجاح."
+    except Exception as e:
+        return False, str(e)
+
+def clear_all_resolved_alerts():
+    """Remove resolved alerts."""
+    try:
+        execute_write("DELETE FROM wisp_system_alerts WHERE is_resolved = 1")
+        return True, "تم مسح كافة التنبيهات المحلولة بنجاح."
+    except Exception as e:
+        return False, str(e)

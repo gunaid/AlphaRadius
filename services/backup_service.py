@@ -1,0 +1,1147 @@
+def iter_sql_statements(source):
+    """Splits a multi-statement SQL script into individual executable statements respecting quotes and comments."""
+    current = []
+    in_single_quote = False
+    in_double_quote = False
+    in_backtick = False
+    in_line_comment = False
+    in_block_comment = False
+    escape = False
+
+    def characters():
+        while True:
+            chunk = source.read(65536)
+            if not chunk:
+                break
+            yield from chunk
+    chars = iter(characters())
+    ch = next(chars, '')
+    previous = ''
+    while ch:
+        next_ch = next(chars, '')
+
+        if in_line_comment:
+            if ch == '\n':
+                in_line_comment = False
+            previous = ch
+            ch = next_ch
+            continue
+
+        if in_block_comment:
+            if ch == '*' and next_ch == '/':
+                in_block_comment = False
+                previous = next_ch
+                ch = next(chars, '')
+                continue
+            previous = ch
+            ch = next_ch
+            continue
+
+        if escape:
+            current.append(ch)
+            escape = False
+            previous = ch
+            ch = next_ch
+            continue
+
+        if ch == '\\':
+            current.append(ch)
+            escape = True
+            previous = ch
+            ch = next_ch
+            continue
+
+        if ch == "'" and not in_double_quote and not in_backtick:
+            in_single_quote = not in_single_quote
+            current.append(ch)
+            previous = ch
+            ch = next_ch
+            continue
+
+        if ch == '"' and not in_single_quote and not in_backtick:
+            in_double_quote = not in_double_quote
+            current.append(ch)
+            previous = ch
+            ch = next_ch
+            continue
+
+        if ch == '`' and not in_single_quote and not in_double_quote:
+            in_backtick = not in_backtick
+            current.append(ch)
+            previous = ch
+            ch = next_ch
+            continue
+
+        if not in_single_quote and not in_double_quote and not in_backtick:
+            if ch == '-' and next_ch == '-':
+                in_line_comment = True
+                previous = next_ch
+                ch = next(chars, '')
+                continue
+            if ch == '#' and (not previous or previous in '\r\n '):
+                in_line_comment = True
+                previous = ch
+                ch = next_ch
+                continue
+            if ch == '/' and next_ch == '*':
+                in_block_comment = True
+                previous = next_ch
+                ch = next(chars, '')
+                continue
+            if ch == ';':
+                stmt = ''.join(current).strip()
+                if stmt:
+                    yield stmt
+                current = []
+                previous = ch
+                ch = next_ch
+                continue
+
+        current.append(ch)
+        previous = ch
+        ch = next_ch
+
+    remaining = ''.join(current).strip()
+    if remaining:
+        yield remaining
+
+
+
+
+
+def split_sql_statements(sql_text):
+    return list(iter_sql_statements(io.StringIO(sql_text)))
+
+
+# -*- coding: utf-8 -*-
+"""
+Universal & Comprehensive Backup Management Service for MAX RADIUS (FreeRADIUS & WISP Manager).
+Handles full MySQL database dumps, uploads/attachments packaging, card designs & settings archive,
+atomic multi-component restores, and settings management.
+"""
+
+from services.heavy_operation_service import heavy_operation
+import os
+import io
+import tempfile
+import subprocess
+from contextlib import contextmanager
+import json
+import tarfile
+import zipfile
+import hashlib
+import sqlite3
+import datetime
+import shutil
+import secrets
+import time
+from pathlib import Path
+from database.db import DB_PATH, get_connection, db_session, is_mysql_conn, execute_write, execute_update, query_one, query_all, log_audit
+from core.config import BACKUPS_DIR, STORAGE_DIR, UPLOADS_DIR, DB_TYPE, APP_VERSION
+
+CURRENT_SYSTEM_VERSION = APP_VERSION
+DEFAULT_BACKUP_DIR = str(BACKUPS_DIR)
+
+def get_backup_dir():
+    """Retrieve current backup directory from system settings or fallback to default."""
+    try:
+        rec = query_one("SELECT `value` FROM wisp_system_settings WHERE `key` = 'backup_storage_path'")
+        if rec and rec.get('value') and rec['value'].strip():
+            custom_dir = rec['value'].strip()
+            if os.path.exists(custom_dir) or os.access(os.path.dirname(custom_dir) or '.', os.W_OK):
+                os.makedirs(custom_dir, exist_ok=True)
+                return custom_dir
+    except Exception:
+        pass
+
+    if not os.path.exists(DEFAULT_BACKUP_DIR):
+        os.makedirs(DEFAULT_BACKUP_DIR, exist_ok=True)
+    return DEFAULT_BACKUP_DIR
+
+def ensure_backup_dir():
+    """Ensure the backup storage directory exists."""
+    b_dir = get_backup_dir()
+    if not os.path.exists(b_dir):
+        os.makedirs(b_dir, exist_ok=True)
+    return b_dir
+
+def get_file_sha256(filepath):
+    """Compute SHA256 checksum of a file."""
+    sha = hashlib.sha256()
+    with open(filepath, 'rb') as f:
+        while chunk := f.read(65536):
+            sha.update(chunk)
+    return sha.hexdigest()
+
+def get_backup_settings():
+    """Retrieve all automated backup configuration from system settings."""
+    settings = {
+        'auto_enabled': False,
+        'interval_days': 1,
+        'times': ['03:00'],
+        'storage_path': get_backup_dir(),
+        'last_run': None,
+        'last_status': None,
+        'last_message': ''
+    }
+
+    try:
+        rows = query_all("SELECT `key`, `value` FROM wisp_system_settings WHERE `key` LIKE ?", ('backup_%',))
+        db_map = {r['key']: r['value'] for r in rows}
+
+        if 'backup_auto_enabled' in db_map:
+            settings['auto_enabled'] = str(db_map['backup_auto_enabled']).lower() in ['1', 'true', 'yes', 'on']
+        if 'backup_interval_days' in db_map:
+            try:
+                settings['interval_days'] = max(1, int(db_map['backup_interval_days']))
+            except Exception:
+                settings['interval_days'] = 1
+        if 'backup_times' in db_map and db_map['backup_times']:
+            try:
+                parsed_times = json.loads(db_map['backup_times'])
+                if isinstance(parsed_times, list) and parsed_times:
+                    settings['times'] = parsed_times[:6]
+            except Exception:
+                # Comma separated fallback
+                raw = [t.strip() for t in db_map['backup_times'].split(',') if t.strip()]
+                if raw:
+                    settings['times'] = raw[:6]
+        if 'backup_storage_path' in db_map and db_map['backup_storage_path'].strip():
+            settings['storage_path'] = db_map['backup_storage_path'].strip()
+        if 'backup_last_run' in db_map:
+            settings['last_run'] = db_map['backup_last_run']
+        if 'backup_last_status' in db_map:
+            settings['last_status'] = db_map['backup_last_status']
+        if 'backup_last_message' in db_map:
+            settings['last_message'] = db_map['backup_last_message']
+    except Exception:
+        pass
+
+    return settings
+
+def save_backup_settings(auto_enabled, interval_days, times, storage_path, admin_username='admin'):
+    """Save automated backup configuration to database and notify scheduler."""
+    auto_enabled_str = 'true' if auto_enabled else 'false'
+    interval_days = max(1, int(interval_days or 1))
+
+    # Filter and validate up to 6 time strings (HH:MM)
+    cleaned_times = []
+    if isinstance(times, str):
+        try:
+            times = json.loads(times)
+        except Exception:
+            times = [t.strip() for t in times.split(',') if t.strip()]
+
+    for t in (times or []):
+        t_str = str(t).strip()
+        if len(t_str) == 5 and ':' in t_str:
+            cleaned_times.append(t_str)
+            if len(cleaned_times) >= 6:
+                break
+
+    if not cleaned_times:
+        cleaned_times = ['03:00']
+
+    times_json = json.dumps(cleaned_times)
+    storage_path = str(storage_path or '').strip()
+    if storage_path:
+        os.makedirs(storage_path, exist_ok=True)
+
+    settings_to_update = {
+        'backup_auto_enabled': (auto_enabled_str, 'تفعيل النسخ الاحتياطي التلقائي'),
+        'backup_interval_days': (str(interval_days), 'الفاصل الزمني للنسخ التلقائي بالأيام'),
+        'backup_times': (times_json, 'أوقات تشغيل النسخ الاحتياطي اليومية'),
+        'backup_storage_path': (storage_path, 'مسار حفظ النسخ الاحتياطية')
+    }
+
+    for k, (v, desc) in settings_to_update.items():
+        existing = query_one("SELECT `key` FROM wisp_system_settings WHERE `key` = ?", (k,))
+        if existing:
+            execute_update("UPDATE wisp_system_settings SET `value` = ? WHERE `key` = ?", (v, k))
+        else:
+            execute_write("INSERT INTO wisp_system_settings (`key`, `value`, `description`) VALUES (?, ?, ?)", (k, v, desc))
+
+    log_audit(1, admin_username, 'SAVE_BACKUP_SETTINGS', 'backup', f'Updated backup settings (enabled: {auto_enabled_str}, times: {times_json})')
+
+    # Reload background scheduler
+    try:
+        from services.backup_scheduler_service import reload_backup_schedule
+        reload_backup_schedule()
+    except Exception:
+        pass
+
+    return True, "تم حفظ إعدادات النسخ الاحتياطي التلقائي وتحديث المجدول بنجاح."
+
+def sync_disk_backups():
+    """Sync physical files in backup directory with database records."""
+    b_dir = ensure_backup_dir()
+    if not os.path.exists(b_dir):
+        return
+
+    existing_files = os.listdir(b_dir)
+    for fname in existing_files:
+        if not (fname.endswith('.tar.gz') or fname.endswith('.tgz') or fname.endswith('.zip') or fname.endswith('.sql.gz') or fname.endswith('.db') or fname.endswith('.sql')):
+            continue
+
+        fpath = os.path.join(b_dir, fname)
+        if not os.path.isfile(fpath):
+            continue
+
+        size_bytes = os.path.getsize(fpath)
+        size_mb = round(size_bytes / (1024 * 1024), 2)
+
+        # Check if already in DB
+        db_rec = query_one("SELECT id FROM wisp_backups WHERE filename = ?", (fname,))
+        if not db_rec:
+            sys_version = CURRENT_SYSTEM_VERSION
+            created_at = datetime.datetime.fromtimestamp(os.path.getmtime(fpath)).strftime('%Y-%m-%d %H:%M:%S')
+            checksum = ""
+
+            if fname.endswith('.tar.gz') or fname.endswith('.tgz'):
+                try:
+                    with tarfile.open(fpath, 'r:gz') as tar:
+                        try:
+                            meta_file = tar.extractfile('metadata.json')
+                            if meta_file:
+                                meta_data = json.loads(meta_file.read().decode('utf-8'))
+                                sys_version = meta_data.get('system_version', sys_version)
+                                created_at = meta_data.get('created_at', created_at)
+                                checksum = meta_data.get('checksum_sha256', '')
+                        except Exception:
+                            pass
+                except Exception:
+                    pass
+            elif fname.endswith('.zip'):
+                try:
+                    with zipfile.ZipFile(fpath, 'r') as zf:
+                        if 'metadata.json' in zf.namelist():
+                            meta_data = json.loads(zf.read('metadata.json').decode('utf-8'))
+                            sys_version = meta_data.get('system_version', sys_version)
+                            created_at = meta_data.get('created_at', created_at)
+                            checksum = meta_data.get('checksum_sha256', '')
+                except Exception:
+                    pass
+
+            if not checksum:
+                try:
+                    checksum = get_file_sha256(fpath)
+                except Exception:
+                    checksum = ""
+
+            execute_write('''
+                INSERT INTO wisp_backups (
+                    filename, file_path, file_size_bytes, file_size_mb,
+                    system_version, checksum_sha256, backup_type, created_by, notes, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, 'manual', 'system', 'Discovered file', ?)
+            ''', (fname, fpath, size_bytes, size_mb, sys_version, checksum, created_at))
+
+def list_backups():
+    """List all available backups with sequential numbering and formatted metadata."""
+    sync_disk_backups()
+    b_dir = get_backup_dir()
+
+    rows = query_all("""
+        SELECT * FROM wisp_backups
+        ORDER BY created_at DESC, id DESC
+    """)
+
+    backups = []
+    total = len(rows)
+    for idx, r in enumerate(rows):
+        seq_id = total - idx
+        fpath = r.get('file_path') or os.path.join(b_dir, r['filename'])
+        exists_on_disk = os.path.isfile(fpath)
+
+        size_bytes = r.get('file_size_bytes') or (os.path.getsize(fpath) if exists_on_disk else 0)
+        size_mb = r.get('file_size_mb') or round(size_bytes / (1024 * 1024), 2)
+        size_str = f"{size_mb:.2f} MB" if size_mb >= 0.05 else f"{max(1, round(size_bytes / 1024))} KB"
+
+        backups.append({
+            'id': r['id'],
+            'seq_id': seq_id,
+            'filename': r['filename'],
+            'file_path': fpath,
+            'file_size_bytes': size_bytes,
+            'file_size_mb': size_mb,
+            'file_size_str': size_str,
+            'system_version': r.get('system_version') or CURRENT_SYSTEM_VERSION,
+            'checksum_sha256': r.get('checksum_sha256') or '',
+            'created_at': r.get('created_at'),
+            'created_by': r.get('created_by') or 'admin',
+            'notes': r.get('notes') or '',
+            'exists_on_disk': exists_on_disk
+        })
+
+    return backups
+
+def generate_mysql_dump(output=None):
+    """Exports all MySQL tables as a valid SQL script using batched fetching to prevent OOM."""
+    sql_buffer = output if output is not None else io.StringIO()
+    sql_buffer.write("-- MAX RADIUS MySQL Database Dump\n")
+    sql_buffer.write(f"-- Generated at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+    sql_buffer.write("SET FOREIGN_KEY_CHECKS = 0;\n\n")
+
+    conn = get_connection()
+    table_names = []
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SHOW FULL TABLES WHERE Table_type='BASE TABLE'")
+            tables = cur.fetchall()
+            for t in tables:
+                tname = list(t.values())[0] if isinstance(t, dict) else t[0]
+                table_names.append(tname)
+
+                try:
+                    cur.execute(f"SHOW CREATE TABLE `{tname}`")
+                    create_res = cur.fetchone()
+                    if create_res:
+                        create_sql = create_res.get('Create Table') if isinstance(create_res, dict) else list(create_res.values())[1]
+                        sql_buffer.write(f"DROP TABLE IF EXISTS `{tname}`;\n")
+                        sql_buffer.write(f"{create_sql};\n\n")
+                except Exception:
+                    pass
+
+                # Generated ownership keys are recreated by DDL, never inserted.
+                cur.execute(f"SHOW COLUMNS FROM `{tname}`")
+                backup_columns = [c['Field'] for c in cur.fetchall() if 'GENERATED' not in str(c.get('Extra','')).upper()]
+                selected_columns = ','.join('`'+c+'`' for c in backup_columns)
+                # Fetch rows in chunks of 500 to keep memory flat
+                from pymysql.cursors import SSDictCursor
+                data_cur = conn.cursor(SSDictCursor)
+                try:
+                    data_cur.execute(f"SELECT {selected_columns} FROM `{tname}`")
+                    batch_size = 500
+                    while True:
+                        rows = data_cur.fetchmany(batch_size)
+                        if not rows:
+                            break
+
+                        cols_str = ", ".join([f"`{k}`" for k in rows[0].keys()])
+                        values_clauses = []
+                        for row in rows:
+                            vals = []
+                            for v in row.values():
+                                if v is None:
+                                    vals.append("NULL")
+                                elif isinstance(v, (int, float)):
+                                    vals.append(str(v))
+                                elif isinstance(v, (bytes, bytearray)):
+                                    vals.append(f"0x{v.hex()}")
+                                else:
+                                    escaped = str(v).replace("\\", "\\\\").replace("'", "\\'")
+                                    vals.append(f"'{escaped}'")
+                            values_clauses.append(f"({', '.join(vals)})")
+
+                        if values_clauses:
+                            sql_buffer.write(f"INSERT INTO `{tname}` ({cols_str}) VALUES\n" + ",\n".join(values_clauses) + ";\n")
+
+                finally:
+                    data_cur.close()
+                sql_buffer.write("\n")
+
+        sql_buffer.write("SET FOREIGN_KEY_CHECKS = 1;\n")
+        return (sql_buffer.getvalue() if output is None else None), table_names
+    finally:
+        conn.close()
+
+@contextmanager
+def _native_mysql_options():
+    # Credentials stay in a private temporary file, never command-line arguments.
+    from database import db
+    def quote(value):
+        value = str(value).replace('\\', '\\\\').replace('"', '\\"').replace('\n', '\\n').replace('\r', '\\r')
+        return '"' + value + '"'
+    with tempfile.TemporaryDirectory(prefix='max-radius-db-client-') as directory:
+        path = os.path.join(directory, 'client.cnf')
+        with open(path, 'w', encoding='utf-8') as config:
+            os.chmod(path, 0o600)
+            config.write('[client]\n' + '\n'.join(key + '=' + quote(value) for key, value in (
+                ('host', db.DB_HOST), ('port', db.DB_PORT), ('user', db.DB_USER),
+                ('password', db.DB_PASSWORD), ('default-character-set', 'utf8mb4'))) + '\n')
+        yield path, str(db.DB_NAME)
+
+
+def _run_mysql_tool(command, stdin=None, stdout=None):
+    with tempfile.TemporaryFile(mode='w+b') as errors:
+        result = subprocess.run(command, stdin=stdin, stdout=stdout or subprocess.DEVNULL,
+                                stderr=errors, timeout=3600, check=False)
+        if result.returncode:
+            errors.seek(0, os.SEEK_END)
+            errors.seek(max(0, errors.tell() - 4096))
+            detail = errors.read().decode('utf-8', errors='replace').strip()
+            from database import db
+            if db.DB_PASSWORD:
+                detail = detail.replace(str(db.DB_PASSWORD), '[redacted]')
+            raise RuntimeError('MariaDB client failed (exit %s): %s' % (result.returncode, detail))
+
+
+def _native_mysql_dump(output):
+    executable = shutil.which('mariadb-dump') or shutil.which('mysqldump')
+    if not executable:
+        raise RuntimeError('MariaDB dump client is missing; install the database client in the web image.')
+    with _native_mysql_options() as (options, database):
+        _run_mysql_tool([executable, '--defaults-extra-file=' + options, '--protocol=TCP', '--skip-ssl',
+                         '--single-transaction', '--quick', '--hex-blob', '--skip-triggers',
+                         '--skip-routines', '--skip-events', database], stdout=output)
+    return [next(iter(row.values())) for row in query_all('SHOW TABLES')]
+
+
+def _native_mysql_restore(sql_path, before_import=None):
+    executable = shutil.which('mariadb') or shutil.which('mysql')
+    if not executable:
+        raise RuntimeError('MariaDB client is missing; install the database client in the web image.')
+    from database.db import get_db_timezone_offset
+    # A disk stream also lets legacy dumps finish their last transaction explicitly.
+    with tempfile.TemporaryFile(mode='w+b') as stream:
+        prefix = "SET SESSION time_zone='%s'; SET SESSION innodb_lock_wait_timeout=180; SET FOREIGN_KEY_CHECKS=0; SET UNIQUE_CHECKS=0; SET autocommit=0;\n" % get_db_timezone_offset()
+        stream.write(prefix.encode('utf-8'))
+        stream.write(b'SET @max_usage_summary_reader_v1=1;\n')
+        from services.mysql_restore_stream import rebind_dump_definers
+        with open(sql_path, 'rb') as source:
+            rebind_dump_definers(source, stream)
+        stream.write(b'\nCOMMIT; SET FOREIGN_KEY_CHECKS=1; SET UNIQUE_CHECKS=1;\n')
+        stream.seek(0)
+        with _native_mysql_options() as (options, database):
+            if before_import is not None:
+                before_import()
+            _run_mysql_tool([executable, '--defaults-extra-file=' + options,
+                             '--protocol=TCP', '--skip-ssl', '--binary-mode', database], stdin=stream)
+
+
+@heavy_operation
+def create_backup(admin_username='admin', notes='نسخة يدوية', dispatch_notifications=True):
+    from services.backup_compaction import backup_lock
+    directory = ensure_backup_dir()
+    with backup_lock(directory, work_directory=str(STORAGE_DIR)):
+        with tempfile.TemporaryFile(mode='w+b', dir=str(STORAGE_DIR)) as sql_file:
+            return _create_backup(sql_file, admin_username, notes, dispatch_notifications)
+
+
+def _create_backup(sql_file, admin_username, notes, dispatch_notifications):
+    """
+    Generate a full comprehensive backup containing:
+    1. Full MySQL / MariaDB database dump
+    2. Uploads folder (static/uploads & storage/uploads with network logo, etc.)
+    3. Card designs, custom templates, and system settings JSON
+    4. Compressed in a single TAR.GZ archive file
+    """
+    b_dir = ensure_backup_dir()
+
+    now = datetime.datetime.now()
+    timestamp_str = now.strftime('%Y%m%d_%H%M%S')
+    rand_suffix = secrets.randbelow(1000)
+    filename = f"max_radius_backup_{timestamp_str}_{rand_suffix:03d}.tar.gz"
+    filepath = os.path.join(b_dir, filename)
+
+    conn = get_connection()
+    is_mysql = is_mysql_conn(conn)
+    conn.close()
+
+    retention_receipt = None
+    creation_timings = {}
+    if is_mysql:
+        from core.time_service import get_db_storage_now
+        retention_time = get_db_storage_now()
+        stage_started = time.monotonic()
+        table_names = _native_mysql_dump(sql_file)
+        creation_timings['dump'] = round(time.monotonic()-stage_started,3)
+        from services.backup_compaction import compact_dump
+        from services.backup_usage_summary import summarize_dump
+        stage_started = time.monotonic()
+        summary_receipt = summarize_dump(sql_file, retention_time, work_parent=str(STORAGE_DIR))
+        creation_timings['summary'] = round(time.monotonic()-stage_started,3)
+        stage_started = time.monotonic()
+        retention_receipt = compact_dump(sql_file, retention_time, work_parent=str(STORAGE_DIR))
+        creation_timings['retention'] = round(time.monotonic()-stage_started,3)
+        retention_receipt['expired_usage_summary'] = summary_receipt
+        db_engine_name = 'mysql'
+    else:
+        # SQLite dump
+        sql_buffer = io.StringIO()
+        conn = get_connection()
+        try:
+            for line in conn.iterdump():
+                sql_buffer.write(f"{line}\n")
+        finally:
+            conn.close()
+        sql_content = sql_buffer.getvalue()
+        tables = query_all("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
+        table_names = [t['name'] for t in tables]
+        db_engine_name = 'sqlite3'
+
+    # Export system settings & card templates to JSON
+    settings_rows = query_all("SELECT `key`, `value`, `description` FROM wisp_system_settings")
+    card_templates = query_all("SELECT * FROM wisp_card_templates")
+
+    # Metadata dictionary
+    meta = {
+        'filename': filename,
+        'created_at': now.strftime('%Y-%m-%d %H:%M:%S'),
+        'system_version': CURRENT_SYSTEM_VERSION,
+        'app_name': 'MAX RADIUS',
+        'db_engine': db_engine_name,
+        'table_count': len(table_names),
+        'tables': table_names,
+        'created_by': admin_username,
+        'notes': notes,
+        'has_uploads': True,
+        'has_card_templates': len(card_templates) > 0
+    }
+
+    if retention_receipt is not None:
+        meta['retention_policy'] = retention_receipt
+        meta['required_restore_capabilities'] = ['expired_usage_summary_v1']
+        meta['creation_timings_seconds'] = dict(creation_timings)
+
+    # Standard gzip remains readable by previous releases; publish only when complete.
+    from services.backup_compaction import atomic_tarfile
+    archive_started = time.monotonic()
+    with atomic_tarfile(filepath) as tar:
+        # 1. Database dump
+        if not is_mysql:
+            sql_file.write(sql_content.encode('utf-8'))
+        sql_file.seek(0, os.SEEK_END)
+        sql_size = sql_file.tell()
+        sql_file.seek(0)
+        ti_sql = tarfile.TarInfo(name='database_dump.sql')
+        ti_sql.size = sql_size
+        ti_sql.mtime = int(now.timestamp())
+        tar.addfile(ti_sql, sql_file)
+
+        # 2. Metadata JSON
+        meta_bytes = json.dumps(meta, default=str, ensure_ascii=False, indent=2).encode('utf-8')
+        ti_meta = tarfile.TarInfo(name='metadata.json')
+        ti_meta.size = len(meta_bytes)
+        ti_meta.mtime = int(now.timestamp())
+        tar.addfile(ti_meta, io.BytesIO(meta_bytes))
+
+        # 3. System Settings JSON
+        config_export = {
+            'settings': settings_rows,
+            'card_templates': card_templates,
+            'exported_at': now.strftime('%Y-%m-%d %H:%M:%S')
+        }
+        cfg_bytes = json.dumps(config_export, default=str, ensure_ascii=False, indent=2).encode('utf-8')
+        ti_cfg = tarfile.TarInfo(name='system_config.json')
+        ti_cfg.size = len(cfg_bytes)
+        ti_cfg.mtime = int(now.timestamp())
+        tar.addfile(ti_cfg, io.BytesIO(cfg_bytes))
+
+        # 4. Uploads Directory (Logo & Attachments)
+        uploads_sources = [
+            str(UPLOADS_DIR),
+            os.path.join(str(STORAGE_DIR), 'uploads')
+        ]
+        if os.name != 'nt':
+            uploads_sources.extend(['/app/web/static/uploads', '/app/storage/uploads'])
+
+        added_files = set()
+        for u_dir in uploads_sources:
+            if os.path.exists(u_dir) and os.path.isdir(u_dir):
+                for root, _, files in os.walk(u_dir):
+                    for file in files:
+                        full_fpath = os.path.join(root, file)
+                        rel_name = os.path.relpath(full_fpath, u_dir).replace('\\', '/')
+                        if rel_name.split('/')[0] == 'card_backgrounds':
+                            continue
+                        arc_name = f"uploads/{rel_name}"
+                        if arc_name not in added_files and os.path.isfile(full_fpath) and not os.path.islink(full_fpath):
+                            added_files.add(arc_name)
+                            try:
+                                tar.add(full_fpath, arcname=arc_name)
+                            except Exception:
+                                pass
+
+        # 5. SQLite raw DB file if SQLite
+        if not is_mysql and os.path.exists(DB_PATH):
+            try:
+                tar.add(DB_PATH, arcname='radius_wisp_raw.db')
+            except Exception:
+                pass
+
+    # Compute size and hash
+    creation_timings['archive'] = round(time.monotonic()-archive_started,3)
+    size_bytes = os.path.getsize(filepath)
+    size_mb = round(size_bytes / (1024 * 1024), 2)
+    checksum = get_file_sha256(filepath)
+
+    # Save in DB
+    existing = query_one("SELECT id FROM wisp_backups WHERE filename = ?", (filename,))
+    if existing:
+        execute_update('''
+            UPDATE wisp_backups SET
+                file_path = ?, file_size_bytes = ?, file_size_mb = ?,
+                checksum_sha256 = ?, system_version = ?, notes = ?
+            WHERE filename = ?
+        ''', (filepath, size_bytes, size_mb, checksum, CURRENT_SYSTEM_VERSION, notes, filename))
+    else:
+        execute_write('''
+            INSERT INTO wisp_backups (
+                filename, file_path, file_size_bytes, file_size_mb,
+                system_version, checksum_sha256, backup_type, created_by, notes, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, 'full', ?, ?, ?)
+        ''', (
+            filename, filepath, size_bytes, size_mb,
+            CURRENT_SYSTEM_VERSION, checksum, admin_username, notes,
+            now.strftime('%Y-%m-%d %H:%M:%S')
+        ))
+
+    # Update last run in settings
+    try:
+        execute_update("UPDATE wisp_system_settings SET `value` = ? WHERE `key` = 'backup_last_run'", (now.strftime('%Y-%m-%d %H:%M:%S'),))
+        execute_update("UPDATE wisp_system_settings SET `value` = 'success' WHERE `key` = 'backup_last_status'", ())
+    except Exception:
+        pass
+
+    # Auto-dispatch to Telegram if enabled in Notification Center
+    auto_tg_sent = False
+    try:
+        from services.bot_notifications_service import get_notification_settings
+        n_settings = (get_notification_settings().get('settings') or {})
+        if dispatch_notifications and n_settings.get('is_enabled') and n_settings.get('auto_send_backups') and n_settings.get('bot_token'):
+            import threading
+            threading.Thread(
+                target=send_backup_to_telegram,
+                args=(filename, admin_username),
+                daemon=True
+            ).start()
+            auto_tg_sent = True
+    except Exception as e_tg:
+        print(f"[Telegram Auto-Send Warning]: {e_tg}")
+
+    extra_msg = " وجارٍ إرسالها إلى تيليجرام تلقائياً..." if auto_tg_sent else "."
+    if retention_receipt is not None:
+        extra_msg += ' الكروت وبياناتها المالية محفوظة، مع تلخيص جلسات الكروت المنتهية المؤهلة.'
+    log_audit(1, admin_username, 'CREATE_BACKUP', 'backup', f'Created comprehensive backup {filename} ({size_mb} MB)')
+    return True, f"تم إنشاء النسخة الاحتياطية [{filename}] بنجاح بحجم ({size_mb:.2f} MB){extra_msg}", {
+        'filename': filename,
+        'file_size_mb': size_mb,
+        'system_version': CURRENT_SYSTEM_VERSION,
+        'telegram_auto_dispatched': auto_tg_sent,
+        'creation_timings_seconds': creation_timings
+    }
+
+def upload_backup_file(file_storage, admin_username='admin'):
+    """Save an uploaded backup file and record it."""
+    b_dir = ensure_backup_dir()
+    if not file_storage or not file_storage.filename:
+        return False, "يرجى اختيار ملف صالح لرفعه."
+
+    orig_filename = file_storage.filename.strip()
+    ext = os.path.splitext(orig_filename)[1].lower()
+    if not (orig_filename.endswith('.tar.gz') or orig_filename.endswith('.tgz') or ext in ['.zip', '.sql', '.gz', '.db']):
+        return False, "صيغة الملف غير مدعومة. يرجى رفع ملف بصيغة (.tar.gz أو .zip أو .sql أو .db)."
+
+    clean_name = os.path.basename(orig_filename).replace(' ', '_')
+    if not clean_name.startswith('max_radius_') and not clean_name.startswith('wisp_') and not clean_name.startswith('backup_'):
+        clean_name = f"uploaded_{clean_name}"
+
+    target_path = os.path.join(b_dir, clean_name)
+    counter = 1
+    base_stem, base_ext = os.path.splitext(clean_name)
+    if clean_name.endswith('.tar.gz'):
+        base_stem = clean_name[:-7]
+        base_ext = '.tar.gz'
+    while os.path.exists(target_path):
+        clean_name = f"{base_stem}_{counter}{base_ext}"
+        target_path = os.path.join(b_dir, clean_name)
+        counter += 1
+
+    file_storage.save(target_path)
+    size_bytes = os.path.getsize(target_path)
+    if size_bytes == 0:
+        if os.path.exists(target_path): os.remove(target_path)
+        return False, "الملف المرفوع فارغ (0 بايت)."
+
+    size_mb = round(size_bytes / (1024 * 1024), 2)
+    sys_version = CURRENT_SYSTEM_VERSION
+    now_str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    checksum = get_file_sha256(target_path)
+
+    execute_write('''
+        INSERT INTO wisp_backups (
+            filename, file_path, file_size_bytes, file_size_mb,
+            system_version, checksum_sha256, backup_type, created_by, notes, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, 'uploaded', ?, 'Manual upload', ?)
+    ''', (clean_name, target_path, size_bytes, size_mb, sys_version, checksum, admin_username, now_str))
+
+    log_audit(1, admin_username, 'UPLOAD_BACKUP', 'backup', f'Uploaded backup {clean_name} ({size_mb} MB)')
+    return True, f"تم رفع النسخة الاحتياطية [{clean_name}] بنجاح بحجم ({size_mb} MB)."
+
+def _restore_machine_license_rows(rows):
+    """Restore this installation's exact license rows in one transaction."""
+    import re
+    conn = get_connection()
+    try:
+        marker = '%s' if is_mysql_conn(conn) else '?'
+        cur = conn.cursor()
+        try:
+            cur.execute('SELECT * FROM wisp_license_info LIMIT 0')
+            columns = [item[0] for item in cur.description]
+            if rows and any(set(row) - set(columns) for row in rows):
+                raise RuntimeError('Target license schema is incomplete after restore.')
+            cur.execute('DELETE FROM wisp_license_info')
+            if rows:
+                fields = list(rows[0])
+                if any(not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', name) for name in fields):
+                    raise RuntimeError('Invalid target license column contract.')
+                statement = ('INSERT INTO wisp_license_info (' + ','.join('`'+n+'`' for n in fields)
+                             + ') VALUES (' + ','.join([marker] * len(fields)) + ')')
+                for row in rows:
+                    cur.execute(statement, tuple(row[name] for name in fields))
+        finally:
+            cur.close()
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+    from services.license_guard_service import clear_license_cache
+    clear_license_cache()
+
+
+@heavy_operation
+def restore_backup(filename, admin_username='admin'):
+    try:
+        license_state = {'rows': query_all('SELECT * FROM wisp_license_info ORDER BY id'),
+                         'started': False, 'restored': False}
+    except Exception:
+        return False, 'تعذر حفظ بيانات ترخيص المنظومة قبل الاستعادة؛ لم يبدأ الاستيراد.'
+    with tempfile.TemporaryDirectory(prefix='max-radius-restore-') as temp_dir:
+        protection_error = None
+        try:
+            result = _restore_backup(filename, admin_username, temp_dir, license_state)
+        finally:
+            if license_state['started'] and not license_state['restored']:
+                try:
+                    _restore_machine_license_rows(license_state['rows'])
+                    license_state['restored'] = True
+                except Exception as error:
+                    protection_error = error
+        if protection_error is not None:
+            return False, ('الاستعادة غير مكتملة: تعذر إعادة بيانات ترخيص هذه المنظومة. '
+                           'لا تعِد الاستيراد قبل فحص الحالة وحماية الترخيص.')
+        return result
+
+
+def _restore_backup(filename, admin_username, temp_dir, license_state=None):
+    """
+    Comprehensive restore:
+    1. Extracts database SQL dump and updates MariaDB/MySQL.
+    2. Restores uploads directory (logos, images) to static/uploads & storage/uploads.
+    3. Restores system configs and card templates if present.
+    """
+    b_dir = ensure_backup_dir()
+    safe_name = os.path.basename(filename)
+    filepath = os.path.join(b_dir, safe_name)
+    if not os.path.isfile(filepath):
+        return False, f"ملف النسخة الاحتياطية [{safe_name}] غير موجود على القرص."
+
+    try:
+        if license_state is None:
+            license_state = {'rows': query_all('SELECT * FROM wisp_license_info ORDER BY id'),
+                             'started': False, 'restored': False}
+        sql_path = None
+        extracted_sql = os.path.join(temp_dir, 'database_dump.sql')
+        is_tar = safe_name.endswith('.tar.gz') or safe_name.endswith('.tgz')
+        is_zip = safe_name.endswith('.zip')
+        is_sql = safe_name.endswith('.sql')
+        from core.backup_archive_policy import validate_archive,upload_targets
+        payload_types=validate_archive(filepath)
+        if 'sql' not in payload_types:
+            probe_conn=get_connection()
+            try:mysql_restore=is_mysql_conn(probe_conn)
+            finally:probe_conn.close()
+            if mysql_restore:raise ValueError('نسخة SQLite لا تصلح لاستعادة MySQL.')
+
+        target_uploads_dirs = [
+            str(UPLOADS_DIR),
+            os.path.join(str(STORAGE_DIR), 'uploads')
+        ]
+        if os.name != 'nt':
+            target_uploads_dirs.extend(['/app/web/static/uploads', '/app/storage/uploads'])
+        for ud in target_uploads_dirs:
+            os.makedirs(ud, exist_ok=True)
+
+        restored_files_count = 0
+
+        # 1. Extract from TAR.GZ
+        if is_tar:
+            with tarfile.open(filepath, 'r|gz') as tar:
+                for member in tar:
+                    if member.name == 'database_dump.sql':
+                        f = tar.extractfile(member)
+                        if f:
+                            with open(extracted_sql, 'wb') as out:
+                                shutil.copyfileobj(f, out, 1024 * 1024)
+                            sql_path = extracted_sql
+                    elif member.name.startswith('uploads/') and not member.isdir():
+                        rel_file = member.name[len('uploads/'):]
+                        f = tar.extractfile(member)
+                        if f:
+                            from contextlib import ExitStack
+                            with ExitStack() as stack:
+                                outputs=[]
+                                for dest_path in upload_targets(rel_file,target_uploads_dirs):
+                                    dest_path.parent.mkdir(parents=True,exist_ok=True)
+                                    outputs.append(stack.enter_context(dest_path.open('wb')))
+                                while True:
+                                    block=f.read(1024*1024)
+                                    if not block:break
+                                    for out_f in outputs:out_f.write(block)
+                            restored_files_count += 1
+                    elif member.name == 'system_config.json':
+                        # Config JSON backup
+                        pass
+
+        # 2. Extract from ZIP
+        elif is_zip:
+            with zipfile.ZipFile(filepath, 'r') as zf:
+                namelist = zf.namelist()
+                if 'database_dump.sql' in namelist:
+                    with zf.open('database_dump.sql') as src, open(extracted_sql, 'wb') as out:
+                        shutil.copyfileobj(src, out, 1024 * 1024)
+                    sql_path = extracted_sql
+                elif 'radius_wisp_raw.db' in namelist and not mysql_restore:
+                    license_state['started'] = True
+                    with zf.open('radius_wisp_raw.db') as source,open(DB_PATH,'wb') as destination:
+                        shutil.copyfileobj(source,destination,1024*1024)
+                    return True, f"تمت استعادة النسخة الاحتياطية [{safe_name}] بنجاح."
+
+                # Check for uploads inside ZIP
+                for name in namelist:
+                    if name.startswith('uploads/') and not name.endswith('/'):
+                        rel_file = name[len('uploads/'):]
+                        for dest_path in upload_targets(rel_file,target_uploads_dirs):
+                            dest_path.parent.mkdir(parents=True,exist_ok=True)
+                            with zf.open(name) as source,dest_path.open('wb') as destination:
+                                shutil.copyfileobj(source,destination,1024*1024)
+                        restored_files_count += 1
+
+        # 3. Plain SQL
+        elif is_sql:
+            sql_path = filepath
+
+        from database.db import set_import_maintenance_active
+        set_import_maintenance_active(True)
+
+        quota_warning = ""
+
+        # An older backup cannot inherit alias ownership from this newer database.
+        restored_identity_metadata = False
+        restored_voucher_metadata = False
+        restored_mac_metadata = False
+        restored_sale_metadata = False
+        restored_sale_audit = False
+        restored_usage_summary = False
+        restored_traffic_history = False
+        restored_rollup_tables = set()
+        restored_service_evidence = False
+        if sql_path:
+            import re
+            from services.sql_import_stream import schema_headers
+            with open(sql_path,'r',encoding='utf-8',errors='replace') as identity_source:
+                for line in schema_headers(identity_source):
+                    restored_identity_metadata |= bool(re.search(r'CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?`?wisp_subscriber_names\b',line,re.I))
+                    restored_voucher_metadata |= bool(re.search(r'CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?`?wisp_voucher_names\b',line,re.I))
+                    restored_mac_metadata |= bool(re.search(r'CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?`?wisp_account_mac_policies\b',line,re.I))
+                    restored_sale_metadata |= bool(re.search(r'CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?`?wisp_sale_sources\b',line,re.I))
+                    rollup_match = re.search(r'CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?`?(wisp_traffic_checkpoints|wisp_traffic_rollups|wisp_traffic_rollup_state|wisp_traffic_intervals)\b',line,re.I)
+                    if rollup_match: restored_rollup_tables.add(rollup_match.group(1).lower())
+                    restored_service_evidence |= bool(re.search(r'CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?`?wisp_session_service_evidence\b',line,re.I))
+                    restored_usage_summary |= bool(re.search(r'CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?`?wisp_account_usage_summary\b',line,re.I))
+                    restored_traffic_history |= bool(re.search(r'CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?`?wisp_traffic_history\b',line,re.I))
+                    restored_sale_audit |= bool(re.search(r'CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?`?wisp_sale_source_audit\b',line,re.I))
+        # Execute database restoration
+        if sql_path:
+            conn = get_connection()
+            is_mysql = is_mysql_conn(conn)
+            conn.close()
+
+            if is_mysql:
+                _native_mysql_restore(sql_path, before_import=lambda: license_state.update(started=True))
+            else:
+                license_state['started'] = True
+                conn = get_connection()
+                try:
+                    cursor = conn.cursor()
+                    cursor.execute("PRAGMA foreign_keys = OFF;")
+                    tbl_rows = cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").fetchall()
+                    for row in tbl_rows:
+                        cursor.execute(f'DROP TABLE IF EXISTS "{row[0]}";')
+                    conn.commit()
+                    with open(sql_path, 'r', encoding='utf-8', errors='replace') as sql_stream:
+                        conn.executescript(sql_stream.read())
+                    conn.commit()
+                finally:
+                    conn.close()
+
+        # Require a healthy schema and verified accounting triggers before reporting success.
+        schema_restore_error = None
+        try:
+            from database.schema_healer import heal_database_schema, install_accounting_triggers
+            if not heal_database_schema(install_triggers=False):
+                raise RuntimeError("Schema repair did not complete successfully.")
+            # The general healer logs some trigger failures; enforce verification here.
+            with db_session() as restored_db:
+                if is_mysql_conn(restored_db):
+                    from database.subscriber_edit_schema import install_subscriber_edit_schema,clear_legacy_restore_ownership
+                    if sql_path and not restored_identity_metadata:
+                        clear_legacy_restore_ownership(restored_db)
+                    elif sql_path and not restored_voucher_metadata:
+                        clear_legacy_restore_ownership(restored_db,voucher_only=True)
+                    if sql_path and not restored_mac_metadata:
+                        from database.account_mac_schema import clear_legacy_mac_restore
+                        clear_legacy_mac_restore(restored_db)
+                    if sql_path and not restored_sale_metadata:
+                        from database.sales_source_schema import clear_legacy_sale_sources
+                        clear_legacy_sale_sources(restored_db)
+                    elif sql_path and not restored_sale_audit:
+                        with restored_db.cursor() as sale_audit_cursor:
+                            sale_audit_cursor.execute('DELETE FROM wisp_sale_source_audit')
+                    if sql_path and not restored_traffic_history:
+                        from database.traffic_history_schema import clear_legacy_traffic_history
+                        clear_legacy_traffic_history(restored_db)
+                    if sql_path and len(restored_rollup_tables)!=4:
+                        from database.traffic_samples_schema import install_traffic_samples_schema,clear_legacy_rollups
+                        install_traffic_samples_schema(restored_db)
+                        clear_legacy_rollups(restored_db)
+                    install_subscriber_edit_schema(restored_db)
+                    from database.usage_summary_schema import install_usage_summary_schema,clear_legacy_usage_summary
+                    install_usage_summary_schema(restored_db)
+                    if sql_path and not restored_usage_summary:
+                        clear_legacy_usage_summary(restored_db)
+                    install_accounting_triggers(restored_db)
+                    if sql_path and not restored_service_evidence:
+                        with restored_db.cursor() as service_cursor:service_cursor.execute('DELETE FROM wisp_session_service_evidence')
+        except Exception as e:
+            schema_restore_error = str(e)
+            print(f"[Schema Healer Restore Error]: {e}")
+
+        _restore_machine_license_rows(license_state['rows'])
+        license_state['restored'] = True
+
+        # Post-Restore License Quota Audit
+        try:
+            from services.license_guard_service import get_active_license_status
+            lic_st = get_active_license_status(force_refresh=True)
+            lic_mode = lic_st.get('license_mode', 'active_sessions')
+            if lic_mode == 'active_sessions':
+                c_act = lic_st.get('current_active_sessions', 0)
+                m_act = lic_st.get('max_active_sessions', 0)
+                if m_act > 0 and c_act >= m_act:
+                    quota_warning = f" ⚠️ (تنبيه الترخيص: الجلسات المتصلة {c_act:,} بلغت سقف باقة ترخيصك {m_act:,} - يتم رفض الاتصالات الجديدة فقط مع استمرار عمل النظام وإدارة المشتركين)."
+        except Exception as e_post_check:
+            print(f"[Post-Restore Check Exception]: {e_post_check}")
+
+        # Never restore an active worker/container-control journal from a backup.
+        try:
+            from services.factory_reset_service import sanitize_restored_jobs
+            sanitize_restored_jobs()
+        except Exception as jobs_error:
+            schema_restore_error = schema_restore_error or str(jobs_error)
+
+        # Layer 1: Cleanly sanitize restored open sessions
+        try:
+            execute_write("""
+                UPDATE radacct
+                SET acctstoptime = COALESCE(acctupdatetime, acctstarttime, CURRENT_TIMESTAMP),
+                    acctterminatecause = 'Backup-Restored-Closed'
+                WHERE acctstoptime IS NULL
+            """)
+            print("[Restore Hook] Successfully sanitized and closed restored ghost sessions in radacct.")
+        except Exception as e_hook:
+            print(f"[Restore Hook Warning]: {e_hook}")
+
+        if schema_restore_error is not None:
+            log_audit(1, admin_username, 'RESTORE_BACKUP_INCOMPLETE', 'backup',
+                      f'Restore from {safe_name} incomplete: {schema_restore_error}')
+            return False, (f"تم تطبيق بيانات النسخة الاحتياطية [{safe_name}]، لكن الاستعادة غير مكتملة: "
+                           f"فشل إصلاح قاعدة البيانات أو التحقق من مشغلات المحاسبة: {schema_restore_error}. "
+                           "لم يتم التراجع عن البيانات المستعادة؛ يلزم معالجة السبب وإعادة الاستعادة قبل اعتماد النظام.")
+
+        extra_info = f" واستعادة {restored_files_count} ملف مرفقات/شعارات" if restored_files_count > 0 else ""
+        log_audit(1, admin_username, 'RESTORE_BACKUP', 'backup', f'Restored database & files from {safe_name}')
+        return True, f"تمت استعادة النسخة الاحتياطية [{safe_name}] بنجاح وتحديث قاعدة البيانات وتطبيق المعالجة الذاتية بالكامل{extra_info}.{quota_warning}"
+
+    except Exception as err:
+        return False, f"حدث خطأ أثناء استعادة النسخة الاحتياطية: {str(err)}"
+    finally:
+        try:
+            from database.db import set_import_maintenance_active
+            set_import_maintenance_active(False)
+        except Exception:
+            pass
+
+def delete_backup(filename, admin_username='admin'):
+    """Delete a backup file from storage and database."""
+    b_dir = ensure_backup_dir()
+    safe_name = os.path.basename(filename)
+    filepath = os.path.join(b_dir, safe_name)
+    if os.path.exists(filepath):
+        try:
+            os.remove(filepath)
+        except Exception as e:
+            return False, f"فشل حذف الملف من القرص: {str(e)}"
+
+    execute_write("DELETE FROM wisp_backups WHERE filename = ?", (safe_name,))
+    log_audit(1, admin_username, 'DELETE_BACKUP', 'backup', f'Deleted backup file {safe_name}')
+    return True, f"تم حذف ملف النسخة الاحتياطية [{safe_name}] نهائياً بنجاح."
+
+def get_backup_filepath(filename):
+    """Get verified file path for download."""
+    b_dir = ensure_backup_dir()
+    safe_name = os.path.basename(filename)
+    filepath = os.path.join(b_dir, safe_name)
+    if os.path.isfile(filepath):
+        return filepath
+    return None
+
+def send_backup_to_telegram(filename, admin_username='admin', override_chat_id=None):
+    """
+    Send a specific backup archive to the configured Telegram channel / admin chat.
+    Formats rich markdown caption containing system metadata, checksum, and file size.
+    """
+    safe_name = os.path.basename(filename)
+    filepath = get_backup_filepath(safe_name)
+    if not filepath or not os.path.isfile(filepath):
+        return False, f"ملف النسخة الاحتياطية [{safe_name}] غير موجود على السيرفر."
+
+    # Retrieve backup record if exists
+    rec = query_one("SELECT * FROM wisp_backups WHERE filename = ?", (safe_name,))
+    size_bytes = os.path.getsize(filepath)
+    size_mb = round(size_bytes / (1024 * 1024), 2)
+    size_str = f"{size_mb:.2f} MB" if size_mb >= 0.05 else f"{max(1, round(size_bytes / 1024))} KB"
+    checksum = (rec.get('checksum_sha256') if rec else None) or get_file_sha256(filepath)
+    created_at = (rec.get('created_at') if rec else None) or datetime.datetime.fromtimestamp(os.path.getmtime(filepath)).strftime('%Y-%m-%d %H:%M:%S')
+    created_by = (rec.get('created_by') if rec else admin_username) or 'admin'
+    version = (rec.get('system_version') if rec else CURRENT_SYSTEM_VERSION) or CURRENT_SYSTEM_VERSION
+
+    # Build rich caption for Telegram (HTML formatted)
+    caption = (
+        f"📦 <b>نسخة احتياطية جديدة - MAX RADIUS</b>\n"
+        f"━━━━━━━━━━━━━━━━━━━\n"
+        f"📁 <b>اسم الملف:</b> <code>{safe_name}</code>\n"
+        f"⚖️ <b>الحجم:</b> <code>{size_str}</code>\n"
+        f"📅 <b>تاريخ الإنشاء:</b> <code>{created_at}</code>\n"
+        f"🏷️ <b>إصدار النظام:</b> <code>v{version}</code>\n"
+        f"👤 <b>المُنشئ:</b> <code>{created_by}</code>\n"
+        f"🔒 <b>SHA256:</b> <code>{checksum[:16]}...</code>\n"
+        f"━━━━━━━━━━━━━━━━━━━\n"
+        f"#Backup #MAX_RADIUS #Database"
+    )
+
+    try:
+        from services.bot_notifications_service import send_telegram_document
+        ok, msg = send_telegram_document(
+            filepath=filepath,
+            caption=caption,
+            message_type='BACKUP_ARCHIVE',
+            override_chat_id=override_chat_id
+        )
+        if ok:
+            log_audit(1, admin_username, 'SEND_BACKUP_TELEGRAM', 'backup', f'Sent backup archive {safe_name} to Telegram')
+        return ok, msg
+    except Exception as e:
+        return False, f"فشل أثناء إرسال النسخة عبر تيليجرام: {str(e)}"

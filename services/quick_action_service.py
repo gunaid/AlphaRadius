@@ -1,0 +1,1030 @@
+# -*- coding: utf-8 -*-
+"""
+Quick Actions Service for Subscribers and Voucher Cards:
+Handles:
+1. Extend Validity (days)
+2. Terminate Subscription (Immediate expiration + CoA kick + reset extra quota)
+3. Renew Package (Reset cycle, re-calculate validity & quota, log invoice/sale, CoA kick)
+4. Change Package (Update package_id, radusergroup, validity, quota, CoA kick)
+5. Add Data Quota (extra_quota_mb in MB/GB)
+6. Usage History (radacct sessions breakdown)
+7. Add Wallet Balance (balance deposit + transaction log)
+8. Deduct Wallet Balance (balance deduction with balance verification + log)
+9. Disconnect / Kick (CoA Disconnect-Request to NAS)
+"""
+
+import datetime
+from core.time_service import get_db_storage_now
+import uuid
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+from database.db import (query_one, query_all, execute_write, log_audit, log_user_audit,
+                         db_session, is_mysql_conn, adapt_query, execute_in_transaction)
+from core.coa import RadiusCoaClient
+from core.rate_limit import format_bytes, format_duration, build_mikrotik_rate_limit
+from services.voucher_service import calculate_package_expiration
+from services.quota_service import calculate_cycle_usage_and_rollover, record_session_baselines
+from services.renewal_settlement_service import settle_cycle_operation
+
+from core.ownership import scoped_query_all as query_all, scoped_query_one as query_one
+
+def format_mb_or_gb(mb):
+    if not mb:
+        return "0 MB"
+    if mb >= 1024:
+        gb = round(mb / 1024.0, 2)
+        gb_str = f"{int(gb)}" if gb.is_integer() else f"{gb:.2f}"
+        return f"{gb_str} جيجابايت"
+    return f"{int(mb)} ميجابايت"
+
+def generate_invoice_number(sub_id=1):
+    return f"INV-{get_db_storage_now().replace(tzinfo=None).strftime('%Y%m%d%H%M%S')}-{uuid.uuid4().hex[:6].upper()}"
+
+def get_target_entity(entity_type, entity_id=None):
+    """
+    Find subscriber or voucher card by ID or username.
+    Returns: (entity_dict, 'subscriber' or 'voucher')
+    """
+    if entity_id is None:
+        entity_id = entity_type
+        entity_type = None
+
+    if entity_type == 'subscriber':
+        if isinstance(entity_id, int) or str(entity_id).isdigit():
+            row = query_one("""
+                SELECT s.*, p.name as package_name, p.price as package_price,
+                       p.validity_value, p.validity_unit, COALESCE(s.snap_volume_quota_mb, p.volume_quota_mb, 0) as volume_quota_mb
+                FROM wisp_subscribers s
+                JOIN wisp_packages p ON s.package_id = p.id
+                WHERE s.id = ?
+            """, (int(entity_id),))
+        else:
+            row = query_one("""
+                SELECT s.*, p.name as package_name, p.price as package_price,
+                       p.validity_value, p.validity_unit, COALESCE(s.snap_volume_quota_mb, p.volume_quota_mb, 0) as volume_quota_mb
+                FROM wisp_subscribers s
+                JOIN wisp_packages p ON s.package_id = p.id
+                WHERE LOWER(s.username) = LOWER(?)
+            """, (str(entity_id).strip(),))
+        return row, 'subscriber'
+    elif entity_type == 'voucher':
+        if isinstance(entity_id, int) or str(entity_id).isdigit():
+            row = query_one("""
+                SELECT v.*, p.name as package_name, 
+                       COALESCE(v.snap_price, p.price) as package_price,
+                       COALESCE(v.snap_validity_value, p.validity_value) as validity_value, 
+                       COALESCE(v.snap_validity_unit, p.validity_unit) as validity_unit, 
+                       COALESCE(v.snap_volume_quota_mb, p.volume_quota_mb) as volume_quota_mb,
+                       b.name as batch_name
+                FROM wisp_vouchers v
+                JOIN wisp_packages p ON v.package_id = p.id
+                JOIN wisp_voucher_batches b ON v.batch_id = b.id
+                WHERE v.id = ?
+            """, (int(entity_id),))
+        else:
+            row = query_one("""
+                SELECT v.*, p.name as package_name, 
+                       COALESCE(v.snap_price, p.price) as package_price,
+                       COALESCE(v.snap_validity_value, p.validity_value) as validity_value, 
+                       COALESCE(v.snap_validity_unit, p.validity_unit) as validity_unit, 
+                       COALESCE(v.snap_volume_quota_mb, p.volume_quota_mb) as volume_quota_mb,
+                       b.name as batch_name
+                FROM wisp_vouchers v
+                JOIN wisp_packages p ON v.package_id = p.id
+                JOIN wisp_voucher_batches b ON v.batch_id = b.id
+                WHERE LOWER(v.username) = LOWER(?) OR v.pin_code = ?
+            """, (str(entity_id).strip(), str(entity_id).strip()))
+        return row, 'voucher'
+    else:  # entity_type is None, probe voucher then subscriber
+        v_res, _ = get_target_entity('voucher', entity_id)
+        if v_res:
+            return v_res, 'voucher'
+        s_res, _ = get_target_entity('subscriber', entity_id)
+        if s_res:
+            return s_res, 'subscriber'
+        return None, 'unknown'
+
+
+def action_disable_account(entity_type, entity_id, admin_username='admin'):
+    """Block login without changing paid entitlements; disconnect every session."""
+    from services.account_lifecycle_service import run_transaction, lock_account, sql
+    from services.coa_queue_service import enqueue_disconnect
+    if entity_type not in ('subscriber', 'voucher'):
+        return False, 'نوع الحساب غير صالح'
+
+    def disable(conn):
+        table, row = lock_account(conn, entity_type, entity_id)
+        if not row:
+            return None
+        if entity_type == 'voucher' and row['status'] == 'recharged':
+            return {'consumed': True}
+        sql(conn, f"UPDATE {table} SET status='suspended',pause_reason=? WHERE id=?",
+            (row.get('pause_reason') if row['status'] in ('suspended','disabled') and row.get('pause_reason')
+             else 'إيقاف يدوي من الإدارة', entity_id))
+        return row
+
+    account = run_transaction(disable)
+    if not account:
+        return False, 'الحساب غير موجود'
+    if account.get('consumed'):
+        return False, 'الكرت مستخدم للشحن؛ لا يمكن تغيير حالته'
+    log_audit(1, admin_username, 'DISABLE_ACCOUNT', entity_type,
+              f'Disabled {account["username"]}; balances and validity preserved')
+    try:
+        queued, _ = enqueue_disconnect(account['username'], reason='Admin Disable Account',
+            admin_username=admin_username, lifecycle_kind=entity_type,
+            lifecycle_id=account['id'], lifecycle_cycle=str(account.get('last_renewed_at') or ''),
+            require_accounting_stop=True)
+    except Exception:
+        queued = False
+    if not queued:
+        return True, 'تم إيقاف الحساب ومنع الدخول؛ تعذر جدولة الفصل، وقد تبقى جلساته الحالية متصلة.'
+    return True, 'تم إيقاف الحساب مع حفظ الرصيد والصلاحية، وطُلب فصل جميع جلساته؛ قبول الطلب لا يؤكد اكتمال الفصل.'
+
+
+def action_activate_subscriber(entity_id, admin_username='admin', entity_type='subscriber'):
+    """Remove a manual suspension without renewing or adding entitlement."""
+    from services.account_lifecycle_service import run_transaction, lock_account, sql, expiry_reason, ACCOUNTING_UNCERTAIN_REASON
+    from services.license_guard_service import get_active_license_status
+    from core.radius_sync import sync_subscriber_to_radius, sync_voucher_to_radius
+    if entity_type not in ('subscriber','voucher'):
+        raise ValueError('نوع الحساب غير صالح')
+    sync_account = sync_subscriber_to_radius if entity_type=='subscriber' else sync_voucher_to_radius
+
+    def activate(conn):
+        table, row = lock_account(conn, entity_type, entity_id)
+        if not row:
+            raise ValueError('المشترك غير موجود')
+        if row['status'] not in ('suspended', 'disabled'):
+            raise ValueError('المشترك غير موقوف حاليًا؛ حدّث الصفحة')
+        if row.get('pause_reason') == 'إيقاف لحين إكمال حذف الحساب':
+            raise ValueError('المشترك ينتظر إكمال الحذف؛ لا يمكن تنشيطه بهذه العملية')
+        if not sql(conn, 'SELECT id FROM wisp_packages WHERE id=? FOR UPDATE', (row['package_id'],), 'one'):
+            raise ValueError('تعذر العثور على باقة المشترك')
+        candidate = dict(row, status='active')
+        reason = expiry_reason(conn, entity_type, candidate)
+        if reason == ACCOUNTING_UNCERTAIN_REASON:
+            raise ValueError('تعذر تنشيط المشترك قبل تسوية محاسبة الدورة الحالية')
+        status = 'expired' if reason else 'active'
+        if status == 'active':
+            license_status = get_active_license_status()
+            if not license_status.get('valid') or license_status.get('status') == 'revoked':
+                raise ValueError('لا يمكن تنشيط المشترك: الترخيص غير صالح')
+        sql(conn, f"UPDATE {table} SET status=?,pause_reason='' WHERE id=?", (status, entity_id))
+        if not sync_account(entity_id, conn=conn):
+            raise RuntimeError('تعذر تحديث صلاحيات المشترك في الراديوس')
+        return dict(status=status, reason=reason, username=row['username'])
+
+    result = run_transaction(activate)
+    log_user_audit(entity_type, entity_id, result['username'], admin_username,
+                   'ACTIVATE_ACCOUNT', 'إلغاء الإيقاف: '+result['status'])
+    message = 'تم تنشيط الحساب ونقله إلى تبويب النشط' if result['status']=='active' else 'أُلغي الإيقاف ونُقل الحساب إلى المنتهي: '+result['reason']
+    return True, message, result['status']
+
+
+def action_delete_entity(entity_type, entity_id, admin_username='admin'):
+    from services.account_lifecycle_service import delete_account, deletion_pending_message
+    entity_type = 'voucher' if entity_type == 'card' else entity_type
+    if entity_type not in ('voucher','subscriber'):
+        return False, 'نوع الحساب غير صالح.'
+    entity, kind = get_target_entity(entity_type, entity_id)
+    if not entity:
+        return False, 'الحساب غير موجود'
+    result = delete_account(kind, entity['id'])
+    if result.get('pending'):
+        return False, deletion_pending_message(result)
+    if result.get('deleted'):
+        log_audit(1, admin_username, 'DELETE_ACCOUNT', kind, f'Deleted {entity["username"]}; financial history retained')
+        return True, 'تم الحذف مع حفظ السجل المالي والمحاسبي.'
+    return False, 'لم يتم الحذف؛ أعد التحقق من حالة الحساب.'
+
+def action_bulk_execute(action_fn, entity_type, target_ids, **kwargs):
+    """
+    Executes an action for a single ID or a list/array of target IDs.
+    Ensures safe atomic handling per item and reports batch progress.
+    """
+    import json
+    
+    if isinstance(action_fn, str):
+        action_map = {
+            'delete': action_delete_entity,
+            'extend_time': action_extend_time,
+            'terminate': action_terminate_subscription,
+            'renew': action_renew_package,
+            'change_package': action_change_package,
+            'add_quota': action_add_quota,
+            'add_wallet': action_add_wallet_balance,
+            'deduct_wallet': action_deduct_wallet_balance,
+            'disconnect': action_disconnect_user
+        }
+        action_fn = action_map.get(action_fn.lower().strip())
+        if action_fn is None:
+            return False, 'العملية المطلوبة غير صالحة.'
+
+    if isinstance(target_ids, str):
+        target_ids = target_ids.strip()
+        if target_ids.startswith('[') and target_ids.endswith(']'):
+            try:
+                target_ids = json.loads(target_ids)
+            except Exception:
+                target_ids = [target_ids]
+        elif ',' in target_ids:
+            target_ids = [x.strip() for x in target_ids.split(',') if x.strip()]
+        elif target_ids:
+            target_ids = [target_ids]
+        else:
+            target_ids = []
+            
+    if not isinstance(target_ids, (list, tuple, set)):
+        target_ids = [target_ids] if target_ids is not None else []
+        
+    # Validate the entire batch before any side effects; normalize equivalent IDs.
+    unique_ids = []
+    seen_ids = set()
+    for value in target_ids:
+        if isinstance(value, bool) or not isinstance(value, (int, str)):
+            return False, 'معرف الحساب غير صالح.'
+        text = str(value).strip()
+        if not text.isascii() or not text.isdigit() or int(text) <= 0:
+            return False, 'معرف الحساب غير صالح.'
+        ident = int(text)
+        if ident not in seen_ids:
+            seen_ids.add(ident)
+            unique_ids.append(ident)
+    target_ids = unique_ids
+    if not target_ids:
+        return False, "لم يتم تحديد أي مشتركين لتنفيذ العملية الجماعية."
+        
+    if len(target_ids) == 1:
+        return action_fn(entity_type, target_ids[0], **kwargs)
+        
+    success_count = 0
+    fail_count = 0
+    errors = []
+    jobs = []
+    
+    for tid in target_ids:
+        try:
+            ok, msg = action_fn(entity_type, tid, **kwargs)
+            if ok:
+                success_count += 1
+                if isinstance(msg, dict) and msg.get('job_id'): jobs.append(msg)
+            else:
+                fail_count += 1
+                errors.append(f"#{tid}: {msg}")
+        except Exception as ex:
+            fail_count += 1
+            errors.append(f"#{tid}: {str(ex)}")
+            
+    is_success = (success_count > 0)
+    summary = f"تم تنفيذ العملية بنجاح على {success_count} من أصل {len(target_ids)}."
+    if fail_count > 0:
+        summary += f" (تعذر التنفيذ على {fail_count})"
+        
+    if jobs:
+        return is_success, dict(message=f'تم قبول {success_count} طلبًا؛ لم يتأكد الفصل بعد. تعذر قبول {fail_count}.',jobs=jobs,pending=True)
+    return is_success, summary
+
+def action_extend_time(entity_type, entity_id, days, admin_username='admin'):
+    return action_adjust_entitlement(entity_type,entity_id,days=days,admin_username=admin_username)
+
+
+def parse_entitlement_adjustment(days=0, quota_amount=0, quota_unit='MB'):
+    days_value = Decimal(str(days or 0))
+    if not days_value.is_finite() or days_value != days_value.to_integral_value() or days_value<0 or days_value>36500:
+        raise ValueError('عدد الأيام غير صالح.')
+    days = int(days_value)
+    mb = 0
+    if Decimal(str(quota_amount or 0)) != 0:
+        _,mb,_ = parse_quota_adjustment(quota_amount,quota_unit)
+    if not days and not mb:
+        raise ValueError('أدخل أيامًا موجبة أو بيانات غير صفرية.')
+    return days,mb
+
+
+@settle_cycle_operation
+def action_adjust_entitlement(entity_type, entity_id, days=0, quota_amount=0, quota_unit='MB', admin_username='admin'):
+    """One transaction for time/data topups; manual suspension is preserved."""
+    from core.radius_sync import sync_subscriber_to_radius, sync_voucher_to_radius
+    from services.account_lifecycle_service import expiry_reason, ACCOUNTING_UNCERTAIN_REASON
+    try:
+        days,mb = parse_entitlement_adjustment(days,quota_amount,quota_unit)
+        entity,etype = get_target_entity(entity_type,entity_id)
+        if not entity or etype not in ('subscriber','voucher'):
+            raise ValueError('الحساب أو الكرت غير موجود.')
+        table = 'wisp_subscribers' if etype=='subscriber' else 'wisp_vouchers'
+        with db_session() as conn:
+            cur = conn.cursor()
+            try:
+                def run(statement,args=()):
+                    cur.execute(adapt_query(statement,conn),args)
+                lock = ' FOR UPDATE' if is_mysql_conn(conn) else ''
+                run(f'SELECT *, CURRENT_TIMESTAMP AS checked_at FROM {table} WHERE id=?'+lock,(entity['id'],))
+                row = dict(cur.fetchone())
+                if etype=='voucher' and row['status']=='recharged':
+                    raise ValueError('الكرت مستخدم للشحن؛ لا يمكن إعادة استخدامه.')
+                if days:
+                    start = get_db_storage_now().replace(tzinfo=None)
+                    if row.get('expires_at'):
+                        start = max(start,datetime.datetime.fromisoformat(str(row['expires_at']).replace('T',' ')))
+                    expiry = (start+datetime.timedelta(days=days)).strftime('%Y-%m-%d %H:%M:%S')
+                    run(f'UPDATE {table} SET expires_at=? WHERE id=?',(expiry,row['id']))
+                if mb:
+                    run(f'UPDATE {table} SET extra_quota_mb=COALESCE(extra_quota_mb,0)+? WHERE id=?',(mb,row['id']))
+                if row['status']=='expired' and (days or mb>0):
+                    run(f'SELECT *, CURRENT_TIMESTAMP AS checked_at FROM {table} WHERE id=?',(row['id'],))
+                    candidate=dict(cur.fetchone());candidate['status']='active'
+                    # The same lifecycle policy decides whether all limits allow activation.
+                    reason=expiry_reason(conn,etype,candidate)
+                    if reason==ACCOUNTING_UNCERTAIN_REASON:
+                        raise ValueError('تعذرت تسوية المحاسبة؛ لم تُحفظ الإضافة.')
+                    if not reason:
+                        from services.license_guard_service import get_active_license_status
+                        lic=get_active_license_status()
+                        if not lic.get('valid') or lic.get('status')=='revoked':
+                            raise ValueError('الترخيص غير صالح؛ لم تُحفظ الإضافة.')
+                        run(f"UPDATE {table} SET status='active' WHERE id=?",(row['id'],))
+                        if etype=='voucher':
+                            run("UPDATE wisp_vouchers SET expire_reason='' WHERE id=?",(row['id'],))
+                sync=sync_subscriber_to_radius if etype=='subscriber' else sync_voucher_to_radius
+                if not sync(row['id'],conn=conn):
+                    raise RuntimeError('تعذر تحديث الراديوس؛ لم تُحفظ الإضافة.')
+                run('INSERT INTO wisp_audit_logs (admin_id,username,action,module,details) VALUES (?,?,?,?,?)',
+                    (1,admin_username,'ADJUST_ENTITLEMENT',etype,f'Adjusted {row["username"]}: {days} days, {mb} MB; cycle and suspension preserved'))
+            finally:
+                cur.close()
+        return True,'تم تعديل الأيام والبيانات مع حفظ حالة الإيقاف ودورة المحاسبة.'
+    except (ValueError,InvalidOperation,OverflowError) as exc:
+        return False,str(exc)
+
+def action_terminate_subscription(entity_type, entity_id, admin_username='admin'):
+    """2. إنهاء الاشتراك فوراً وطرده من ميكروتيك"""
+    entity, etype = get_target_entity(entity_type, entity_id)
+    if not entity:
+        return False, "الحساب أو الكرت غير موجود"
+        
+    username = entity['username']
+    now = get_db_storage_now().replace(tzinfo=None)
+    now_iso = now.strftime('%Y-%m-%d %H:%M:%S')
+    now_fr = now.strftime('%d %b %Y %H:%M:%S')
+    
+    if etype == 'subscriber':
+        execute_write("UPDATE wisp_subscribers SET expires_at = ?, status = 'expired', extra_quota_mb = 0 WHERE id = ?", (now_iso, entity['id']))
+    else:
+        execute_write("UPDATE wisp_vouchers SET expires_at = ?, status = 'expired', expire_reason = 'تم إنهاء الاشتراك يدوياً بواسطة الإدارة', extra_quota_mb = 0 WHERE id = ?", (now_iso, entity['id']))
+        
+    execute_write("DELETE FROM radcheck WHERE LOWER(username) = LOWER(?) AND attribute = 'Expiration'", (username,))
+    execute_write("INSERT INTO radcheck (username, attribute, op, value) VALUES (?, 'Expiration', ':=', ?)", (username, now_fr))
+    
+    # Send CoA Disconnect
+    action_disconnect_user(entity_type, entity_id, admin_username=admin_username)
+    
+    log_audit(1, admin_username, 'TERMINATE_SUBSCRIPTION', etype, f'Terminated subscription for {username}')
+    return True, "تم إنهاء الاشتراك فوراً، تصفير الرصيد المتبقي، وفصل المشترك من الميكروتيك."
+
+@settle_cycle_operation
+def action_renew_package(entity_type, entity_id, admin_username='admin'):
+    """3. تجديد الباقة الحالية مع دعم ميزة ترحيل الرصيد (Data & Time Rollover) وتسوية السلفة"""
+    with db_session() as conn:
+        cursor = conn.cursor()
+        lock_clause = "FOR UPDATE" if is_mysql_conn(conn) else ""
+
+        entity_resolved, etype = get_target_entity(entity_type, entity_id)
+        if not entity_resolved:
+            return False, "الحساب أو الكرت غير موجود"
+
+        target_table = "wisp_subscribers" if etype == 'subscriber' else "wisp_vouchers"
+        sql_ent = adapt_query(f"SELECT * FROM {target_table} WHERE id = ? LIMIT 1 {lock_clause}", conn)
+        cursor.execute(sql_ent, (entity_resolved['id'],))
+        entity = cursor.fetchone()
+        if not entity:
+            return False, "الحساب أو الكرت غير موجود"
+        if not isinstance(entity, dict):
+            entity = dict(entity)
+
+        username = entity['username']
+        pkg_id = entity['package_id']
+        sql_pkg = adapt_query("SELECT * FROM wisp_packages WHERE id = ? LIMIT 1", conn)
+        cursor.execute(sql_pkg, (pkg_id,))
+        pkg = cursor.fetchone()
+        if not pkg:
+            return False, "باقة المشترك غير موجودة"
+        if not isinstance(pkg, dict):
+            pkg = dict(pkg)
+
+        # Single DB timestamp for renewal baseline and last_renewed_at (Defect 3 & 11)
+        cursor.execute("SELECT CURRENT_TIMESTAMP")
+        r_now = cursor.fetchone()
+        db_now = r_now[0] if not isinstance(r_now, dict) else list(r_now.values())[0]
+        if isinstance(db_now, str):
+            db_now_dt = datetime.datetime.strptime(db_now.split('.')[0].strip(), '%Y-%m-%d %H:%M:%S')
+        else:
+            db_now_dt = db_now
+        db_now_str = db_now_dt.strftime('%Y-%m-%d %H:%M:%S')
+
+        from services.rate_policy_service import package_rate_limit
+        try:
+            renewal_rate = package_rate_limit(pkg) if etype == 'voucher' else None
+        except ValueError as exc:
+            return False, str(exc)
+
+        is_rollover_enabled = bool(pkg.get('is_rollover_enabled'))
+
+        # 1. Defect 1: Calculate cycle consumption & rollover BEFORE updating session baselines
+        try:
+            calc = calculate_cycle_usage_and_rollover(entity, pkg, is_rollover_enabled=is_rollover_enabled, conn=conn, now=db_now_dt)
+            rem_data_mb = calc['rem_data_mb']
+            rem_time_delta = calc['rem_time_delta']
+            rem_days = calc['rem_days']
+            rem_hours = calc['rem_hours']
+        except Exception as e:
+            conn.rollback()
+            return False, f"تعذر قراءة استهلاك المشترك من سجلات المحاسبة، تم إيقاف عملية التجديد بأمان: {e}"
+
+        # 2. Record session baselines for active sessions using the single DB timestamp
+        record_session_baselines(username, renewed_at=db_now_str, conn=conn)
+
+        # 3. Defect 7: Full loan settlement
+        loan_mb = int(entity.get('loan_balance_mb') or 0)
+        has_active_loan = (int(entity.get('loan_status') or 0) == 1 or loan_mb > 0)
+        new_base_quota_mb = int(entity.get('snap_volume_quota_mb') if etype == 'voucher' and entity.get('snap_volume_quota_mb') is not None else (pkg.get('volume_quota_mb') or 0))
+        is_unlimited_quota = (new_base_quota_mb == 0)
+
+        if is_rollover_enabled:
+            new_extra_mb = float(rem_data_mb)
+        else:
+            new_extra_mb = 0.0
+
+        new_loan_balance_mb = 0
+        new_loan_status = 0
+        deducted_loan_mb = 0
+
+        if has_active_loan:
+            if is_unlimited_quota:
+                deducted_loan_mb = loan_mb
+                new_loan_balance_mb = 0
+                new_loan_status = 0
+            else:
+                total_capacity = new_base_quota_mb + new_extra_mb
+                if total_capacity >= loan_mb:
+                    deducted_loan_mb = loan_mb
+                    if new_extra_mb >= loan_mb:
+                        new_extra_mb -= loan_mb
+                    else:
+                        shortfall = loan_mb - new_extra_mb
+                        new_extra_mb = -shortfall
+                    new_loan_balance_mb = 0
+                    new_loan_status = 0
+                else:
+                    deducted_loan_mb = total_capacity
+                    unsettled_loan = loan_mb - total_capacity
+                    new_extra_mb = -new_base_quota_mb
+                    new_loan_balance_mb = int(unsettled_loan)
+                    new_loan_status = 1
+
+        # 4. Defect 8: Validity calculation (single add of remaining time)
+        val = int(pkg.get('validity_value') if pkg.get('validity_value') is not None else (pkg.get('validity_days') or 30))
+        unit = pkg.get('validity_unit') or 'days'
+        
+        if val <= 0:
+            new_exp_iso = None
+            new_fr_exp = None
+        else:
+            if unit == 'hours':
+                base_delta = datetime.timedelta(hours=val)
+            elif unit == 'minutes':
+                base_delta = datetime.timedelta(minutes=val)
+            elif unit == 'months':
+                base_delta = datetime.timedelta(days=val * 30)
+            else:
+                base_delta = datetime.timedelta(days=val)
+                
+            new_exp_dt = db_now_dt + base_delta + rem_time_delta
+            new_exp_iso = new_exp_dt.strftime('%Y-%m-%d %H:%M:%S')
+            new_fr_exp = new_exp_dt.strftime('%d %b %Y %H:%M:%S')
+
+        # 5. Database updates
+        if etype == 'subscriber':
+            upd_sub = adapt_query("""
+                UPDATE wisp_subscribers
+                SET snap_volume_quota_mb = ?, expires_at = ?,
+                    last_renewed_at = ?,
+                    extra_quota_mb = ?,
+                    loan_balance_mb = ?,
+                    loan_status = ?,
+                    status = 'active'
+                WHERE id = ?
+            """, conn)
+            cursor.execute(upd_sub, (new_base_quota_mb, new_exp_iso, db_now_str, new_extra_mb, new_loan_balance_mb, new_loan_status, entity['id']))
+
+            inv_num = generate_invoice_number(entity['id'])
+            ins_inv = adapt_query("""
+                INSERT INTO wisp_invoices (invoice_number, subscriber_id, subscriber_name, amount, status, package_name, notes, paid_at)
+                VALUES (?, ?, ?, ?, 'paid', ?, 'تجديد باقة يدوي من لوحة التحكم', ?)
+            """, conn)
+            cursor.execute(ins_inv, (inv_num, entity['id'], entity.get('full_name') or username, pkg['price'], pkg['name'], db_now_str))
+            from services.invoice_cost_service import record_invoice_cost
+            record_invoice_cost(conn,cursor.lastrowid,pkg)
+            from services.sales_source_service import record_sale_source
+            record_sale_source(conn, 'invoice', cursor.lastrowid, username)
+        else:
+            snap_quota = entity.get('snap_volume_quota_mb') if entity.get('snap_volume_quota_mb') is not None else int(pkg.get('volume_quota_mb') or 0)
+            snap_uptime = entity.get('snap_uptime_limit_mins') if entity.get('snap_uptime_limit_mins') is not None else int(pkg.get('uptime_limit_mins') or 0)
+            upd_vouch = adapt_query("""
+                UPDATE wisp_vouchers
+                SET expires_at = ?,
+                    last_renewed_at = ?,
+                    extra_quota_mb = ?,
+                    status = 'active',
+                    expire_reason = '',
+                    snap_price = ?,
+                    snap_cost = ?,
+                    snap_volume_quota_mb = ?,
+                    snap_uptime_limit_mins = ?,
+                    snap_validity_value = ?,
+                    snap_validity_unit = ?,
+                    snap_validity_days = ?,
+                    snap_rate_download = ?,
+                    snap_rate_upload = ?,
+                    snap_rate_limit_str = ?,
+                    snap_simultaneous_sessions = ?,
+                    snap_mikrotik_group = ?
+                WHERE id = ?
+            """, conn)
+            cursor.execute(upd_vouch, (
+                new_exp_iso, db_now_str, new_extra_mb,
+                float(pkg.get('price') or 0.0), float(pkg.get('cost') or 0.0), int(snap_quota),
+                int(snap_uptime),
+                val,
+                pkg.get('validity_unit') or 'days', int(pkg.get('validity_days') or 30),
+                pkg.get('rate_download') or '', pkg.get('rate_upload') or '',
+                renewal_rate,
+                int(pkg.get('simultaneous_sessions') or 1),
+                pkg.get('mikrotik_group') or '',
+                entity['id']
+            ))
+
+            ins_sale = adapt_query("""
+                INSERT INTO wisp_voucher_sales (
+                    voucher_id, batch_id, batch_name, username, serial_number,
+                    package_name, price, cost, reseller_id, activated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, conn)
+            cursor.execute(ins_sale, (
+                entity['id'], entity.get('batch_id') or 1, entity.get('batch_name') or 'Direct',
+                entity['username'], entity.get('serial_number') or '',
+                pkg['name'], pkg['price'], pkg.get('cost') or 0, entity.get('reseller_id'), db_now_str
+            ))
+            from services.sales_source_service import record_sale_source
+            record_sale_source(conn, 'voucher', cursor.lastrowid, username)
+
+        # 6. RADIUS attributes
+        cursor.execute(adapt_query("DELETE FROM radcheck WHERE LOWER(username) = LOWER(?) AND attribute = 'Expiration'", conn), (username,))
+        if new_fr_exp:
+            cursor.execute(adapt_query("INSERT INTO radcheck (username, attribute, op, value) VALUES (?, 'Expiration', ':=', ?)", conn), (username, new_fr_exp))
+
+        user_pwd = entity.get('password') or entity.get('pin_code') or username
+        cursor.execute(adapt_query("DELETE FROM radcheck WHERE LOWER(username) = LOWER(?) AND (attribute = 'Cleartext-Password' OR (attribute = 'Auth-Type' AND value = 'Reject'))", conn), (username,))
+        cursor.execute(adapt_query("INSERT INTO radcheck (username, attribute, op, value) VALUES (?, 'Cleartext-Password', ':=', ?)", conn), (username, user_pwd))
+
+        cursor.execute(adapt_query("DELETE FROM radcheck WHERE LOWER(username) = LOWER(?) AND attribute = 'Max-Total-Octets'", conn), (username,))
+        cursor.execute(adapt_query("DELETE FROM radusergroup WHERE LOWER(username) = LOWER(?)", conn), (username,))
+        cursor.execute(adapt_query("INSERT INTO radusergroup (username, groupname, priority) VALUES (?, ?, 1)", conn), (username, pkg['name']))
+
+    # Sessions were finalized before billing; only audit remains outside the transaction.
+
+    rolled_gb = round(rem_data_mb / 1024.0, 2)
+    rollover_parts = []
+    if rolled_gb > 0:
+        gb_str = f"{int(rolled_gb)}" if rolled_gb.is_integer() else f"{rolled_gb:.2f}"
+        rollover_parts.append(f"{gb_str} جيجابايت")
+    if rem_days > 0:
+        rollover_parts.append(f"{rem_days} {'أيام' if 3 <= rem_days <= 10 else 'يوم'}")
+    elif rem_hours > 0:
+        rollover_parts.append(f"{rem_hours} {'ساعات' if 3 <= rem_hours <= 10 else 'ساعة'}")
+
+    loan_text = f" (تم سداد سلفة {format_mb_or_gb(deducted_loan_mb)})" if deducted_loan_mb > 0 else ""
+    if is_rollover_enabled and rollover_parts:
+        rollover_text = " و ".join(rollover_parts)
+        res_msg = f"تم التجديد بنجاح! تم ترحيل {rollover_text} إلى رصيدك الجديد{loan_text}."
+        audit_change = f"تم تجديد الباقة مع ترحيل الرصيد ({rollover_text}){loan_text}"
+    else:
+        res_msg = f"تم تجديد باقة ({pkg['name']}) بنجاح للمشترك{loan_text}."
+        audit_change = f"تجديد باقة {pkg['name']}{loan_text}"
+
+    log_user_audit(etype, entity['id'], username, admin_username, 'RENEW_PACKAGE', audit_change)
+    log_audit(1, admin_username, 'RENEW_PACKAGE', etype, f'Renewed package {pkg["name"]} for {username}: {audit_change}')
+    return True, res_msg
+
+
+@settle_cycle_operation
+def action_change_package(entity_type, entity_id, new_package_id, enable_rollover=None, admin_username='admin', voucher_profile=None, operation_id=None, expected_revision=None):
+    """4. تغيير الباقة مع خيار ترحيل الرصيد الذكي (Data & Time Rollover) وتسوية السلفة"""
+    with db_session() as conn:
+        cursor = conn.cursor()
+        lock_clause = "FOR UPDATE" if is_mysql_conn(conn) else ""
+
+        entity_resolved, etype = get_target_entity(entity_type, entity_id)
+        if not entity_resolved:
+            return False, "الحساب أو الكرت غير موجود"
+
+        target_table = "wisp_subscribers" if etype == 'subscriber' else "wisp_vouchers"
+        sql_ent = adapt_query(f"SELECT * FROM {target_table} WHERE id = ? LIMIT 1 {lock_clause}", conn)
+        cursor.execute(sql_ent, (entity_resolved['id'],))
+        entity = cursor.fetchone()
+        if not entity:
+            return False, "الحساب أو الكرت غير موجود"
+        if not isinstance(entity, dict):
+            entity = dict(entity)
+
+        if etype == 'voucher' and expected_revision is not None:
+            from services.voucher_edit_service import revision
+            if revision(entity) != expected_revision:
+                return False, 'تغيرت بيانات الكرت؛ أعد فتح الصفحة قبل تغيير الباقة.'
+        if voucher_profile is not None and voucher_profile.get('username') != entity['username']:
+            return False, 'احفظ تعديل اسم الكرت أولًا من قسم البيانات ثم غيّر الباقة.'
+        if voucher_profile is not None and etype != 'voucher':
+            return False, 'تعديل بيانات الكرت متاح للكروت فقط'
+        if etype == 'voucher' and str(entity.get('status') or '').lower() == 'recharged':
+            return False, 'لا يمكن تغيير باقة كرت مستهلك للشحن'
+        keep_unused = voucher_profile is not None and entity.get('status') == 'unused' and voucher_profile.get('status') == 'unused'
+
+        cursor.execute(adapt_query("SELECT * FROM wisp_packages WHERE id = ?", conn), (new_package_id,))
+        new_pkg = cursor.fetchone()
+        if not new_pkg:
+            return False, "الباقة الجديدة المحددة غير موجودة"
+        if not isinstance(new_pkg, dict):
+            new_pkg = dict(new_pkg)
+
+        from services.rate_policy_service import package_rate_limit
+        try:
+            changed_rate = package_rate_limit(new_pkg) if etype == 'voucher' else None
+        except ValueError as exc:
+            return False, str(exc)
+
+        # Defect 6: Retrieve subscriber's current / old package to calculate rollover from!
+        old_pkg_id = entity.get('package_id')
+        old_pkg = None
+        if old_pkg_id:
+            cursor.execute(adapt_query("SELECT * FROM wisp_packages WHERE id = ?", conn), (old_pkg_id,))
+            old_pkg = cursor.fetchone()
+            if old_pkg and not isinstance(old_pkg, dict):
+                old_pkg = dict(old_pkg)
+        if not old_pkg:
+            old_pkg = new_pkg
+
+        if keep_unused:
+            enable_rollover = False
+        elif enable_rollover is None:
+            enable_rollover = bool(old_pkg.get('is_rollover_enabled'))
+        else:
+            enable_rollover = bool(enable_rollover)
+
+        username = entity['username']
+
+        # Single DB timestamp for renewal baseline and last_renewed_at (Defect 3 & 11)
+        cursor.execute("SELECT CURRENT_TIMESTAMP")
+        r_now = cursor.fetchone()
+        db_now = r_now[0] if not isinstance(r_now, dict) else list(r_now.values())[0]
+        if isinstance(db_now, str):
+            db_now_dt = datetime.datetime.strptime(db_now.split('.')[0].strip(), '%Y-%m-%d %H:%M:%S')
+        else:
+            db_now_dt = db_now
+        db_now_str = db_now_dt.strftime('%Y-%m-%d %H:%M:%S')
+
+        # 1. Defect 1 & 6: Calculate cycle consumption & rollover from OLD package BEFORE recording baselines
+        try:
+            calc = calculate_cycle_usage_and_rollover(entity, old_pkg, is_rollover_enabled=enable_rollover, conn=conn, now=db_now_dt)
+            rem_data_mb = calc['rem_data_mb']
+            rem_time_delta = calc['rem_time_delta']
+            rem_days = calc['rem_days']
+            rem_hours = calc['rem_hours']
+        except Exception as e:
+            conn.rollback()
+            return False, f"تعذر قراءة استهلاك المشترك من سجلات المحاسبة، تم إيقاف عملية تغيير الباقة بأمان: {e}"
+
+        # 2. Record session baselines for active sessions
+        record_session_baselines(username, renewed_at=db_now_str, conn=conn)
+
+        # 3. Defect 7: Comprehensive loan settlement against new package capacity
+        loan_mb = int(entity.get('loan_balance_mb') or 0)
+        has_active_loan = (int(entity.get('loan_status') or 0) == 1 or loan_mb > 0)
+        new_base_quota_mb = int(new_pkg.get('volume_quota_mb') or 0)
+        is_unlimited_quota = (new_base_quota_mb == 0)
+
+        if enable_rollover:
+            new_extra_mb = float(rem_data_mb)
+        else:
+            new_extra_mb = 0.0
+
+        new_loan_balance_mb = 0
+        new_loan_status = 0
+        deducted_loan_mb = 0
+
+        if has_active_loan:
+            if is_unlimited_quota:
+                deducted_loan_mb = loan_mb
+                new_loan_balance_mb = 0
+                new_loan_status = 0
+            else:
+                total_capacity = new_base_quota_mb + new_extra_mb
+                if total_capacity >= loan_mb:
+                    deducted_loan_mb = loan_mb
+                    if new_extra_mb >= loan_mb:
+                        new_extra_mb -= loan_mb
+                    else:
+                        shortfall = loan_mb - new_extra_mb
+                        new_extra_mb = -shortfall
+                    new_loan_balance_mb = 0
+                    new_loan_status = 0
+                else:
+                    deducted_loan_mb = total_capacity
+                    unsettled_loan = loan_mb - total_capacity
+                    new_extra_mb = -new_base_quota_mb
+                    new_loan_balance_mb = int(unsettled_loan)
+                    new_loan_status = 1
+
+        # 4. Defect 8: Validity calculation
+        val = new_pkg.get('validity_value') if new_pkg.get('validity_value') is not None else (new_pkg.get('validity_days') or 30)
+        unit = new_pkg.get('validity_unit') or 'days'
+        
+        if val <= 0:
+            new_exp_iso = None
+            new_fr_exp = None
+        else:
+            if unit == 'hours':
+                base_delta = datetime.timedelta(hours=val)
+            elif unit == 'minutes':
+                base_delta = datetime.timedelta(minutes=val)
+            elif unit == 'months':
+                base_delta = datetime.timedelta(days=val * 30)
+            else:
+                base_delta = datetime.timedelta(days=val)
+                
+            new_exp_dt = db_now_dt + base_delta + rem_time_delta
+            new_exp_iso = new_exp_dt.strftime('%Y-%m-%d %H:%M:%S')
+            new_fr_exp = new_exp_dt.strftime('%d %b %Y %H:%M:%S')
+
+        # 5. Database updates
+        if etype == 'subscriber':
+            upd_sub = adapt_query("""
+                UPDATE wisp_subscribers
+                SET snap_volume_quota_mb = ?, package_id = ?, expires_at = ?, last_renewed_at = ?,
+                    extra_quota_mb = ?, loan_balance_mb = ?, loan_status = ?, status = 'active'
+                WHERE id = ?
+            """, conn)
+            cursor.execute(upd_sub, (new_base_quota_mb, new_pkg['id'], new_exp_iso, db_now_str, new_extra_mb, new_loan_balance_mb, new_loan_status, entity['id']))
+
+            inv_num = generate_invoice_number(entity['id'])
+            ins_inv = adapt_query("""
+                INSERT INTO wisp_invoices (invoice_number, subscriber_id, subscriber_name, amount, status, package_name, notes, paid_at)
+                VALUES (?, ?, ?, ?, 'paid', ?, 'تغيير باقة وترقية من لوحة التحكم', ?)
+            """, conn)
+            cursor.execute(ins_inv, (inv_num, entity['id'], entity.get('full_name') or username, new_pkg['price'], new_pkg['name'], db_now_str))
+            from services.invoice_cost_service import record_invoice_cost
+            record_invoice_cost(conn,cursor.lastrowid,new_pkg)
+            from services.sales_source_service import record_sale_source
+            record_sale_source(conn, 'invoice', cursor.lastrowid, username)
+        else:
+            upd_vouch = adapt_query("""
+                UPDATE wisp_vouchers
+                SET package_id = ?,
+                    expires_at = ?,
+                    last_renewed_at = ?,
+                    extra_quota_mb = ?,
+                    status = 'active',
+                    expire_reason = '',
+                    snap_price = ?,
+                    snap_cost = ?,
+                    snap_volume_quota_mb = ?,
+                    snap_uptime_limit_mins = ?,
+                    snap_validity_value = ?,
+                    snap_validity_unit = ?,
+                    snap_validity_days = ?,
+                    snap_rate_download = ?,
+                    snap_rate_upload = ?,
+                    snap_rate_limit_str = ?,
+                    snap_simultaneous_sessions = ?,
+                    snap_mikrotik_group = ?
+                WHERE id = ?
+            """, conn)
+            cursor.execute(upd_vouch, (
+                new_pkg['id'], new_exp_iso, db_now_str, new_extra_mb,
+                float(new_pkg.get('price') or 0.0), float(new_pkg.get('cost') or 0.0), int(new_pkg.get('volume_quota_mb') or 0),
+                int(new_pkg.get('uptime_limit_mins') or 0),
+                int(val),
+                unit, int(new_pkg.get('validity_days') or 30),
+                new_pkg.get('rate_download') or '', new_pkg.get('rate_upload') or '',
+                changed_rate,
+                int(new_pkg.get('simultaneous_sessions') or 1),
+                new_pkg.get('mikrotik_group') or '',
+                entity['id']
+            ))
+
+            ins_sale = adapt_query("""
+                INSERT INTO wisp_voucher_sales (
+                    voucher_id, batch_id, batch_name, username, serial_number,
+                    package_name, price, cost, reseller_id, activated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, conn)
+            if not keep_unused:
+                cursor.execute(ins_sale, (
+                    entity['id'], entity.get('batch_id') or 1, entity.get('batch_name') or 'Direct',
+                    entity['username'], entity.get('serial_number') or '',
+                    new_pkg['name'], new_pkg['price'], new_pkg.get('cost') or 0, entity.get('reseller_id'), db_now_str
+                ))
+                from services.sales_source_service import record_sale_source
+                record_sale_source(conn, 'voucher', cursor.lastrowid, username)
+
+        # 6. RADIUS attributes
+        if voucher_profile is not None:
+            if keep_unused:
+                new_exp_iso = entity.get('expires_at')
+                new_fr_exp = new_exp_iso.strftime('%d %b %Y %H:%M:%S') if new_exp_iso else None
+                cursor.execute(adapt_query('UPDATE wisp_vouchers SET last_renewed_at = ? WHERE id = ?', conn), (entity.get('last_renewed_at'), entity['id']))
+            if 'expires_at' in voucher_profile:
+                new_exp_iso = voucher_profile['expires_at']
+                parsed_exp = datetime.datetime.fromisoformat(str(new_exp_iso)) if new_exp_iso else None
+                new_fr_exp = parsed_exp.strftime('%d %b %Y %H:%M:%S') if parsed_exp else None
+            if voucher_profile['username'] != username:
+                for table in ('radcheck', 'radreply', 'radusergroup'):
+                    cursor.execute(adapt_query(f'DELETE FROM {table} WHERE username = ?', conn), (username,))
+            username = voucher_profile['username']
+            entity['password'] = voucher_profile['password']
+            cursor.execute(adapt_query('UPDATE wisp_vouchers SET username=?, password=?, pin_code=?, bound_mac=?, status=?, expires_at=? WHERE id=?', conn),
+                           (username, entity['password'], entity['password'], voucher_profile.get('bound_mac') or None, voucher_profile['status'], new_exp_iso, entity['id']))
+            cursor.execute(adapt_query("DELETE FROM radcheck WHERE username=? AND attribute='Calling-Station-Id'", conn), (username,))
+            if voucher_profile.get('bound_mac'):
+                cursor.execute(adapt_query("INSERT INTO radcheck(username,attribute,op,value) VALUES (?, 'Calling-Station-Id', '==', ?)", conn), (username, voucher_profile['bound_mac']))
+        cursor.execute(adapt_query("DELETE FROM radcheck WHERE LOWER(username) = LOWER(?) AND attribute = 'Expiration'", conn), (username,))
+        if new_fr_exp:
+            cursor.execute(adapt_query("INSERT INTO radcheck (username, attribute, op, value) VALUES (?, 'Expiration', ':=', ?)", conn), (username, new_fr_exp))
+
+        user_pwd = entity.get('password') or entity.get('pin_code') or username
+        cursor.execute(adapt_query("DELETE FROM radcheck WHERE LOWER(username) = LOWER(?) AND (attribute = 'Cleartext-Password' OR (attribute = 'Auth-Type' AND value = 'Reject'))", conn), (username,))
+        cursor.execute(adapt_query("INSERT INTO radcheck (username, attribute, op, value) VALUES (?, 'Cleartext-Password', ':=', ?)", conn), (username, user_pwd))
+
+        cursor.execute(adapt_query("DELETE FROM radcheck WHERE LOWER(username) = LOWER(?) AND attribute = 'Max-Total-Octets'", conn), (username,))
+        cursor.execute(adapt_query("DELETE FROM radusergroup WHERE LOWER(username) = LOWER(?)", conn), (username,))
+        cursor.execute(adapt_query("INSERT INTO radusergroup (username, groupname, priority) VALUES (?, ?, 1)", conn), (username, new_pkg['name']))
+
+        if operation_id:
+            if etype == 'voucher':
+                from services.voucher_edit_service import fingerprint, save_receipt
+            else:
+                from services.subscriber_edit_service import fingerprint, save_receipt
+            digest=fingerprint('package',entity['id'],admin_username,{'package_id':int(new_package_id),'rollover':bool(enable_rollover)})
+            save_receipt(conn,operation_id,entity['id'],admin_username,digest,{'success':True,'message':'تم تغيير الباقة وبدء دورة جديدة وفق خيار الترحيل المحدد.'})
+            if etype == 'voucher':
+                details = f"تغيير الباقة إلى {new_pkg['name']} " + ('مع ترحيل المتبقي' if enable_rollover else 'دون ترحيل المتبقي')
+                cursor.execute(adapt_query("INSERT INTO user_audit_logs(user_type,user_id,username,admin_name,action,change_details) VALUES('voucher',?,?,?,'CHANGE_PACKAGE',?)",conn),
+                               (entity['id'],username,admin_username,details))
+                cursor.execute(adapt_query("INSERT INTO wisp_audit_logs(admin_id,username,action,module,details) VALUES(1,?,'CHANGE_PACKAGE','vouchers',?)",conn),(admin_username,details))
+
+    # Sessions were finalized before billing; only audit remains outside the transaction.
+
+    rolled_gb = round(rem_data_mb / 1024.0, 2)
+    rollover_parts = []
+    if rolled_gb > 0:
+        gb_str = f"{int(rolled_gb)}" if rolled_gb.is_integer() else f"{rolled_gb:.2f}"
+        rollover_parts.append(f"{gb_str} جيجابايت")
+    if rem_days > 0:
+        rollover_parts.append(f"{rem_days} {'أيام' if 3 <= rem_days <= 10 else 'يوم'}")
+    elif rem_hours > 0:
+        rollover_parts.append(f"{rem_hours} {'ساعات' if 3 <= rem_hours <= 10 else 'ساعة'}")
+
+    loan_text = f" (تم سداد سلفة {format_mb_or_gb(deducted_loan_mb)})" if deducted_loan_mb > 0 else ""
+    if enable_rollover and rollover_parts:
+        rollover_text = " و ".join(rollover_parts)
+        res_msg = f"تم ترقية/تغيير الباقة إلى ({new_pkg['name']}) بنجاح! تم ترحيل {rollover_text} إلى رصيدك الجديد{loan_text}."
+        audit_note = f"ترقية باقة إلى {new_pkg['name']} مع ترحيل الرصيد ({rollover_text}){loan_text}"
+    else:
+        res_msg = f"تم تغيير الباقة إلى ({new_pkg['name']}) بنجاح للمشترك{loan_text} وتطبيق الإعدادات الجديدة فوراً."
+        audit_note = f"تغيير باقة إلى {new_pkg['name']}{loan_text}"
+
+    if not (etype == 'voucher' and operation_id):
+        log_user_audit(etype, entity['id'], username, admin_username, 'CHANGE_PACKAGE', audit_note)
+        log_audit(1, admin_username, 'CHANGE_PACKAGE', etype, f'Changed package to {new_pkg["name"]} for {username}: {audit_note}')
+    return True, res_msg
+
+def parse_quota_adjustment(quota_amount, quota_unit='GB'):
+    import math
+    val = float(quota_amount)
+    unit = str(quota_unit).upper()
+    if not math.isfinite(val) or val == 0 or unit not in ('MB', 'GB'):
+        raise ValueError('invalid quota adjustment')
+    mb_val = round(val * 1024.0, 2) if unit == 'GB' else round(val, 2)
+    if not math.isfinite(mb_val) or mb_val == 0 or abs(mb_val) >= 2**63:
+        raise ValueError('invalid quota adjustment')
+    return val, mb_val, unit
+
+
+def action_add_quota(entity_type, entity_id, quota_amount, quota_unit='GB', admin_username='admin'):
+    return action_adjust_entitlement(entity_type,entity_id,quota_amount=quota_amount,quota_unit=quota_unit,admin_username=admin_username)
+
+
+def action_get_usage_history(entity_type, entity_id):
+    """6. استعراض سجل الاستهلاك والجلسات"""
+    entity, etype = get_target_entity(entity_type, entity_id)
+    if not entity:
+        return False, "الحساب أو الكرت غير موجود", {}
+        
+    username = entity['username']
+    
+    # Reuse the same session display state as subscriber/card details and the portal.
+    from services.subscriber_service import get_subscriber_sessions
+    sessions = get_subscriber_sessions(username, limit=50)
+    for s in sessions:
+        s['total_traffic'] = s['total_str']
+        s['status_str'] = 'متصل' if s['is_active'] else 'غير متصل'
+
+    # Aggregated totals
+    summary = query_one("""
+        SELECT COUNT(DISTINCT acctsessionid) as total_sessions,
+               COALESCE(SUM(max_down), 0) as total_down_bytes,
+               COALESCE(SUM(max_up), 0) as total_up_bytes,
+               COALESCE(SUM(max_time), 0) as total_time_sec
+        FROM (
+            SELECT nasipaddress, acctsessionid,
+                   MAX(CAST(COALESCE(acctoutputoctets, 0) AS UNSIGNED)) as max_down,
+                   MAX(CAST(COALESCE(acctinputoctets, 0) AS UNSIGNED)) as max_up,
+                   MAX(acctsessiontime) as max_time
+            FROM radacct_owned
+            WHERE LOWER(username) = LOWER(?)
+            GROUP BY nasipaddress, acctsessionid
+        ) AS t
+    """, (username,))
+
+    
+    sum_data = {
+        'username': username,
+        'full_name': entity.get('full_name') or username,
+        'package_name': entity.get('package_name') or '-',
+        'total_sessions': summary['total_sessions'] if summary else 0,
+        'total_download': format_bytes(summary['total_down_bytes'] if summary else 0),
+        'total_upload': format_bytes(summary['total_up_bytes'] if summary else 0),
+        'total_traffic': format_bytes((summary['total_down_bytes'] or 0) + (summary['total_up_bytes'] or 0) if summary else 0),
+        'total_duration': format_duration(summary['total_time_sec'] if summary else 0),
+        'sessions': sessions
+    }
+    return True, "تم جلب سجل الاستهلاك بنجاح", sum_data
+
+def action_add_wallet_balance(entity_type, entity_id, amount, notes='', admin_username='admin'):
+    return _change_wallet_balance(entity_type, entity_id, amount, notes, admin_username, deduct=False)
+
+def action_deduct_wallet_balance(entity_type, entity_id, amount, notes='', admin_username='admin'):
+    return _change_wallet_balance(entity_type, entity_id, amount, notes, admin_username, deduct=True)
+
+def _change_wallet_balance(entity_type, entity_id, amount, notes, admin_username, deduct):
+    """Keep locked balance, subscriber invoice and audit in one transaction."""
+    entity, etype = get_target_entity(entity_type, entity_id)
+    if not entity or etype not in ('subscriber', 'voucher'):
+        return False, "الحساب أو الكرت غير موجود"
+    try:
+        val = Decimal(str(amount).strip())
+        if not val.is_finite() or val <= 0 or val > Decimal('99999999.99'):
+            return False, "يرجى إدخال مبلغ مالي صحيح أكبر من 0"
+        val = val.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        if val <= 0:
+            return False, 'أقل مبلغ مسموح هو 0.01'
+    except (InvalidOperation, ValueError, TypeError):
+        return False, "قيمة المبلغ المدخل غير صحيحة"
+    table = 'wisp_subscribers' if etype == 'subscriber' else 'wisp_vouchers'
+    with db_session() as conn:
+        write = lambda sql, params=(): execute_in_transaction(conn, sql, params)
+        locked = execute_in_transaction(conn, f'SELECT * FROM {table} WHERE id = ?' +
+            (' FOR UPDATE' if is_mysql_conn(conn) else ''), (entity['id'],), fetch='one')
+        if not locked:
+            return False, 'الحساب أو الكرت غير موجود'
+        balance = Decimal(str(locked.get('balance') or 0))
+        if not balance.is_finite():
+            return False, 'رصيد المحفظة غير صالح؛ راجع بيانات الحساب'
+        if deduct and balance < val:
+            return False, f'الرصيد الحالي ({balance}) غير كافٍ لسحب مبلغ ({val})'
+        remaining = balance - val if deduct else balance + val
+        if abs(remaining) > Decimal('99999999.99'):
+            return False, 'المبلغ يتجاوز الحد المسموح للمحفظة'
+        write(f'UPDATE {table} SET balance = ? WHERE id = ?', (str(remaining), locked['id']))
+        title = 'سحب/تصحيح رصيد محفظة' if deduct else 'إيداع رصيد محفظة'
+        if etype == 'subscriber':
+            write('''INSERT INTO wisp_invoices
+                (invoice_number, subscriber_id, subscriber_name, amount, status, package_name, notes, paid_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)''',
+                (generate_invoice_number(locked['id']), locked['id'], locked.get('full_name') or locked['username'],
+                 str(val), 'refunded' if deduct else 'paid', title, notes or f'{title} بواسطة {admin_username}'))
+        action = 'DEDUCT_WALLET_BALANCE' if deduct else 'ADD_WALLET_BALANCE'
+        write('''INSERT INTO wisp_audit_logs (admin_id, username, action, module, details)
+            VALUES (1, ?, ?, ?, ?)''', (admin_username, action, etype,
+            f'{action}: {val}; account {locked["username"]}; remaining {remaining}'))
+    if deduct:
+        return True, f'تم خصم/سحب {val} من رصيد المحفظة بنجاح. الرصيد المتبقي: {remaining}'
+    return True, f'تمت إضافة {val} إلى محفظة المشترك بنجاح.'
+
+def action_disconnect_user(entity_type, entity_id=None, admin_username='admin', operation_id=None):
+    entity, kind = get_target_entity(entity_type, entity_id)
+    if not entity:
+        return False, 'الحساب غير موجود'
+    from services.session_control_service import submit_manual
+    try:
+        return True, submit_manual(kind, entity['id'], entity['username'], admin_username, operation_id)
+    except (ValueError, RuntimeError, OSError):
+        return False, 'تعذر قبول طلب الفصل؛ توجد عملية متعارضة أو بيانات جلسات غير مكتملة. لم يُؤكد أي فصل.'

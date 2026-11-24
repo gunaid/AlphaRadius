@@ -1,0 +1,14 @@
+{
+  "execute_now": false,
+  "executed": true,
+  "verified": true,
+  "user_authorized_same_tag_replacement": true,
+  "mutable_tags_changed": true,
+  "latest_changed": false,
+  "core_pushed": true,
+  "web_push_required": false,
+  "registry_receipt": "registry.json",
+  "source_receipt": "source-manifest.json",
+  "historical_plan": "upload-plan-initial-20261105.json",
+  "domains_or_clients_updated": false
+}
