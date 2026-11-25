@@ -64,7 +64,7 @@
         <tbody class="divide-y divide-[#1c2840] text-slate-200">
           {% for m in macs %}
           <tr><td class="py-2 font-mono" dir="ltr">{{ m.mac }}</td><td>{{ m.note }}</td>
-              <td>{{ 'من تقرير الكشف' if m.source == 'detected' else 'يدوي' }}</td><td>{{ m.created_by }}</td>
+              <td>{{ 'من تقرير الكشف' if m.source == 'detected' else 'قائمة مبدئية' if m.source == 'preset' else 'يدوي' }}</td><td>{{ m.created_by }}</td>
               <td dir="ltr" class="font-mono text-slate-400">{{ m.created_at }}</td>
               <td>{% if can_manage %}<form method="POST" action="{{ url_for('cloned_macs_delete') }}"><input type="hidden" name="mac" value="{{ m.mac }}"><button type="submit" class="text-rose-400 hover:text-rose-300">حذف</button></form>{% endif %}</td></tr>
           {% else %}<tr><td colspan="6" class="py-4 text-center text-slate-400">القائمة فارغة.</td></tr>{% endfor %}

@@ -984,14 +984,19 @@
     },
     {
       "file": "database/cloned_mac_schema.py",
-      "sha256": "54fa8b0268f0281f55c2a3a64a70a555ea4dbaa93b1d3e2b2cc27fbd8f0c48b7",
+      "sha256": "0298728620845b3316ae360ebfbb7135359ef2dddaf0b1fa12febc0ddb25aae4",
       "imports": [
         "database.schema_objects"
       ],
       "definitions": [
         {
           "name": "install_cloned_mac_schema",
-          "line": 49,
+          "line": 104,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "seed_cloned_macs",
+          "line": 112,
           "kind": "FunctionDef"
         }
       ]
@@ -4253,7 +4258,7 @@
     },
     {
       "file": "services/cloned_mac_service.py",
-      "sha256": "cf93275cf2ef43d2bc2d3132fb8b699c24def793c3c72ab7d04b790def74ecbe",
+      "sha256": "42cb5cbfec562c55eed19aab673aa7fadc7f8c59667d65c36552108caac9e9f1",
       "imports": [
         "core.mac_policy",
         "core.mikrotik_api",

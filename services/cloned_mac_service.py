@@ -57,7 +57,7 @@ def add_mac(mac, note='', created_by='', source='manual'):
     if query_one('SELECT mac FROM wisp_cloned_macs WHERE mac=?', (mac,)):
         return mac, False
     execute_write('INSERT INTO wisp_cloned_macs(mac,note,source,created_by,created_at) VALUES (?,?,?,?,NOW())',
-                  (mac, note, source if source in ('manual', 'detected') else 'manual', str(created_by or '')[:64]))
+                  (mac, note, source if source in ('manual', 'detected', 'preset') else 'manual', str(created_by or '')[:64]))
     return mac, True
 
 

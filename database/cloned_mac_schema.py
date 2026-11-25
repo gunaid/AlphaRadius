@@ -12,6 +12,61 @@ router never receives a profile it does not have. Works on RouterOS 6 and 7.
 
 PROFILE_SUFFIX = '-nocookie'
 
+# Known cloned MACs supplied by the operator, inserted once (source 'preset').
+# A settings flag records the seed, so a MAC deleted later is never re-added.
+SEED_FLAG = 'cloned_mac_seed_20261125'
+SEED_MACS = (
+    '9C:B2:B2:E1:31:64',
+    'D0:D7:83:3D:49:99',
+    '34:79:16:78:6D:A4',
+    'A0:4F:85:FB:FF:F6',
+    '00:00:11:CF:D5:71',
+    '00:90:4C:C5:12:38',
+    'A0:C9:A0:98:CA:81',
+    'D8:31:CF:78:B2:BD',
+    '1C:99:4C:C3:A4:0E',
+    '00:05:49:38:3A:0B',
+    'F0:08:F1:69:FF:46',
+    '00:03:7F:04:02:12',
+    '44:6D:57:D0:24:AA',
+    'FC:42:03:DD:A5:AC',
+    'A0:91:69:F5:C2:70',
+    'D8:90:E8:10:98:09',
+    '90:06:28:E2:44:51',
+    '80:5A:04:A4:F9:3C',
+    'D0:5B:A8:DA:3D:A8',
+    '38:AA:3C:10:C6:79',
+    '00:90:4C:C5:12:77',
+    'A0:91:69:C2:CF:4B',
+    'A0:91:69:F7:45:18',
+    'FC:C7:34:20:F9:A4',
+    'E0:19:1D:1F:B3:FF',
+    'FC:2D:5E:9B:85:20',
+    '50:F5:20:5F:50:8F',
+    '2C:FD:AB:0E:14:4E',
+    '00:AE:FA:5A:64:BF',
+    '98:F1:70:12:AE:B4',
+    '4C:66:41:0F:29:D3',
+    'B0:C1:9E:AD:4D:67',
+    'FC:2D:5E:23:7B:21',
+    'D0:5B:A8:A8:6D:6E',
+    'B0:C1:9E:29:9C:4A',
+    '14:F4:2A:C9:E8:BB',
+    '10:A5:D0:47:69:ED',
+    'BC:3F:4E:1A:D8:1C',
+    'B8:D7:AF:69:4C:A5',
+    '84:10:0D:B4:35:EE',
+    '08:D4:6A:F2:33:7E',
+    'B8:B4:2E:B0:EB:98',
+    'A0:8D:16:DB:41:2F',
+    'B0:C1:9E:2F:0A:99',
+    '98:00:C6:7C:39:31',
+    'B0:C1:9E:B8:4C:A5',
+    'F8:4E:73:35:AE:AF',
+    'C8:FE:30:FF:C3:E5',
+    'B4:79:A7:15:84:E0',
+)
+
 MACS_SQL = """CREATE TABLE IF NOT EXISTS wisp_cloned_macs (
  mac VARCHAR(17) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL PRIMARY KEY,
  note VARCHAR(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
@@ -50,4 +105,20 @@ def install_cloned_mac_schema(cur, maria=True):
     from database.schema_objects import ensure_schema_object
     cur.execute(MACS_SQL)
     cur.execute(PROFILES_SQL)
+    seed_cloned_macs(cur)
     return ensure_schema_object(cur, FUNCTION_SQL, maria=maria)
+
+
+def seed_cloned_macs(cur):
+    """Insert SEED_MACS once; returns how many were added."""
+    cur.execute("SELECT `key` FROM wisp_system_settings WHERE `key`=%s", (SEED_FLAG,))
+    if cur.fetchone():
+        return 0
+    added = 0
+    for mac in SEED_MACS:
+        cur.execute("""INSERT IGNORE INTO wisp_cloned_macs(mac,note,source,created_by,created_at)
+                       VALUES (%s,'قائمة مبدئية','preset','system',NOW())""", (mac,))
+        added += cur.rowcount
+    cur.execute("INSERT INTO wisp_system_settings(`key`,`value`,`description`) VALUES (%s,%s,%s)",
+                (SEED_FLAG, str(added), 'تم إدخال القائمة المبدئية للماكات المستنسخة'))
+    return added

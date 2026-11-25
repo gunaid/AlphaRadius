@@ -246,6 +246,16 @@ class ClonedMacLab(RoamingLab):
         self.assertEqual(self.profile('BB:BB:BB:BB:BB:02'), '', 'unlisted MAC unchanged')
         self.assertEqual(self.profile(''), '')
 
+    def test_operator_seed_was_inserted_once(self):
+        from database.cloned_mac_schema import SEED_MACS, SEED_FLAG, seed_cloned_macs
+        self.cur.execute('DELETE FROM wisp_cloned_macs')
+        self.assertEqual(seed_cloned_macs(self.cur), len(SEED_MACS))
+        self.cur.execute("SELECT COUNT(*) AS n FROM wisp_cloned_macs WHERE source='preset'")
+        self.assertEqual(self.cur.fetchone()['n'], 49)
+        self.assertEqual(seed_cloned_macs(self.cur), 0, 'flag stops a second seed')
+        self.cur.execute("SELECT `value` FROM wisp_system_settings WHERE `key`=%s", (SEED_FLAG,))
+        self.assertEqual(self.cur.fetchone()['value'], '49')
+
     def test_listed_mac_keeps_the_plain_limit(self):
         self.open_session('CC:CC:CC:CC:CC:03')
         self.assertEqual(self.reserve('AA:AA:AA:AA:AA:01'), 2)

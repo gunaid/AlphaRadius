@@ -172,6 +172,39 @@ class ServiceTests(unittest.TestCase):
         sync.assert_not_called()
 
 
+class SeedTests(unittest.TestCase):
+    class Cursor:
+        def __init__(self):
+            self.settings, self.macs, self.rowcount, self.last = {}, {}, 0, None
+
+        def execute(self, sql, params=()):
+            if sql.startswith('SELECT `key`'):
+                self.last = {'key': params[0]} if params[0] in self.settings else None
+            elif 'INTO wisp_cloned_macs' in sql:
+                self.rowcount = 0 if params[0] in self.macs else 1
+                self.macs.setdefault(params[0], 'preset')
+            elif 'INTO wisp_system_settings' in sql:
+                self.settings[params[0]] = params[1]
+
+        def fetchone(self):
+            return self.last
+
+    def test_operator_list_is_valid_and_seeded_once(self):
+        from core.mac_policy import normalize_mac
+        from database.cloned_mac_schema import SEED_MACS, SEED_FLAG, seed_cloned_macs
+        self.assertEqual(len(SEED_MACS), 49)
+        self.assertEqual(len(set(SEED_MACS)), 49)
+        self.assertEqual([normalize_mac(m) for m in SEED_MACS], list(SEED_MACS))
+        cur = self.Cursor()
+        cur.macs['B4:79:A7:15:84:E0'] = 'manual'          # already listed by hand: kept, not counted
+        self.assertEqual(seed_cloned_macs(cur), 48)
+        self.assertEqual(cur.settings[SEED_FLAG], '48')
+        self.assertEqual(cur.macs['B4:79:A7:15:84:E0'], 'manual')
+        del cur.macs['9C:B2:B2:E1:31:64']                 # operator deletes one later
+        self.assertEqual(seed_cloned_macs(cur), 0)
+        self.assertNotIn('9C:B2:B2:E1:31:64', cur.macs)
+
+
 class WiringTests(unittest.TestCase):
     def test_postauth_switches_hotspot_profile_only(self):
         postauth = (ROOT / 'docker/freeradius/license-capacity-postauth.conf').read_text(encoding='utf-8')
