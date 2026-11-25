@@ -151,6 +151,8 @@ def translate_portal_error(raw_error):
 
     if any(k in err_normalized for k in ["invalid username", "invalid password", "wrong password", "bad password", "authentication failed", "auth failed", "internal error"]):
         return "رقم الكرت أو كلمة المرور غير صحيحة، يرجى التأكد وإعادة المحاولة."
+    if any(k in err_normalized for k in ["no valid profile", "profile has expired", "profile expired"]):
+        return "عذراً، لقد انتهت صلاحية هذا الكرت أو باقته."
     if any(k in err_normalized for k in ["uptime limit", "uptime reached", "time limit", "time reached", "limit uptime"]):
         return "عذراً، لقد انتهى الوقت المخصص لهذا الكرت (صلاحية الوقت منتهية)."
     if any(k in err_normalized for k in ["traffic limit", "quota reached", "bytes limit", "transfer limit", "limit bytes", "data limit", "limit reached"]):

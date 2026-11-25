@@ -152,6 +152,14 @@
 
                     <!-- نوع التصميم -->
                     <div>
+                        <label for="selDesignPackage" class="block text-slate-300 font-bold mb-1.5">الباقة المرتبطة بالتصميم</label>
+                        <select id="selDesignPackage" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:border-blue-500 font-bold mb-1">
+                            <option value="">بدون ربط (يُختار يدويًا أو كتصميم افتراضي)</option>
+                            {% for p in design_packages or [] %}
+                            <option value="{{ p.id }}" {% if design and design.package_id and design.package_id|int == p.id|int %}selected{% endif %}>{{ p.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <p class="text-[10px] text-slate-400 mb-3">عند الطباعة أو التصدير يُختار هذا التصميم تلقائيًا لحزم هذه الباقة. ربط الباقة بتصميم آخر يلغي ربطها هنا.</p>
                         <label class="block text-slate-300 font-bold mb-1.5">نوع التصميم والمظهر</label>
                         <select id="selDesignType" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:border-blue-500 font-bold" onchange="onDesignTypeChange()">
                             <option value="image" {% if not design or design.design_type == 'image' %}selected{% endif %}>🖼️ كرت مخصص بصورة (Custom Card with Image)</option>
@@ -247,15 +255,15 @@
                         </div>
                     </div>
 
-                    <!-- عدد الكروت بالصف والعمود (حتى 15 كرت بالعمود) -->
+                    <!-- عدد الكروت بالصف والعمود (حتى 6 أعمدة و20 صفًا) -->
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-slate-300 font-bold mb-1">عدد الكروت في كل صف (أعمدة)</label>
                             <input type="number" id="inpCardsPerRow" value="{{ design.cards_per_row if design else 2 }}" min="1" max="6" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono font-bold focus:border-blue-500" oninput="onLayoutChange()">
                         </div>
                         <div>
-                            <label class="block text-slate-300 font-bold mb-1">عدد الكروت في كل عمود (صفوف - حتى 15)</label>
-                            <input type="number" id="inpCardsPerCol" value="{{ design.cards_per_col if design else 5 }}" min="1" max="15" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono font-bold focus:border-blue-500" oninput="onLayoutChange()">
+                            <label class="block text-slate-300 font-bold mb-1">عدد الكروت في كل عمود (صفوف - حتى 20)</label>
+                            <input type="number" id="inpCardsPerCol" value="{{ design.cards_per_col if design else 5 }}" min="1" max="20" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono font-bold focus:border-blue-500" oninput="onLayoutChange()">
                         </div>
                     </div>
 
@@ -747,10 +755,13 @@
 
     function onLayoutChange() {
         if (!currentConfig.layout) currentConfig.layout = {};
-        const r = parseInt(document.getElementById('inpCardsPerRow').value) || 2;
+        let r = parseInt(document.getElementById('inpCardsPerRow').value) || 2;
         let c = parseInt(document.getElementById('inpCardsPerCol').value) || 5;
-        if (c > 15) c = 15;
+        if (r > 6) r = 6;
+        if (r < 1) r = 1;
+        if (c > 20) c = 20;
         if (c < 1) c = 1;
+        document.getElementById('inpCardsPerRow').value = r;
         document.getElementById('inpCardsPerCol').value = c;
 
         currentConfig.layout.cards_per_row = r;
@@ -1620,6 +1631,7 @@
             background_color: (currentConfig.general && currentConfig.general.bg_color) || '#ffffff',
             border_color: (currentConfig.general && currentConfig.general.border_color) || '#cbd5e1',
             bg_image: bgImgFilename,
+            package_id: (document.getElementById('selDesignPackage') || {}).value || '',
             config: currentConfig
         };
 

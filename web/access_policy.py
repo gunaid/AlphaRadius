@@ -57,7 +57,7 @@ def filter_dashboard_metrics(metrics):
     if has_permission('vouchers.view'):
         allowed.update(('vouchers', 'voucher_summary'))
     if can_view_network_totals():
-        allowed.update(('active_sessions', 'total_unique_online', 'traffic_in_str', 'traffic_out_str', 'traffic_total_str', 'traffic_status_text'))
+        allowed.update(('active_sessions', 'total_unique_online', 'traffic_in_str', 'traffic_out_str', 'traffic_total_str', 'traffic_status_text', 'traffic_total_cost'))
     if has_permission('nas.view') and owner_id() is None:
         allowed.add('total_nas')
     if has_permission('system.view_services') and owner_id() is None:

@@ -367,9 +367,31 @@ def _collect_db_metrics_internal():
     }
 
 
+# Demand-driven collection: the full voucher/session counts and the Docker
+# per-container stats (each stats call samples for about a second inside the
+# Docker daemon) are only refreshed while someone is looking at the dashboard.
+# The original loop ran every 2 seconds forever, viewers or not.
+COLLECT_INTERVAL_SECONDS = 5
+DEMAND_WINDOW_SECONDS = 90
+_LAST_DEMAND = 0.0
+_LAST_COLLECTED = 0.0
+_DEMAND = threading.Event()
+
+
+def note_metrics_demand():
+    global _LAST_DEMAND
+    _LAST_DEMAND = time.monotonic()
+    _DEMAND.set()
+
+
 def _metrics_collector_loop():
-    global _LIVE_METRICS_CACHE
+    global _LIVE_METRICS_CACHE, _LAST_COLLECTED
     while True:
+        if time.monotonic() - _LAST_DEMAND > DEMAND_WINDOW_SECONDS:
+            # Idle: no dashboard viewer. Sleep until one appears.
+            _DEMAND.clear()
+            _DEMAND.wait(60)
+            continue
         try:
             # Yield database completely to bulk imports and database migrations
             from database.db import is_import_maintenance_active
@@ -384,9 +406,10 @@ def _metrics_collector_loop():
 
             with _LIVE_LOCK:
                 _LIVE_METRICS_CACHE = combined
+            _LAST_COLLECTED = time.monotonic()
         except Exception:
             pass
-        time.sleep(2)
+        time.sleep(COLLECT_INTERVAL_SECONDS)
 
 
 def start_live_metrics_daemon():
@@ -402,6 +425,7 @@ start_live_metrics_daemon()
 
 
 def get_server_resources():
+    note_metrics_demand()
     with _LIVE_LOCK:
         return _LIVE_METRICS_CACHE.get('resources', {
             'cpu_percent': 0.5,
@@ -417,10 +441,13 @@ def get_server_resources():
 
 
 def get_dashboard_metrics():
+    stale = time.monotonic() - _LAST_COLLECTED > DEMAND_WINDOW_SECONDS
+    note_metrics_demand()
     with _LIVE_LOCK:
         res = dict(_LIVE_METRICS_CACHE)
-    # If cache is still at defaults on the very first sub-second startup, calculate immediately
-    if res.get('total_subscribers') == 0 and res.get('vouchers', {}).get('total') == 0:
+    # First request after start-up or after an idle period: counts are computed
+    # now (index-backed SQL); container resources follow from the woken collector.
+    if stale or (res.get('total_subscribers') == 0 and res.get('vouchers', {}).get('total') == 0):
         try:
             db_stats = _collect_db_metrics_internal()
             res.update(db_stats)
@@ -429,7 +456,10 @@ def get_dashboard_metrics():
     from services.dashboard_reporting_service import local_today
     from core.time_service import get_configured_timezone_name
     if res.get('traffic_day') != local_today(None, get_configured_timezone_name()).isoformat():
-        res.update(traffic_in_str='غير متاح',traffic_out_str='غير متاح',traffic_total_str='غير متاح',traffic_status_text='تعذر تحديث الاستهلاك')
+        res.update(traffic_in_str='غير متاح',traffic_out_str='غير متاح',traffic_total_str='غير متاح',
+                   traffic_total_bytes=None,traffic_status_text='تعذر تحديث الاستهلاك')
+    from services.data_cost_service import format_cost
+    res['traffic_total_cost'] = format_cost(res.get('traffic_total_bytes'))
     return res
 
 
@@ -506,10 +536,23 @@ def get_sales_chart_data(now=None):
     return read_series(sales_series, owner=owner_id(), now=now, timezone=get_configured_timezone_name())
 
 
+_PING_CACHE = {'at': 0.0, 'value': None, 'key': None}
+
+
 def get_internet_ping(host="8.8.8.8", port=53, timeout=1.5):
     """
     Checks Internet connectivity and round-trip ping latency in milliseconds.
+    One probe per 15 seconds per process serves every dashboard poll.
     """
+    now = time.monotonic()
+    if _PING_CACHE['value'] is not None and _PING_CACHE['key'] == (host, port) and now - _PING_CACHE['at'] < 15:
+        return dict(_PING_CACHE['value'])
+    value = _probe_internet(host, port, timeout)
+    _PING_CACHE.update(at=now, value=value, key=(host, port))
+    return dict(value)
+
+
+def _probe_internet(host, port, timeout):
     start = time.time()
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

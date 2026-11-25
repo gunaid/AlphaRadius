@@ -409,6 +409,8 @@ def update_settings_action():
     try:
         from services.system_settings_service import save_system_settings
         saved = save_system_settings(request.form, request.files.get('network_logo'), current_app.static_folder)
+        from services.data_cost_service import clear_cache as clear_data_cost_cache
+        clear_data_cost_cache()
         currency_symbol = saved['currency_symbol']
         timezone_val = saved['timezone']
         try:

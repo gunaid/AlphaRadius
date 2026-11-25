@@ -45,7 +45,31 @@ def setting_values(form):
     for key, minimum, default in (('loan_amount_mb', 10, 1024), ('loan_threshold_mb', 1, 100)):
         raw = form.get(key, '').strip()
         values[key] = str(max(minimum, int(raw))) if raw.isdigit() else str(default)
+    # RADIUS reject texts sent to the NAS; empty keeps FreeRADIUS's built-in default.
+    for key in RADIUS_MESSAGE_KEYS:
+        if key in form:
+            text = ' '.join(str(form.get(key) or '').split())[:200]
+            values[key] = text
+    if 'gb_cost' in form:
+        values['gb_cost'] = parse_gb_cost(form.get('gb_cost'))
     return values
+
+
+RADIUS_MESSAGE_KEYS = ('radius_msg_expired', 'radius_msg_quota', 'radius_msg_uptime', 'radius_msg_disabled',
+                       'radius_msg_recharged', 'radius_msg_simultaneous', 'radius_msg_mac',
+                       'radius_msg_capacity', 'radius_msg_invalid', 'radius_msg_reconcile')
+
+
+def parse_gb_cost(raw):
+    """Non-negative cost of one GB as a plain decimal string ('0' disables cost display)."""
+    from decimal import Decimal, InvalidOperation
+    try:
+        value = Decimal(str(raw or '0').strip() or '0')
+    except InvalidOperation:
+        raise ValueError('تكلفة الجيجا يجب أن تكون رقمًا.') from None
+    if not value.is_finite() or value < 0 or value > Decimal('1000000000'):
+        raise ValueError('تكلفة الجيجا يجب أن تكون رقمًا موجبًا أو صفرًا.')
+    return format(value.normalize(), 'f') if value else '0'
 
 
 def save_system_settings(form, logo, static_folder):

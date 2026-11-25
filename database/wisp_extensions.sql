@@ -107,6 +107,7 @@ CREATE TABLE IF NOT EXISTS wisp_voucher_batches (
     code_length INTEGER DEFAULT 8,
     created_by VARCHAR(64) DEFAULT 'admin',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    sale_point VARCHAR(100) NOT NULL DEFAULT 'توزيع عام',
     FOREIGN KEY (package_id) REFERENCES wisp_packages(id),
     FOREIGN KEY (reseller_id) REFERENCES wisp_resellers(id)
 );

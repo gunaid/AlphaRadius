@@ -57,6 +57,7 @@ ENDPOINT_PERMISSIONS = {
  'api_coverage_map_update': ['nas.manage'],
  'api_create_backup': ['system.backups'],
  'api_dashboard_live_metrics': [],
+ 'api_dashboard_routers': ['nas.view'],
  'api_delete_backup': ['system.backups'],
  'api_disconnect_subscriber': ['subscribers.disconnect'],
  'api_disconnect_voucher': ['vouchers.actions'],

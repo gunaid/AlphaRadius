@@ -259,6 +259,37 @@ def ping_host(host, timeout=0.25, extra_port=None):
     return False, 0
 
 
+def uptime_hours(value):
+    """RouterOS uptime ('1w2d03:04:05' or '1w2d3h4m5s') as whole hours, or None."""
+    import re
+    text = str(value or '').strip()
+    if not text or not re.search(r'\d', text):
+        return None
+    units = {'w': 604800, 'd': 86400, 'h': 3600, 'm': 60, 's': 1}
+    seconds = 0
+    clock = re.search(r'(\d+):(\d{2}):(\d{2})$', text)
+    if clock:
+        seconds += int(clock.group(1)) * 3600 + int(clock.group(2)) * 60 + int(clock.group(3))
+        text = text[:clock.start()]
+    for number, unit in re.findall(r'(\d+)([wdhms])', text):
+        seconds += int(number) * units[unit]
+    return seconds // 3600
+
+
+def _api_count(client, path):
+    """Row count via =count-only= (no row transfer); None when not available."""
+    try:
+        rows = client.talk([path, '=count-only='])
+    except Exception:
+        return None
+    if rows and '!trap' not in rows[0] and 'ret' in rows[-1]:
+        try:
+            return int(rows[-1]['ret'])
+        except (TypeError, ValueError):
+            return None
+    return None
+
+
 def fetch_single_nas_status(nas_row):
     """
     Fetches real-time hardware status and live metrics for a single NAS router.
@@ -402,18 +433,15 @@ def fetch_single_nas_status(nas_row):
                 except Exception:
                     pass
 
-            # Fetch Active Hotspot & PPP Users from RouterOS API
+            # Counts only: =count-only= avoids transferring every active row.
             try:
-                hotspot_active = client.talk(['/ip/hotspot/active/print'])
-                ppp_active = client.talk(['/ppp/active/print'])
-                
-                api_active_count = 0
-                if hotspot_active and '!trap' not in hotspot_active[0]:
-                    api_active_count += len(hotspot_active)
-                if ppp_active and '!trap' not in ppp_active[0]:
-                    api_active_count += len(ppp_active)
-                    
+                hotspot_active = _api_count(client, '/ip/hotspot/active/print')
+                ppp_active = _api_count(client, '/ppp/active/print')
+                result['hotspot_active'] = hotspot_active
+                api_active_count = (hotspot_active or 0) + (ppp_active or 0)
                 result['active_users'] = api_active_count if api_active_count > 0 else db_sessions_count
+                result['hotspot_hosts'] = _api_count(client, '/ip/hotspot/host/print')
+                result['neighbors'] = _api_count(client, '/ip/neighbor/print')
             except Exception:
                 pass
         else:

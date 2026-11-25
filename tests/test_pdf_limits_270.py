@@ -45,20 +45,35 @@ class CardPdfRoute(unittest.TestCase):
    return {'id':1} if self.owned else None
   def template(name,**values):self.calls.append(values);return 'bounded fixture HTML'
   def render(parts,assets,**kw):self.options=kw;list(parts);return io.BytesIO(b'fixture PDF')
-  scope={'request':request,'current_app':current_app,'jsonify':jsonify,'send_file':send_file,'query_one':query,'get_batch_cards_for_print':lambda identity:({'name':'fixture'},self.cards,{}),'get_card_design_by_id':lambda identity:{'cards_per_row':3,'cards_per_col':13},'get_all_card_designs':lambda:[],'render_template':template}
+  self.templates=[]
+  def template(name,**values):self.templates.append(name);self.calls.append(values);return 'bounded fixture HTML'
+  scope={'request':request,'current_app':current_app,'jsonify':jsonify,'send_file':send_file,'query_one':query,'get_batch_cards_for_print':lambda identity:({'name':'fixture','package_id':1},self.cards,{}),'get_card_design_by_id':lambda identity:{'id':identity,'cards_per_row':3,'cards_per_col':13},'get_all_card_designs':lambda:[],'render_template':template,
+         'MAX_BATCH_CARDS':10000,'resolve_card_design':lambda package:None}
+  workers=patch.object(renderer,'default_workers',return_value=1);workers.start();self.addCleanup(workers.stop)
   root=Path(__file__).resolve().parents[1];node=next(n for n in ast.parse((root/'web/routes/vouchers.py').read_text(encoding='utf-8-sig')).body if isinstance(n,ast.FunctionDef) and n.name=='print_cards');node.decorator_list=[];exec(compile(ast.Module(body=[node],type_ignores=[]),'card-pdf-route','exec'),scope);self.app.add_url_rule('/print/<int:batch_id>','print_cards',scope['print_cards']);self.client=self.app.test_client();patcher=patch.object(renderer,'render_parts',side_effect=render);patcher.start();self.addCleanup(patcher.stop)
- def test_custom_pdf_has_six_groups_without_losing_a_card(self):
+ def test_custom_pdf_uses_lean_pages_without_losing_a_card(self):
+  # A designed export renders the lean PDF page: up to 1000 cards (25 sheets
+  # of 39) per browser page with one renderer, 500 with two.
+  self.cards=[{'id':i} for i in range(2340)]
   response=self.client.get('/print/1?export=pdf&design_id=4');self.assertEqual(response.status_code,200);response.close()
-  self.assertEqual(len(self.calls),6);self.assertEqual(self.options['parts_per_worker'],8);self.assertEqual(self.options['timeout'],600)
-  self.assertEqual([len(p) for call in self.calls for p in call['card_pages']],[39]*24)
-  self.assertEqual([c['id'] for call in self.calls for c in call['cards']],list(range(936)))
+  self.assertEqual(set(self.templates),{'print_cards_pdf.html'})
+  self.assertEqual([len(call['card_pages']) for call in self.calls],[25,25,10])
+  self.assertEqual(self.options['workers'],1);self.assertEqual(self.options['parts_per_worker'],3);self.assertEqual(self.options['timeout'],1800)
+  self.assertEqual([len(p) for call in self.calls for p in call['card_pages']],[39]*60)
+  self.assertEqual([c['id'] for call in self.calls for p in call['card_pages'] for c in p],list(range(2340)))
+ def test_two_renderers_balance_groups(self):
+  self.cards=[{'id':i} for i in range(10000)]
+  with patch('services.pdf_export_service.default_workers',return_value=2):
+   response=self.client.get('/print/1?export=pdf&design_id=4');self.assertEqual(response.status_code,200);response.close()
+  self.assertEqual(self.options['workers'],2);self.assertEqual(len(self.calls),22);self.assertEqual(self.options['parts_per_worker'],6)
+  self.assertEqual(sum(len(p) for call in self.calls for p in call['card_pages']),10000)
  def test_browser_print_view_remains_one_render_with_24_sheets(self):
   response=self.client.get('/print/1?design_id=4');self.assertEqual(response.status_code,200);response.close();self.assertEqual(len(self.calls),1);self.assertEqual(len(self.calls[0]['card_pages']),24);self.assertEqual(self.options,{})
  def test_default_design_keeps_original_chunk_boundaries(self):
   self.cards=self.cards[:49];response=self.client.get('/print/1?export=pdf');self.assertEqual(response.status_code,200);response.close();self.assertEqual([len(c['cards']) for c in self.calls],[48,1])
  def test_ownership_and_card_limit_still_block_before_render(self):
   self.owned=False;response=self.client.get('/print/1?export=pdf');self.assertEqual(response.status_code,404);self.assertEqual(self.calls,[])
-  self.owned=True;self.cards=[{}]*2001;response=self.client.get('/print/1?export=pdf');self.assertEqual(response.status_code,400);self.assertEqual(self.calls,[])
+  self.owned=True;self.cards=[{}]*10001;response=self.client.get('/print/1?export=pdf');self.assertEqual(response.status_code,400);self.assertEqual(self.calls,[])
 
 class PdfLimits(unittest.TestCase):
  def setUp(self):

@@ -61,6 +61,8 @@ def install_account_mac_schema(conn):
                       WHERE m.account_type=p.account_type AND m.account_id=p.account_id
                         AND m.mac=UPPER(REPLACE(p_station,'-',':'))));
                 END''', maria=maria)
+            from database.radius_message_schema import install_radius_message_function
+            install_radius_message_function(cur, maria=maria)
         else:
             cur.execute('DROP VIEW IF EXISTS wisp_account_mac_usernames')
             cur.execute(view)

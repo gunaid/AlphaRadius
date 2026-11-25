@@ -49,6 +49,39 @@ def batch_download_name(name, extension):
     return value + '.' + extension
 
 
+def batch_export_name(batch_id, extension, fallback_name=''):
+    """الباقة-رقم الدفعة-عدد الكروت-التاريخ والساعة-الموزع-نقطة البيع.<ext>
+
+    Card count is the batch's actual card rows; the date and time are the batch
+    creation time. Unsafe filename characters are replaced by batch_download_name.
+    """
+    try:
+        from database.db import query_one
+        row = query_one('''SELECT b.batch_number, b.created_at, b.reseller_id, b.sale_point,
+                   p.name AS package_name,
+                   COALESCE(NULLIF(m.full_name, ''), m.username, r.name) AS reseller_name,
+                   (SELECT COUNT(*) FROM wisp_vouchers v WHERE v.batch_id = b.id) AS cards
+            FROM wisp_voucher_batches b
+            LEFT JOIN wisp_packages p ON p.id = b.package_id
+            LEFT JOIN wisp_managers m ON m.id = b.reseller_id
+            LEFT JOIN wisp_resellers r ON r.id = b.reseller_id AND m.id IS NULL
+            WHERE b.id = ?''', (batch_id,))
+    except Exception:
+        row = None
+    if not row:
+        return batch_download_name(fallback_name, extension)
+    created = row.get('created_at')
+    if isinstance(created, datetime.datetime):
+        stamp = created.strftime('%Y-%m-%d_%H-%M')
+    else:
+        stamp = str(created or '')[:16].replace(' ', '_').replace(':', '-')
+    parts = [row.get('package_name') or 'باقة', row.get('batch_number') or str(batch_id),
+             str(int(row.get('cards') or 0)), stamp,
+             row.get('reseller_name') or 'بدون موزع', row.get('sale_point') or 'توزيع عام']
+    return batch_download_name('-'.join(str(p).strip().replace('-', '_') if i < 2 or i > 3 else str(p).strip()
+                                         for i, p in enumerate(parts)), extension)
+
+
 def export_usernames_text(batch_id, owner=None):
     """Prepare a complete UTF-8 file with bounded pages and one read snapshot."""
     import tempfile
@@ -292,16 +325,25 @@ def validate_export_row(row):
     return result
 
 
-def iter_card_pdf_groups(cards, cards_per_page=None):
-    """Bundle existing A4 sheets without changing a sheet's grid or card order."""
+def iter_card_pdf_groups(cards, cards_per_page=None, max_cards=None):
+    """Bundle existing A4 sheets without changing a sheet's grid or card order.
+
+    max_cards lets the lean PDF page (no Tailwind runtime) carry more sheets per
+    browser page; without it the original 156-card, four-sheet bound applies.
+    """
     if cards_per_page is None:
         chunk_size = 48
     else:
         if type(cards_per_page) is not int or cards_per_page < 1:
             raise ValueError('عدد الكروت في الورقة يجب أن يكون موجبًا.')
-        # At most four physical sheets and 156 cards per new DOM. A legacy
-        # single sheet larger than that retains its existing size unchanged.
-        sheets = max(1, min(4, 156 // cards_per_page))
+        if max_cards is None:
+            # At most four physical sheets and 156 cards per new DOM. A legacy
+            # single sheet larger than that retains its existing size unchanged.
+            sheets = max(1, min(4, 156 // cards_per_page))
+        else:
+            if type(max_cards) is not int or max_cards < 1:
+                raise ValueError('حد الكروت في جزء PDF يجب أن يكون موجبًا.')
+            sheets = max(1, max_cards // cards_per_page)
         chunk_size = cards_per_page * sheets
     for offset in range(0, len(cards), chunk_size):
         subset = cards[offset:offset + chunk_size]

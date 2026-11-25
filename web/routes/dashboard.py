@@ -107,6 +107,22 @@ def api_dashboard_live_metrics():
     })
 
 
+@dashboard_bp.route('/api/dashboard/routers', endpoint="api_dashboard_routers")
+def api_dashboard_routers():
+    """Router statistics table, loaded after the dashboard renders (cached 60s)."""
+    if owner_id() is not None or not has_permission('nas.view'):
+        return jsonify(success=False, message='لا تملك صلاحية هذا الإجراء.'), 403
+    from services.router_stats_service import router_rows
+    from core.license_feature_policy import enabled as _feature_enabled
+    rows = router_rows()
+    if not (_feature_enabled('sales_reports') and has_permission('invoices.view')
+            and has_permission('detail.invoices.sales_view')):
+        rows = [dict(r, revenue=None) for r in rows]
+    if not can_view_network_totals():
+        rows = [dict(r, traffic_str=None, traffic_cost=None, traffic_bytes=None) for r in rows]
+    return jsonify(success=True, routers=rows)
+
+
 @dashboard_bp.route('/api/system/ping', endpoint="api_system_ping")
 
 def api_system_ping():

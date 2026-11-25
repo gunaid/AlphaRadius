@@ -65,6 +65,13 @@
                 <span>الشبكة و FreeRADIUS</span>
             </button>
 
+            <!-- Tab: Data cost -->
+            <button type="button" onclick="switchSettingsTab('datacost')" id="tab-btn-datacost"
+                    class="tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap text-slate-400 hover:text-white hover:bg-[#11192b]">
+                <i class="fa-solid fa-sack-dollar text-sm text-amber-400"></i>
+                <span>تكلفة البيانات</span>
+            </button>
+
             <!-- Tab 5: Contact & SMS -->
             <button type="button" onclick="switchSettingsTab('contact')" id="tab-btn-contact"
                     class="tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap text-slate-400 hover:text-white hover:bg-[#11192b]">
@@ -457,6 +464,76 @@
                             <span>إدارة أجهزة الرواتر والـ NAS</span>
                         </a>
                     </div>
+                </div>
+            </div>
+            <!-- RADIUS reject messages sent to the router (User Manager style defaults). -->
+            <div id="radiusMessagesSection" class="bg-[#0b0f19] border border-[#1c2840] rounded-2xl p-6 shadow-sm space-y-4">
+                <div>
+                    <h3 class="font-bold text-white text-base flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20 flex items-center justify-center text-sm"><i class="fa-solid fa-comment-slash"></i></div>
+                        <span>رسائل رفض الراديوس المرسلة إلى الراوتر</span>
+                    </h3>
+                    <p class="text-xs text-slate-400 mt-1">تظهر للمستخدم في صفحة دخول الهوتسبوت. القيم الافتراضية بصيغة رسائل اليوزرمانجر؛ اترك الحقل فارغًا لاستخدام القيمة الافتراضية الظاهرة.</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div>
+                            <label for="radius_msg_expired" class="block text-slate-300 font-semibold mb-1">انتهاء صلاحية الكرت / الباقة</label>
+                            <input type="text" id="radius_msg_expired" name="radius_msg_expired" maxlength="200" dir="ltr" value="{{ settings.get('radius_msg_expired', '') }}" placeholder="no valid profile found" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-mono focus:border-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label for="radius_msg_quota" class="block text-slate-300 font-semibold mb-1">نفاد رصيد البيانات</label>
+                            <input type="text" id="radius_msg_quota" name="radius_msg_quota" maxlength="200" dir="ltr" value="{{ settings.get('radius_msg_quota', '') }}" placeholder="transfer limit reached" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-mono focus:border-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label for="radius_msg_uptime" class="block text-slate-300 font-semibold mb-1">نفاد رصيد الوقت</label>
+                            <input type="text" id="radius_msg_uptime" name="radius_msg_uptime" maxlength="200" dir="ltr" value="{{ settings.get('radius_msg_uptime', '') }}" placeholder="uptime limit reached" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-mono focus:border-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label for="radius_msg_disabled" class="block text-slate-300 font-semibold mb-1">حساب موقوف</label>
+                            <input type="text" id="radius_msg_disabled" name="radius_msg_disabled" maxlength="200" dir="ltr" value="{{ settings.get('radius_msg_disabled', '') }}" placeholder="user is disabled" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-mono focus:border-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label for="radius_msg_recharged" class="block text-slate-300 font-semibold mb-1">كرت مشحون في المحفظة</label>
+                            <input type="text" id="radius_msg_recharged" name="radius_msg_recharged" maxlength="200" dir="ltr" value="{{ settings.get('radius_msg_recharged', '') }}" placeholder="no valid profile found" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-mono focus:border-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label for="radius_msg_simultaneous" class="block text-slate-300 font-semibold mb-1">تجاوز عدد الأجهزة المسموح</label>
+                            <input type="text" id="radius_msg_simultaneous" name="radius_msg_simultaneous" maxlength="200" dir="ltr" value="{{ settings.get('radius_msg_simultaneous', '') }}" placeholder="simultaneous session limit reached" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-mono focus:border-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label for="radius_msg_mac" class="block text-slate-300 font-semibold mb-1">جهاز غير مسموح (MAC)</label>
+                            <input type="text" id="radius_msg_mac" name="radius_msg_mac" maxlength="200" dir="ltr" value="{{ settings.get('radius_msg_mac', '') }}" placeholder="MAC address is not allowed for this account" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-mono focus:border-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label for="radius_msg_capacity" class="block text-slate-300 font-semibold mb-1">بلوغ سعة الترخيص</label>
+                            <input type="text" id="radius_msg_capacity" name="radius_msg_capacity" maxlength="200" dir="ltr" value="{{ settings.get('radius_msg_capacity', '') }}" placeholder="Concurrent session capacity reached" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-mono focus:border-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label for="radius_msg_invalid" class="block text-slate-300 font-semibold mb-1">حساب غير صالح</label>
+                            <input type="text" id="radius_msg_invalid" name="radius_msg_invalid" maxlength="200" dir="ltr" value="{{ settings.get('radius_msg_invalid', '') }}" placeholder="invalid username or password" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-mono focus:border-blue-500 focus:outline-none">
+                        </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- TAB: تكلفة البيانات (Data cost per GB)                     -->
+        <!-- ========================================================= -->
+        <div id="tab-content-datacost" class="tab-pane hidden space-y-6">
+            <div class="bg-[#0b0f19] border border-[#1c2840] rounded-2xl p-6 shadow-sm space-y-5">
+                <div>
+                    <h3 class="font-bold text-white text-base flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center text-sm"><i class="fa-solid fa-sack-dollar"></i></div>
+                        <span>تكلفة الجيجا (Cost per GB)</span>
+                    </h3>
+                    <p class="text-xs text-slate-400 mt-1">تُحسب تكلفة الاستهلاك الفعلي للبيانات (تنزيل + رفع) بضرب عدد الجيجابايت في هذه القيمة، وتظهر في التقارير ومربعات الاستهلاك وجدول الراوترات. اتركها 0 لإخفاء التكلفة.</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                    <div>
+                        <label for="gb_cost" class="block text-slate-300 font-semibold mb-1">تكلفة 1 جيجابايت ({{ currency_symbol }})</label>
+                        <input type="number" id="gb_cost" name="gb_cost" min="0" step="0.0001" value="{{ settings.get('gb_cost', '0') or '0' }}" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-mono focus:border-blue-500 focus:outline-none">
+                    </div>
+                    <div class="flex items-end text-slate-400">1 GB = 1024 MB؛ تُستخدم القيمة في كل التقارير المرتبطة بالاستهلاك.</div>
                 </div>
             </div>
         </div>

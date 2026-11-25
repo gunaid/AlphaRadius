@@ -139,7 +139,26 @@
             <span class="text-xs text-slate-400 font-medium">محدث لحظياً</span>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+            <!-- 0. إجمالي الكروت في النظام -->
+            <div class="bg-[#0b0f19] border border-[#1c2840] rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <span class="text-xs font-bold text-slate-400 block mb-1">إجمالي الكروت في النظام</span>
+                        <h3 id="stat-vouchers-total-cards" class="text-3xl font-black text-amber-400 font-mono tracking-tight">{{ metrics.voucher_summary.total|default(0) }}</h3>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-xl border border-amber-500/20">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between text-xs text-slate-400 font-medium mt-4 pt-3 border-t border-[#1c2840]">
+                    <span>المتاح غير المستخدم: <strong id="stat-vouchers-available" class="text-amber-300 font-mono">{{ metrics.voucher_summary.available|default(0) }}</strong></span>
+                    {% if can_access_endpoint('vouchers') %}<a href="{{ url_for('vouchers') }}" class="text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1">
+                        الحزم <i class="fa-solid fa-arrow-left text-[10px]"></i>
+                    </a>{% endif %}
+                </div>
+            </div>
+
             <!-- 1. مشتركو الكروت (الكل) -->
             <div class="bg-[#0b0f19] border border-[#1c2840] rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between">
                 <div class="flex items-start justify-between">
@@ -223,6 +242,40 @@
 {% endif %}
 
     <!-- ========================================================== -->
+    <!-- 2b. إحصائيات الراوترات (NAS)                                 -->
+    <!-- ========================================================== -->
+    {% if has_permission('nas.view') and not is_reseller_scope() and can_access_endpoint('api_dashboard_routers') %}
+    <div>
+        <div class="flex items-center justify-between mb-3 px-1">
+            <h3 class="text-sm font-extrabold text-slate-200 flex items-center gap-2">
+                <i class="fa-solid fa-server text-teal-400"></i>
+                إحصائيات الراوترات
+            </h3>
+            <span class="text-xs text-slate-400 font-medium">الاستهلاك والإيراد لليوم • يُحدّث كل دقيقة</span>
+        </div>
+        <div class="bg-[#0b0f19] border border-[#1c2840] rounded-2xl shadow-sm overflow-x-auto">
+            <table class="w-full text-right text-xs whitespace-nowrap">
+                <thead class="text-slate-400 border-b border-[#1c2840] bg-[#070b14]/60">
+                    <tr>
+                        <th class="px-4 py-3">الراوتر</th>
+                        <th class="px-4 py-3">مدة التشغيل (ساعة)</th>
+                        <th class="px-4 py-3">عدد الأكتف</th>
+                        <th class="px-4 py-3">عدد المتصلين</th>
+                        <th class="px-4 py-3">عدد الأجهزة Neighbor</th>
+                        <th class="px-4 py-3">إجمالي استهلاك الإنترنت والقيمة</th>
+                        <th class="px-4 py-3">إجمالي الإيراد</th>
+                        <th class="px-4 py-3">موديل الراوتر</th>
+                    </tr>
+                </thead>
+                <tbody id="routerStatsBody" class="divide-y divide-[#1c2840] text-slate-200">
+                    <tr><td colspan="8" class="px-4 py-8 text-center text-slate-400">جارٍ قراءة الراوترات...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ========================================================== -->
     <!-- 3. إحصائيات المشتركين والشبكة العامة (Network & PPPoE)        -->
     <!-- ========================================================== -->
     <div>
@@ -286,6 +339,7 @@
                         <span class="text-xs font-bold text-slate-400 block mb-1">إجمالي استهلاك البيانات اليومي</span>
                         <h3 id="stat-traffic-total" class="text-2xl sm:text-3xl font-black text-sky-400 font-mono tracking-tight">{{ metrics.traffic_total_str }}</h3>
                         <span id="stat-traffic-status" class="text-xs text-amber-500">{{ metrics.traffic_status_text|default('') }}</span>
+                        {% if data_cost_enabled() %}<span class="block text-xs text-amber-400 font-bold mt-1">التكلفة: <bdi dir="ltr"><span id="stat-traffic-cost" class="font-mono">{{ metrics.traffic_total_cost or '—' }}</span> {{ currency_symbol }}</bdi></span>{% endif %}
                     </div>
                     <div class="w-12 h-12 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center text-xl border border-sky-500/20">
                         <i class="fa-solid fa-arrow-right-arrow-left"></i>
@@ -670,6 +724,64 @@
 
 {% block scripts %}
 <script>
+(function () {
+    const body = document.getElementById('routerStatsBody');
+    if (!body) return;
+    const currency = {{ currency_symbol|tojson }};
+    const cell = (text, cls) => {
+        const td = document.createElement('td');
+        td.className = 'px-4 py-3 ' + (cls || '');
+        td.textContent = (text === null || text === undefined || text === '') ? '—' : String(text);
+        return td;
+    };
+    function render(rows) {
+        body.replaceChildren();
+        if (!rows.length) {
+            const tr = document.createElement('tr');
+            const td = cell('لا توجد أجهزة NAS مسجلة.', 'text-center text-slate-400 py-8');
+            td.colSpan = 8; tr.appendChild(td); body.appendChild(tr); return;
+        }
+        rows.forEach(r => {
+            const tr = document.createElement('tr');
+            tr.className = 'hover:bg-[#11192b]';
+            const name = cell('', 'font-bold');
+            const dot = document.createElement('span');
+            dot.className = 'inline-block w-2 h-2 rounded-full ml-2 ' + (r.online ? 'bg-emerald-400' : 'bg-rose-500');
+            name.textContent = '';
+            name.append(dot, document.createTextNode(r.name || r.ip_address));
+            const ip = document.createElement('div');
+            ip.className = 'text-[10px] font-mono text-slate-500'; ip.textContent = r.ip_address || '';
+            name.appendChild(ip);
+            tr.appendChild(name);
+            tr.appendChild(cell(r.uptime_hours, 'font-mono'));
+            tr.appendChild(cell(r.active, 'font-mono text-emerald-400'));
+            tr.appendChild(cell(r.hosts, 'font-mono text-sky-400'));
+            tr.appendChild(cell(r.neighbors, 'font-mono'));
+            const traffic = cell(r.traffic_str, 'font-mono');
+            if (r.traffic_cost) {
+                const cost = document.createElement('div');
+                cost.className = 'text-[11px] text-amber-400'; cost.textContent = r.traffic_cost + ' ' + currency;
+                traffic.appendChild(cost);
+            }
+            tr.appendChild(traffic);
+            tr.appendChild(cell(r.revenue === null ? null : (r.revenue + ' ' + currency), 'font-mono text-emerald-300'));
+            tr.appendChild(cell(r.model));
+            body.appendChild(tr);
+        });
+    }
+    async function load() {
+        if (document.hidden) return;
+        try {
+            const res = await fetch('/api/dashboard/routers', {credentials: 'same-origin'});
+            const data = await res.json();
+            if (data.success) render(data.routers || []);
+        } catch (e) { /* keep the last table */ }
+    }
+    load();
+    setInterval(load, 60000);
+})();
+</script>
+<script>
     // ----------------- 1. Live Digital Clock -----------------
     function updateLiveClock() {
         const now = new Date();
@@ -864,7 +976,7 @@
     // ----------------- 4. Real-Time Live Metrics Polling (Every 3.5s) -----------------
     let isPolling = false;
     async function updateDashboardLiveStats() {
-        if (isPolling) return;
+        if (isPolling || document.hidden) return;
         isPolling = true;
         try {
             const resp = await fetch('/api/dashboard/live-metrics');
@@ -877,6 +989,10 @@
             const res = m.resources || {};
 
             // 1. Voucher Cards Real-Time Numbers
+            const elVTotalCards = document.getElementById('stat-vouchers-total-cards');
+            if (elVTotalCards && vs.total !== undefined) elVTotalCards.textContent = vs.total;
+            const elVAvailable = document.getElementById('stat-vouchers-available');
+            if (elVAvailable && vs.available !== undefined) elVAvailable.textContent = vs.available;
             const elVTotalSubs = document.getElementById('stat-vouchers-total-subs');
             if (elVTotalSubs && (vs.total_card_subscribers !== undefined || vs.activated !== undefined)) {
                 elVTotalSubs.textContent = vs.total_card_subscribers !== undefined ? vs.total_card_subscribers : vs.activated;
@@ -928,6 +1044,8 @@
 
             const elTfTot = document.getElementById('stat-traffic-total');
             if (elTfTot && m.traffic_total_str) elTfTot.textContent = m.traffic_total_str;
+            const elTfCost = document.getElementById('stat-traffic-cost');
+            if (elTfCost) elTfCost.textContent = m.traffic_total_cost || '—';
             const elTfOut = document.getElementById('stat-traffic-out');
             if (elTfOut && m.traffic_out_str) elTfOut.textContent = m.traffic_out_str;
             const elTfIn = document.getElementById('stat-traffic-in');
@@ -1072,8 +1190,9 @@
             .replace(/'/g, "&#039;");
     }
 
-    // Start Real-Time Live Polling Every 3.5s
-    setInterval(updateDashboardLiveStats, 3500);
+    // Live polling every 10s; paused while the tab is hidden, refreshed when it returns.
+    setInterval(updateDashboardLiveStats, 10000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) updateDashboardLiveStats(); });
 
     // Asynchronously Check for System Updates
     async function checkSystemUpdatesBanner() {

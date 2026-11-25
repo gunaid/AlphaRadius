@@ -985,6 +985,19 @@
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
+        /* 1b. Inputs with an inline icon keep the space reserved by their utility
+           class; the generic padding above must not slide text under the icon. */
+        input.pr-8, select.pr-8 { padding-right: 2rem; }
+        input.pr-9, select.pr-9 { padding-right: 2.25rem; }
+        input.pr-10, select.pr-10 { padding-right: 2.5rem; }
+        input.pr-11, select.pr-11 { padding-right: 2.75rem; }
+        input.pr-12, select.pr-12 { padding-right: 3rem; }
+        input.pl-8, select.pl-8 { padding-left: 2rem; }
+        input.pl-9, select.pl-9 { padding-left: 2.25rem; }
+        input.pl-10, select.pl-10 { padding-left: 2.5rem; }
+        input.pl-11, select.pl-11 { padding-left: 2.75rem; }
+        input.pl-12, select.pl-12 { padding-left: 3rem; }
+
         /* 2. High-Contrast Disabled States */
         input:disabled,
         select:disabled,

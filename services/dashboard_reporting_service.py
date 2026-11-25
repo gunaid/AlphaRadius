@@ -80,7 +80,7 @@ def daily_traffic_metrics(owner=None, now=None, timezone=None):
         total = None if down is None or up is None else int(down)+int(up)
         show = lambda value: format_bytes(value) if value is not None else 'غير متاح'
         return dict(traffic_in_str=show(up),traffic_out_str=show(down),traffic_total_str=show(total),
-                    traffic_status_text='',traffic_day=today)
+                    traffic_total_bytes=total,traffic_status_text='',traffic_day=today)
     except Exception:
         return dict(traffic_in_str='غير متاح',traffic_out_str='غير متاح',traffic_total_str='غير متاح',
-                    traffic_status_text='تعذر تحديث الاستهلاك',traffic_day=today)
+                    traffic_total_bytes=None,traffic_status_text='تعذر تحديث الاستهلاك',traffic_day=today)

@@ -209,7 +209,8 @@ REQUIRED_COLUMNS = {
         ('mikrotik_group', "VARCHAR(100) DEFAULT 'ALL-SPEED'"),
         ('prefix', "VARCHAR(20) DEFAULT ''"),
         ('pin_only', 'TINYINT(1) DEFAULT 0'),
-        ('reseller_id', 'INT NULL')
+        ('reseller_id', 'INT NULL'),
+        ('sale_point', "VARCHAR(100) NOT NULL DEFAULT 'توزيع عام'")
     ],
     'wisp_packages': [
         ('show_in_portal', 'TINYINT(1) DEFAULT 1 AFTER is_active'),

@@ -1,0 +1,52 @@
+{% from "components/card_sheet.html" import card_sheet %}<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>{{ batch.name }}</title>
+{#- PDF-only page: no Tailwind runtime, icon font or toolbar. Only the card
+    font, the sheet macro and (when the design has a QR) the QR library. -#}
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/fonts/tajawal.css') }}">
+<style>
+* { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+@page { size: A4 portrait; margin: 0; }
+html, body { margin: 0; padding: 0; background: #ffffff; font-family: 'Tajawal', sans-serif; }
+.sheet { margin: 0 !important; box-shadow: none !important; page-break-after: always !important; break-after: page !important; }
+.sheet:last-child { page-break-after: auto !important; break-after: auto !important; }
+.custom-card-cell { break-inside: avoid !important; page-break-inside: avoid !important; }
+.cqr img, .cqr canvas { width: 100% !important; height: 100% !important; display: block; }
+</style>
+</head>
+<body>
+{% for page in card_pages %}{{ card_sheet(page, selected_design) }}{% endfor %}
+{% set q = selected_design.config.elements.qr_code if selected_design.config and selected_design.config.elements else none %}
+{% if q and q.enabled %}
+<script src="{{ url_for('static', filename='vendor/qrcode/qrcode.min.js') }}"></script>
+<script>
+(function () {
+    // Same encoder and error-correction level as the print page, but each code
+    // is drawn as one vector path: no canvas, PNG encoding or image decoding.
+    var model = null;
+    var encoder = new QRCode(document.createElement('div'), {width: 1, height: 1, correctLevel: QRCode.CorrectLevel.M});
+    encoder._oDrawing = {draw: function (m) { model = m; }, clear: function () {}};
+    encoder.makeImage = function () {};
+    var boxes = document.querySelectorAll('.cqr[data-qr]');
+    for (var i = 0; i < boxes.length; i++) {
+        encoder.makeCode(boxes[i].getAttribute('data-qr'));
+        var n = model.getModuleCount(), d = '';
+        for (var r = 0; r < n; r++) {
+            for (var c = 0; c < n; c++) {
+                if (!model.isDark(r, c)) continue;
+                var run = 1;
+                while (c + run < n && model.isDark(r, c + run)) run++;
+                d += 'M' + c + ' ' + r + 'h' + run + 'v1h-' + run + 'z';
+                c += run - 1;
+            }
+        }
+        boxes[i].innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + n + ' ' + n +
+            '" width="100%" height="100%" shape-rendering="crispEdges"><path fill="#0f172a" d="' + d + '"/></svg>';
+    }
+})();
+</script>
+{% endif %}
+</body>
+</html>

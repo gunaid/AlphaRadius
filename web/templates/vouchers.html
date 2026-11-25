@@ -265,7 +265,7 @@
                                 <i class="fa-solid fa-folder text-blue-400"></i>
                                 <span>{{ b.name }}</span>
                             </a>{% endif %}{% endif %}
-                            <div class="text-xs font-mono text-blue-400 mr-6 mt-0.5">{{ b.batch_number }}</div>
+                            <div class="text-xs font-mono text-blue-400 mr-6 mt-0.5">{{ b.batch_number }}{% if b.sale_point %} <span class="font-sans text-[11px] text-slate-400">• {{ b.sale_point }}</span>{% endif %}</div>
                         </td>
                         <!-- الباقة -->
                         <td class="py-3.5 px-5 hidden sm:table-cell">
@@ -294,18 +294,23 @@
                         </td>
                         <!-- الإجراءات (تعديل الحزمة، طباعة، حذف) -->
                         <td class="py-3.5 px-5 text-center" onclick="event.stopPropagation()">
-                            <button type="button" class="px-2.5 py-1.5 bg-blue-500/10 hover:bg-blue-600 hover:text-white text-blue-400 border border-blue-500/20 rounded-xl text-xs font-bold transition flex items-center gap-2 mx-auto shadow-sm" aria-haspopup="menu" aria-expanded="false" aria-controls="batchMenu{{ b.id }}" onclick="toggleBatchMenu(this)"><i class="fa-solid fa-bars-staggered text-[11px]"></i><span>العمليات</span><i class="fa-solid fa-chevron-down text-[9px]"></i></button>
+                            <div class="flex items-center justify-center gap-1.5">
+                            {% if can_access_endpoint('edit_batch_action') %}<button type="button" onclick="openEditBatchModal({{ b.id|tojson|forceescape }}, {{ b.name|tojson|forceescape }}, {{ b.package_id|tojson|forceescape }}, {{ (b.sale_point or 'توزيع عام')|tojson|forceescape }})" class="w-8 h-8 rounded-xl bg-blue-500/10 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/20 transition flex items-center justify-center cursor-pointer" title="تعديل" aria-label="تعديل الحزمة"><i class="fa-solid fa-pen-to-square text-xs"></i></button>{% endif %}
+                            {% if can_access_endpoint('print_cards') %}<button type="button" onclick="saveBatchPdf({{ b.id|tojson|forceescape }})" class="w-8 h-8 rounded-xl bg-rose-500/10 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-500/20 transition flex items-center justify-center cursor-pointer" title="حفظ PDF بالتصميم المرتبط بالباقة" aria-label="حفظ PDF"><i class="fa-solid fa-file-pdf text-xs"></i></button>{% endif %}
+                            {% if can_access_endpoint('delete_batch_action') %}<button type="button" onclick="confirmDeleteBatch({{ b.id|tojson|forceescape }}, {{ b.name|tojson|forceescape }}, {{ b.batch_number|tojson|forceescape }})" class="w-8 h-8 rounded-xl bg-rose-600/10 hover:bg-rose-600 text-rose-500 hover:text-white border border-rose-600/20 transition flex items-center justify-center cursor-pointer" title="حذف" aria-label="حذف الحزمة"><i class="fa-solid fa-trash-can text-xs"></i></button>{% endif %}
+                            <button type="button" class="px-2.5 py-1.5 bg-blue-500/10 hover:bg-blue-600 hover:text-white text-blue-400 border border-blue-500/20 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-sm" aria-haspopup="menu" aria-expanded="false" aria-controls="batchMenu{{ b.id }}" onclick="toggleBatchMenu(this)"><i class="fa-solid fa-bars-staggered text-[11px]"></i><span>العمليات</span><i class="fa-solid fa-chevron-down text-[9px]"></i></button>
+                            </div>
                             <div id="batchMenu{{ b.id }}" role="menu" aria-label="عمليات الحزمة" class="batch-menu action-dropdown-menu hidden fixed z-[9999] w-60 bg-[#0b0f19] border border-[#1c2840] rounded-2xl shadow-2xl py-2 text-xs">
                                 <div class="px-3.5 py-2 mb-1 text-[11px] font-bold text-slate-400 bg-[#070b14]/60 border-b border-[#1c2840] flex items-center gap-2"><i class="fa-solid fa-ticket text-blue-400"></i><span class="truncate">{{ b.name }}</span></div>
                                 <!-- تعديل الحزمة -->
-                                {% if can_access_endpoint('edit_batch_action') %}<button type="button" onclick="openEditBatchModal({{ b.id|tojson|forceescape }}, {{ b.name|tojson|forceescape }}, {{ b.package_id|tojson|forceescape }})" class="w-full text-right px-3.5 py-2 text-slate-200 hover:bg-blue-600 hover:text-white flex items-center gap-2.5 transition cursor-pointer" title="تعديل الحزمة والباقة">
+                                {% if can_access_endpoint('edit_batch_action') %}<button type="button" onclick="openEditBatchModal({{ b.id|tojson|forceescape }}, {{ b.name|tojson|forceescape }}, {{ b.package_id|tojson|forceescape }}, {{ (b.sale_point or 'توزيع عام')|tojson|forceescape }})" class="w-full text-right px-3.5 py-2 text-slate-200 hover:bg-blue-600 hover:text-white flex items-center gap-2.5 transition cursor-pointer" title="تعديل الحزمة والباقة">
                                     <i class="fa-solid fa-pen-to-square text-blue-400 w-4 text-center"></i><span>تعديل</span>
                                 </button>{% endif %}
                                 <!-- طباعة مع اختيار التصميم -->
                                 {% if can_access_endpoint('print_cards') %}<button type="button"
                                         data-batch-id="{{ b.id }}"
                                         data-batch-name="{{ b.name }}"
-                                        data-package-name="{{ b.package_name }}"
+                                        data-package-name="{{ b.package_name }}" data-package-id="{{ b.package_id }}"
                                         data-card-count="{{ b.card_count or 0 }}"
                                         data-export-mode="pdf"
                                         onclick="handlePrintBtnClick(this)"
@@ -315,7 +320,7 @@
                                 </button>{% endif %}
                                 {% if can_access_endpoint('export_batch_excel') %}<button type="button" class="w-full text-right px-3.5 py-2 text-slate-200 hover:bg-blue-600 hover:text-white flex items-center gap-2.5 transition cursor-pointer" onclick="downloadBatchFile('/vouchers/batch/{{ b.id }}/excel', 'batch-{{ b.id }}.xlsx')"><i class="fa-solid fa-file-excel text-emerald-400 w-4 text-center"></i><span>تصدير الى ملف اكسل</span></button>{% endif %}
                                 {% if can_access_endpoint('export_batch_text') %}<button type="button" class="w-full text-right px-3.5 py-2 text-slate-200 hover:bg-blue-600 hover:text-white flex items-center gap-2.5 transition cursor-pointer" onclick="downloadBatchFile('/vouchers/batch/{{ b.id }}/text', 'batch-{{ b.id }}.txt')"><i class="fa-solid fa-file-lines text-sky-400 w-4 text-center"></i><span>تصدير إلى ملف نصي</span></button>{% endif %}
-                                {% if can_access_endpoint('print_cards') %}<button type="button" class="w-full text-right px-3.5 py-2 text-slate-200 hover:bg-blue-600 hover:text-white flex items-center gap-2.5 transition cursor-pointer" data-batch-id="{{ b.id }}" data-batch-name="{{ b.name }}" data-package-name="{{ b.package_name }}" data-card-count="{{ b.card_count or 0 }}" data-export-mode="preview" onclick="handlePrintBtnClick(this)"><i class="fa-solid fa-eye text-amber-400 w-4 text-center"></i><span>معاينة</span></button>{% endif %}
+                                {% if can_access_endpoint('print_cards') %}<button type="button" class="w-full text-right px-3.5 py-2 text-slate-200 hover:bg-blue-600 hover:text-white flex items-center gap-2.5 transition cursor-pointer" data-batch-id="{{ b.id }}" data-batch-name="{{ b.name }}" data-package-name="{{ b.package_name }}" data-package-id="{{ b.package_id }}" data-card-count="{{ b.card_count or 0 }}" data-export-mode="preview" onclick="handlePrintBtnClick(this)"><i class="fa-solid fa-eye text-amber-400 w-4 text-center"></i><span>معاينة</span></button>{% endif %}
                                 <!-- حذف الحزمة -->
                                 {% if can_access_endpoint('delete_batch_action') %}<button type="button" onclick="confirmDeleteBatch({{ b.id|tojson|forceescape }}, {{ b.name|tojson|forceescape }}, {{ b.batch_number|tojson|forceescape }})" class="w-full text-right px-3.5 py-2 mt-1 border-t border-[#1c2840] text-rose-400 hover:bg-rose-600 hover:text-white flex items-center gap-2.5 transition font-semibold cursor-pointer" title="حذف الحزمة">
         <i class="fa-solid fa-trash-can text-rose-500 w-4 text-center"></i><span>حذف</span>
@@ -364,6 +369,10 @@
                     <strong>مزامنة FreeRADIUS التلقائية:</strong> عند تغيير الباقة، سيقوم النظام تلقائياً بتحديث جدول <code class="font-mono bg-blue-900/40 px-1 rounded text-blue-200">radusergroup</code> لجميع الكروت التابعة لهذه الحزمة لربطهم بالسرعة والخصائص الجديدة فوراً.
                 </div>
             </div>
+            <div>
+                <label for="edit_batch_sale_point" class="block text-slate-300 font-semibold mb-1">نقطة البيع</label>
+                <input type="text" id="edit_batch_sale_point" name="sale_point" maxlength="100" placeholder="توزيع عام" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none">
+            </div>
             <div class="flex justify-end gap-3 pt-3 border-t border-[#1c2840]">
                 <button type="button" onclick="closeModal('editBatchModal')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold cursor-pointer">إلغاء</button>
                 <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-md cursor-pointer">حفظ وتحديث RADIUS</button>
@@ -382,6 +391,7 @@
             </h3>
             <button type="button" onclick="closeModal('generateModal')" class="text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-base"></i></button>
         </div>
+        {% set fd = batch_form_defaults or {} %}
         <form id="generateBatchForm" method="POST" action="{{ url_for('generate_vouchers_action') }}" class="space-y-3 text-xs">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
@@ -400,9 +410,9 @@
                     <label class="block text-slate-300 font-semibold mb-1">
                         <span>عدد الكروت المراد توليدها</span>
                         <span class="text-rose-400 font-bold">*</span>
-                        <span class="text-[10px] text-slate-400 font-normal mr-1">(الحد الأقصى: 3,000)</span>
+                        <span class="text-[10px] text-slate-400 font-normal mr-1">(الحد الأقصى: 10,000)</span>
                     </label>
-                    <input type="number" id="batch_count" name="count" min="1" max="3000" value="50" required class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none transition">
+                    <input type="number" id="batch_count" name="count" min="1" max="10000" value="{{ fd.count|default(50) }}" required class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none transition">
                     <div id="batch_count_error" class="hidden mt-1.5 flex items-center gap-1.5 text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2.5 py-1.5 rounded-lg">
                         <i class="fa-solid fa-circle-exclamation text-rose-400 text-xs shrink-0"></i>
                         <span class="error-text font-medium"></span>
@@ -414,22 +424,22 @@
                 <div>
                     <label class="block text-slate-300 font-semibold mb-1">صيغة الكرت</label>
                     <select name="format_type" id="format_type" onchange="handleFormatTypeChange()" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none">
-                        <option value="user_pass" selected>اسم مستخدم + كلمة مرور</option>
-                        <option value="pin_only">رمز سري فقط (PIN Only)</option>
+                        <option value="user_pass" {% if fd.format_type|default('user_pass') == 'user_pass' %}selected{% endif %}>اسم مستخدم + كلمة مرور</option>
+                        <option value="pin_only" {% if fd.format_type == 'pin_only' %}selected{% endif %}>رمز سري فقط (PIN Only)</option>
                     </select>
                 </div>
                 <div>
                     <label class="block text-slate-300 font-semibold mb-1">صيغة الحروف</label>
                     <select name="char_type" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none">
-                        <option value="numbers" selected>أرقام فقط</option>
-                        <option value="alphanumeric">أرقام وحروف إنجليزية كبيرة</option>
+                        <option value="numbers" {% if fd.char_type|default('numbers') == 'numbers' %}selected{% endif %}>أرقام فقط</option>
+                        <option value="alphanumeric" {% if fd.char_type == 'alphanumeric' %}selected{% endif %}>أرقام وحروف إنجليزية كبيرة</option>
                     </select>
                 </div>
             </div>
             <!-- خيار جعل كلمة المرور مطابقة لاسم المستخدم -->
             <div id="same_user_pass_wrapper" class="bg-blue-500/10 border border-blue-500/25 rounded-xl p-3.5">
                 <label class="flex items-center gap-2.5 cursor-pointer select-none">
-                    <input type="checkbox" id="same_user_pass" name="same_user_pass" value="1" onchange="toggleSameUserPass(this.checked)" class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 bg-[#070b14] border-slate-700">
+                    <input type="checkbox" id="same_user_pass" name="same_user_pass" value="1" {% if fd.same_user_pass %}checked{% endif %} onchange="toggleSameUserPass(this.checked)" class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 bg-[#070b14] border-slate-700">
                     <span class="text-blue-400 font-bold text-xs">جعل كلمة المرور مطابقة لاسم المستخدم (Username = Password)</span>
                 </label>
                 <p class="text-[11px] text-slate-400 font-medium mt-1 mr-6.5 leading-relaxed">عند التفعيل، سيتم توليد كلمة مرور مساوية لاسم المستخدم تماماً وتلقائياً.</p>
@@ -437,7 +447,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                     <label class="block text-slate-300 font-semibold mb-1" id="code_length_label">طول اسم المستخدم</label>
-                    <input type="number" name="code_length" id="code_length" min="4" max="16" value="8" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none transition">
+                    <input type="number" name="code_length" id="code_length" min="4" max="16" value="{{ fd.code_length|default(8) }}" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none transition">
                     <div id="code_length_error" class="hidden mt-1.5 flex items-center gap-1.5 text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2.5 py-1.5 rounded-lg">
                         <i class="fa-solid fa-circle-exclamation text-rose-400 text-xs shrink-0"></i>
                         <span class="error-text font-medium"></span>
@@ -445,7 +455,7 @@
                 </div>
                 <div id="pass_length_container">
                     <label class="block text-slate-300 font-semibold mb-1">طول كلمة المرور</label>
-                    <input type="number" name="pass_length" id="pass_length" min="4" max="16" value="8" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none transition">
+                    <input type="number" name="pass_length" id="pass_length" min="4" max="16" value="{{ fd.pass_length|default(8) }}" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none transition">
                     <div id="pass_length_error" class="hidden mt-1.5 flex items-center gap-1.5 text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2.5 py-1.5 rounded-lg">
                         <i class="fa-solid fa-circle-exclamation text-rose-400 text-xs shrink-0"></i>
                         <span class="error-text font-medium"></span>
@@ -461,7 +471,7 @@
                 <select name="reseller_id" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none">
                     {% if not is_reseller_scope() %}<option value="">بدون موزع (المخزون الرئيسي للشبكة)</option>{% endif %}
                     {% for r in resellers %}
-                    <option value="{{ r.id }}">{{ r.name }} {% if has_permission('managers.billing') %}(رصيده: {{ r.balance }} {{ currency_symbol }}){% endif %}</option>
+                    <option value="{{ r.id }}" {% if fd.reseller_id and fd.reseller_id|string == r.id|string %}selected{% endif %}>{{ r.name }} {% if has_permission('managers.billing') %}(رصيده: {{ r.balance }} {{ currency_symbol }}){% endif %}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -471,6 +481,19 @@
                 <div id="batchCustomNameWrap" class="hidden"><label for="batchCustomName" class="block text-slate-300 font-semibold mb-1">اسم مخصص</label><input id="batchCustomName" type="text" name="name" disabled class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"></div>
             </div>
             {% endif %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label for="batch_sale_point" class="block text-slate-300 font-semibold mb-1">نقطة البيع</label>
+                    <input type="text" id="batch_sale_point" name="sale_point" maxlength="100" value="{{ fd.sale_point|default('توزيع عام') }}" placeholder="توزيع عام" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none">
+                </div>
+                <div class="flex items-end">
+                    <label class="flex items-center gap-2.5 cursor-pointer select-none bg-rose-500/10 border border-rose-500/25 rounded-xl px-3 py-2.5 w-full">
+                        <input type="checkbox" id="batch_auto_pdf" name="auto_pdf" value="1" {% if fd.auto_pdf %}checked{% endif %} class="w-4 h-4 rounded bg-[#070b14] border-slate-700">
+                        <span class="text-rose-300 font-bold text-xs"><i class="fa-solid fa-file-pdf ml-1"></i>تصدير تلقائي إلى ملف PDF</span>
+                    </label>
+                </div>
+                <p class="sm:col-span-2 text-[11px] text-slate-400">يُصدَّر الملف بالتصميم المرتبط بباقة الحزمة، وإن لم يوجد فبالتصميم الافتراضي. تُحفظ القيم المدخلة هنا كقيم افتراضية للحزمة التالية.</p>
+            </div>
             <div class="flex justify-end gap-3 pt-3 border-t border-[#1c2840]">
                 <button type="button" onclick="closeModal('generateModal')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold cursor-pointer">إلغاء</button>
                 <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-md cursor-pointer">توليد وتصدير لـ RADIUS</button>
@@ -497,7 +520,7 @@
             <label class="block text-xs font-bold text-slate-300">حدد قالب التصميم المطلوب تطبيقه على كروت الحزمة:</label>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[340px] overflow-y-auto pr-1" id="printModalDesignsList">
                 <!-- Option 1: Classic Thermal -->
-                <div id="print_tpl_opt_default" onclick="selectDesignForPrint('', this)" class="design-print-option border-2 border-emerald-500 bg-emerald-950/20 rounded-xl p-3.5 cursor-pointer transition relative">
+                <div id="print_tpl_opt_default" onclick="selectDesignForPrint('0', this)" class="design-print-option border-2 border-emerald-500 bg-emerald-950/20 rounded-xl p-3.5 cursor-pointer transition relative">
                     <div class="flex items-center gap-2.5 mb-1.5">
                         <div class="w-8 h-8 rounded-lg bg-blue-600/30 text-blue-400 flex items-center justify-center border border-blue-500/30 flex-shrink-0">
                             <i class="fa-solid fa-receipt"></i>
@@ -606,10 +629,12 @@ document.addEventListener('DOMContentLoaded',()=> {
         }
     }
 
-    function openEditBatchModal(id, name, pkgId) {
+    function openEditBatchModal(id, name, pkgId, salePoint) {
+        closeBatchMenu();
         document.getElementById('editBatchForm').action = `/vouchers/batch/edit/${id}`;
         document.getElementById('edit_batch_name').value = name;
         document.getElementById('edit_batch_package').value = pkgId;
+        document.getElementById('edit_batch_sale_point').value = salePoint || 'توزيع عام';
         document.getElementById('editBatchModal').classList.remove('hidden');
     }
 
@@ -636,7 +661,7 @@ document.addEventListener('DOMContentLoaded',()=> {
                     return 'هذا الحقل إلزامي، يرجى كتابة عدد الكروت المراد توليدها.';
                 }
                 if (v.rangeOverflow) {
-                    return `يجب أن تكون القيمة أقل من أو تساوي 3,000 كرت (المدخل: ${Number(val).toLocaleString('ar-EG')}).`;
+                    return `يجب أن تكون القيمة أقل من أو تساوي 10,000 كرت (المدخل: ${Number(val).toLocaleString('ar-EG')}).`;
                 }
                 if (v.rangeUnderflow) {
                     return 'يجب أن يكون عدد الكروت 1 على الأقل.';
@@ -838,15 +863,29 @@ document.addEventListener('DOMContentLoaded',()=> {
         const name = btn.getAttribute('data-batch-name') || '';
         const pkg = btn.getAttribute('data-package-name') || '';
         const count = btn.getAttribute('data-card-count') || 0;
+        const packageId = btn.getAttribute('data-package-id') || '';
         batchPrintMode = btn.dataset.exportMode || 'preview';
         document.getElementById('printModalConfirmLabel').textContent = batchPrintMode === 'pdf' ? 'تصدير إلى ملف PDF' : 'فتح صفحة الطباعة';
         closeBatchMenu();
-        openPrintBatchModal(id, name, pkg, count);
+        openPrintBatchModal(id, name, pkg, count, packageId);
     }
 
-    function openPrintBatchModal(batchId, batchName, pkgName, cardCount) {
+    const LINKED_DESIGNS = {{ (linked_design_by_package or {})|tojson }};
+    const DEFAULT_DESIGN_ID = {{ ((card_designs or [])|selectattr('is_default')|map(attribute='id')|first or none)|tojson }};
+
+    // Save PDF directly: the server picks the package-linked design, else the default.
+    function saveBatchPdf(batchId) {
+        closeBatchMenu();
+        downloadBatchFile(`/vouchers/print/${batchId}?export=pdf`, `batch-${batchId}.pdf`);
+    }
+    {% if auto_pdf_batch %}
+    // "تصدير تلقائي إلى ملف PDF" was selected when the batch was created.
+    window.addEventListener('load', () => saveBatchPdf({{ auto_pdf_batch|tojson }}));
+    {% endif %}
+
+    function openPrintBatchModal(batchId, batchName, pkgName, cardCount, packageId) {
         currentBatchIdToPrint = batchId;
-        selectedDesignIdToPrint = ''; // default classic template
+        selectedDesignIdToPrint = '0'; // classic template unless a design applies
         const subEl = document.getElementById('printModalBatchSub');
         if (subEl) {
             subEl.textContent = `الحزمة: ${batchName} (${cardCount} كرت) | الباقة: ${pkgName}`;
@@ -855,9 +894,15 @@ document.addEventListener('DOMContentLoaded',()=> {
         document.querySelectorAll('.design-print-option').forEach(el => {
             el.className = 'design-print-option border border-slate-700 bg-slate-900/60 rounded-xl p-3.5 cursor-pointer hover:border-slate-500 transition relative';
         });
-        const defOpt = document.getElementById('print_tpl_opt_default');
-        if (defOpt) {
-            defOpt.className = 'design-print-option border-2 border-emerald-500 bg-emerald-950/30 rounded-xl p-3.5 cursor-pointer transition relative';
+        const preferred = LINKED_DESIGNS[String(packageId)] || DEFAULT_DESIGN_ID;
+        const preferredOpt = preferred ? document.getElementById('print_tpl_opt_' + preferred) : null;
+        if (preferredOpt) {
+            selectDesignForPrint(String(preferred), preferredOpt);
+        } else {
+            const defOpt = document.getElementById('print_tpl_opt_default');
+            if (defOpt) {
+                defOpt.className = 'design-print-option border-2 border-emerald-500 bg-emerald-950/30 rounded-xl p-3.5 cursor-pointer transition relative';
+            }
         }
         document.getElementById('selectPrintTemplateModal').classList.remove('hidden');
     }

@@ -110,6 +110,7 @@
                     </h2>
                     <div class="flex flex-wrap items-center gap-3 text-xs text-slate-400 mt-1">
                         <span>رقم الدفعة: <strong class="text-blue-400 font-mono">{{ batch.batch_number }}</strong></span>
+                        {% if batch.sale_point %}<span>نقطة البيع: <strong class="text-slate-200">{{ batch.sale_point }}</strong></span>{% endif %}
                         <span>•</span>
                         <span>الباقة: <strong class="text-emerald-400 font-semibold">{{ batch.package_name }}</strong> <span class="font-mono">({{ batch.package_price }} {{ currency_symbol }})</span></span>
                         <span>•</span>

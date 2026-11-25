@@ -1,0 +1,67 @@
+{#- One A4 sheet of a custom card design. Shared by the print preview and the
+    PDF export. Element styles are computed once per sheet, not once per card;
+    every interpolated value is still autoescaped. QR boxes carry their data in
+    data-qr and are filled by a single loop script in the page. -#}
+{% macro text_style(e, size, color) -%}
+position: absolute; left: {{ e.x }}%; top: {{ e.y }}%; transform: translate(-50%, -50%); font-family: '{{ e.font_family or 'Tajawal' }}', sans-serif; font-size: {{ e.font_size or size }}pt; color: {{ e.color or color }}; font-weight: {{ 'bold' if e.bold else 'normal' }}; font-style: {{ 'italic' if e.italic else 'normal' }}; text-decoration: {{ 'underline' if e.underline else 'none' }}; letter-spacing: {{ e.letter_spacing or 0 }}px; white-space: nowrap; line-height: 1;
+{%- endmacro %}
+
+{% macro card_sheet(page, d) %}
+{% set cfg = d.config %}
+{% set el = cfg.elements if cfg and cfg.elements else {} %}
+{% set on = {} %}
+{% for key in ['username', 'password', 'pin_code', 'serial', 'price', 'profile', 'quota', 'validity', 'speed', 'hotspot_name', 'custom_text_1', 'custom_text_2', 'qr_code'] %}
+  {% if el[key] and el[key].enabled %}{% set _ = on.update({key: el[key]}) %}{% endif %}
+{% endfor %}
+{% set st = {} %}
+{% for key, size, color in [('username', 12, '#0f172a'), ('password', 12, '#0f172a'), ('pin_code', 14, '#0f172a'), ('serial', 9, '#475569'), ('price', 12, '#2563eb'), ('profile', 11, '#0f172a'), ('quota', 10, '#334155'), ('validity', 10, '#334155'), ('speed', 9, '#475569'), ('hotspot_name', 12, '#0f172a'), ('custom_text_1', 9, '#475569'), ('custom_text_2', 9, '#475569')] %}
+  {% if key in on %}{% set _ = st.update({key: text_style(on[key], size, color)}) %}{% endif %}
+{% endfor %}
+{% if 'qr_code' in on %}
+  {% set qr_mm = ((on.qr_code.size or 55) * 0.264583)|round(1) %}
+  {% set qr_style = 'position: absolute; left: ' ~ on.qr_code.x ~ '%; top: ' ~ on.qr_code.y ~ '%; transform: translate(-50%, -50%); width: ' ~ qr_mm ~ 'mm; height: ' ~ qr_mm ~ 'mm; background: white; border: 0.5px solid #cbd5e1; border-radius: 0px; display: flex; align-items: center; justify-content: center; padding: 0.5mm; box-sizing: border-box;' %}
+{% endif %}
+{% set cell_style %}width: 100%; height: 100%; position: relative; overflow: hidden; box-sizing: border-box; border-radius: 0px !important; {% if d.cut_lines %}border: 1px dashed {{ d.border_color or '#94a3b8' }};{% else %}border: 1px solid {{ d.border_color or '#cbd5e1' }};{% endif %} background-color: {{ d.background_color or '#ffffff' }};{% endset %}
+{% set show_bg = d.bg_image and d.design_type != 'clean' %}
+<div class="sheet" style="
+    width: 210mm;
+    min-height: 297mm;
+    max-height: 297mm;
+    height: 297mm;
+    margin: 0 auto 12mm auto;
+    background: #ffffff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    box-sizing: border-box;
+    padding-top: {{ d.margin_top_mm if d.margin_top_mm is not none else 10 }}mm;
+    padding-bottom: {{ d.margin_top_mm if d.margin_top_mm is not none else 10 }}mm;
+    padding-left: {{ d.margin_page_mm if d.margin_page_mm is not none else 10 }}mm;
+    padding-right: {{ d.margin_page_mm if d.margin_page_mm is not none else 10 }}mm;
+    display: grid;
+    grid-template-columns: repeat({{ d.cards_per_row|default(2) }}, 1fr);
+    grid-template-rows: repeat({{ d.cards_per_col|default(5) }}, 1fr);
+    gap: {{ d.card_spacing_mm if d.card_spacing_mm is not none else 0 }}mm;
+    position: relative;
+    overflow: hidden;
+">
+{% for c in page %}
+<div class="custom-card-cell" style="{{ cell_style }}">
+{% if show_bg %}<img src="{{ d.bg_image }}" class="card-bg-img" alt="" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; z-index: 1; pointer-events: none; border-radius: 0px;" />{% endif %}
+<div style="position: absolute; inset: 0; z-index: 10; pointer-events: none;">
+{% if 'username' in st %}<div style="{{ st.username }}">{{ (on.username.prefix or '') ~ c.username }}</div>{% endif %}
+{% if 'password' in st %}<div style="{{ st.password }}">{{ (on.password.prefix or '') ~ c.password }}</div>{% endif %}
+{% if 'pin_code' in st %}<div style="{{ st.pin_code }}">{{ (on.pin_code.prefix or '') ~ (c.pin_code if c.pin_code else c.username) }}</div>{% endif %}
+{% if 'serial' in st %}<div style="{{ st.serial }}">{{ (on.serial.prefix or '') ~ c.serial_number }}</div>{% endif %}
+{% if 'price' in st %}<div style="{{ st.price }}">{{ (on.price.prefix or '') ~ (on.price.text if on.price.text else (c.price ~ ' ' ~ c.currency)) }}</div>{% endif %}
+{% if 'profile' in st %}<div style="{{ st.profile }}">{{ (on.profile.prefix or '') ~ (on.profile.text if on.profile.text else c.package_name) }}</div>{% endif %}
+{% if 'quota' in st %}<div style="{{ st.quota }}">{{ (on.quota.prefix or '') ~ (on.quota.text if on.quota.text else c.quota) }}</div>{% endif %}
+{% if 'validity' in st %}<div style="{{ st.validity }}">{{ (on.validity.prefix or '') ~ (on.validity.text if on.validity.text else c.validity) }}</div>{% endif %}
+{% if 'speed' in st %}<div style="{{ st.speed }}">{{ (on.speed.prefix or '') ~ (on.speed.text if on.speed.text else c.speed) }}</div>{% endif %}
+{% if 'hotspot_name' in st %}<div style="{{ st.hotspot_name }}">{{ (on.hotspot_name.prefix or '') ~ (on.hotspot_name.text if on.hotspot_name.text else c.isp_name) }}</div>{% endif %}
+{% if 'custom_text_1' in st %}<div style="{{ st.custom_text_1 }}">{{ (on.custom_text_1.prefix or '') ~ (on.custom_text_1.text or '') }}</div>{% endif %}
+{% if 'custom_text_2' in st %}<div style="{{ st.custom_text_2 }}">{{ (on.custom_text_2.prefix or '') ~ (on.custom_text_2.text or '') }}</div>{% endif %}
+{% if qr_style %}<div id="cqr_{{ c.id }}" class="cqr" data-qr="{{ c.login_url }}" style="{{ qr_style }}"></div>{% endif %}
+</div>
+</div>
+{% endfor %}
+</div>
+{% endmacro %}

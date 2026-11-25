@@ -246,6 +246,7 @@ CREATE TABLE IF NOT EXISTS `wisp_voucher_batches` (
     `mikrotik_group` VARCHAR(100) DEFAULT 'ALL-SPEED',
     `created_by` VARCHAR(64) DEFAULT 'admin',
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `sale_point` VARCHAR(100) NOT NULL DEFAULT 'توزيع عام',
     PRIMARY KEY (`id`),
     UNIQUE KEY `idx_batch_number` (`batch_number`),
     KEY `idx_batch_package` (`package_id`),

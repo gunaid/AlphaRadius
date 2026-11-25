@@ -92,6 +92,7 @@ tests/*
 !tests/test_nas_shared_path.py
 !tests/test_checkpoint_diagnostics.py
 !tests/test_alpha_dual_license_provider.py
+!tests/test_batch_card_features.py
 !tests/voucher_page_fixture.py
 !tests/test_package_page.py
 !tests/test_subscriber_admin_safety.py

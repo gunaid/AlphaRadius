@@ -22,11 +22,54 @@ def group_memory(pgid):
     return total
 
 
+def _stop_worker(process):
+    """The group was created by render_parts; it contains only this renderer."""
+    if process.poll() is None:
+        # Let the worker unwind Playwright and reap its children
+        # before using a process-group kill as a final fallback.
+        process.terminate()
+    try: process.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        if os.name != 'nt':
+            try: os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError: pass
+        else: process.kill()
+        process.wait()
+    if os.name != 'nt':
+        grace=time.monotonic()+2
+        while group_memory(process.pid) and time.monotonic()<grace:time.sleep(.05)
+        if group_memory(process.pid):
+            try:os.killpg(process.pid,signal.SIGKILL)
+            except ProcessLookupError:pass
+
+
+def default_workers():
+    """Parallel renderers only where the host has spare cores and memory.
+
+    Each renderer keeps its own memory budget, so two workers need roughly
+    twice the memory; small devices keep the single sequential renderer.
+    """
+    cores = os.cpu_count() or 1
+    try:
+        import psutil
+        memory_gb = psutil.virtual_memory().total / 1024**3
+    except Exception:
+        memory_gb = 0
+    return 2 if cores >= 4 and memory_gb >= 3.5 else 1
+
+
 def render_parts(parts, static_folder, timeout=180, memory_mb=768, cancelled=None,
-                 parts_per_worker=4):
-    """Parts are generated lazily; temporary PDFs are merged in order, no truncation."""
+                 parts_per_worker=4, workers=1):
+    """Parts are generated lazily; temporary PDFs are merged in order, no truncation.
+
+    Up to `workers` renderer processes run at once, each on a contiguous group
+    of parts and each under its own memory budget. Output order is the part
+    order regardless of which worker finishes first.
+    """
     if type(parts_per_worker) is not int or not 1 <= parts_per_worker <= 8:
         raise ValueError('عدد أجزاء عامل PDF يجب أن يكون بين 1 و8.')
+    if type(workers) is not int or not 1 <= workers <= 4:
+        raise ValueError('عدد عمال PDF المتوازيين يجب أن يكون بين 1 و4.')
     if cancelled is None:
         from services.heavy_operation_service import export_cancelled
         cancelled=export_cancelled
@@ -34,67 +77,61 @@ def render_parts(parts, static_folder, timeout=180, memory_mb=768, cancelled=Non
         root = Path(directory)
         started = time.monotonic()
         try:
-            count = 0
-            iterator = iter(parts)
-            while True:
+            def check(message='انتهت مهلة التصدير. حدد نطاقًا أصغر وأعد المحاولة.'):
                 if cancelled and cancelled():
                     raise ExportCancelled('أُلغي التصدير؛ لم يُصدر ملف جزئي.')
                 if time.monotonic() - started >= timeout:
-                    raise TimeoutError('انتهت مهلة التصدير. حدد نطاقًا أصغر وأعد المحاولة.')
-                group_start = count
-                group_count = 0
-                # Session exports retain four parts. Card exports explicitly
-                # opt into eight, under the same process-group memory budget.
-                for index in range(group_start, group_start + parts_per_worker):
-                    if cancelled and cancelled():
-                        raise ExportCancelled('أُلغي التصدير؛ لم يُصدر ملف جزئي.')
-                    try:
-                        html = next(iterator)
-                    except StopIteration:
+                    raise TimeoutError(message)
+            count = 0
+            iterator = iter(parts)
+            exhausted = False
+            active = []
+            try:
+                while True:
+                    while not exhausted and len(active) < workers:
+                        check()
+                        group_start = count
+                        group_count = 0
+                        # Session exports retain four parts. Card exports explicitly
+                        # opt into eight, under the same process-group memory budget.
+                        for index in range(group_start, group_start + parts_per_worker):
+                            check()
+                            try:
+                                html = next(iterator)
+                            except StopIteration:
+                                exhausted = True
+                                break
+                            (root / f'{index}.html').write_text(html, encoding='utf-8')
+                            group_count += 1
+                        if not group_count:
+                            break
+                        count += group_count
+                        command = [sys.executable, '-B', '-c',
+                                   'from services.pdf_export_service import render_group_worker; import sys; render_group_worker(*sys.argv[1:])',
+                                   str(root), str(Path(static_folder).resolve()), str(group_start), str(group_count)]
+                        process = subprocess.Popen(command, start_new_session=(os.name != 'nt'),
+                                                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                        active.append((process, group_start, group_count))
+                    if not active:
                         break
-                    (root / f'{index}.html').write_text(html, encoding='utf-8')
-                    group_count += 1
-                if not group_count:
-                    break
-                command = [sys.executable, '-B', '-c',
-                           'from services.pdf_export_service import render_group_worker; import sys; render_group_worker(*sys.argv[1:])',
-                           str(root), str(Path(static_folder).resolve()), str(group_start), str(group_count)]
-                process = subprocess.Popen(command, start_new_session=(os.name != 'nt'),
-                                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                try:
-                    while process.poll() is None:
-                        if cancelled and cancelled():
-                            raise ExportCancelled('أُلغي التصدير؛ لم يُصدر ملف جزئي.')
-                        if time.monotonic() - started >= timeout:
-                            raise TimeoutError('انتهت مهلة تجهيز الملف؛ أعد المحاولة بنطاق أصغر.')
-                        if os.name != 'nt' and group_memory(process.pid) > memory_mb * 1024**2:
-                            raise RuntimeError('تعقيد التصميم تجاوز ميزانية التصدير؛ قلل الصور أو حجم النطاق.')
-                        time.sleep(.1)
-                    if process.returncode or not all((root / f'{i}.pdf').is_file()
-                            for i in range(group_start, group_start + group_count)):
-                        raise RuntimeError('تعذر تجهيز أحد أجزاء الملف؛ لم يُصدر ملف جزئي.')
-                    count += group_count
-                    for i in range(group_start, count):
-                        (root / f'{i}.html').unlink()
-                finally:
-                    # The group was created here; it contains only this renderer.
-                    if process.poll() is None:
-                        # Let the worker unwind Playwright and reap its children
-                        # before using a process-group kill as a final fallback.
-                        process.terminate()
-                    try: process.wait(timeout=5)
-                    except subprocess.TimeoutExpired:
-                        if os.name != 'nt':
-                            try: os.killpg(process.pid, signal.SIGKILL)
-                            except ProcessLookupError: pass
-                        else: process.kill()
-                        process.wait()
-                    if os.name != 'nt':
-                        grace=time.monotonic()+2
-                        while group_memory(process.pid) and time.monotonic()<grace:time.sleep(.05)
-                        if group_memory(process.pid):
-                            try:os.killpg(process.pid,signal.SIGKILL)
-                            except ProcessLookupError:pass
+                    for item in list(active):
+                        process, group_start, group_count = item
+                        if process.poll() is None:
+                            if os.name != 'nt' and group_memory(process.pid) > memory_mb * 1024**2:
+                                raise RuntimeError('تعقيد التصميم تجاوز ميزانية التصدير؛ قلل الصور أو حجم النطاق.')
+                            continue
+                        if process.returncode or not all((root / f'{i}.pdf').is_file()
+                                for i in range(group_start, group_start + group_count)):
+                            raise RuntimeError('تعذر تجهيز أحد أجزاء الملف؛ لم يُصدر ملف جزئي.')
+                        for i in range(group_start, group_start + group_count):
+                            (root / f'{i}.html').unlink()
+                        active.remove(item)
+                        _stop_worker(process)
+                    check('انتهت مهلة تجهيز الملف؛ أعد المحاولة بنطاق أصغر.')
+                    time.sleep(.1)
+            finally:
+                for process, _, _ in active:
+                    _stop_worker(process)
             # Assembly also runs outside Web: PDF objects must not accumulate
             # in the request worker as a full history grows.
             merged = root / 'complete.pdf'

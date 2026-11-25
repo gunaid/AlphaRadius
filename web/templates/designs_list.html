@@ -133,6 +133,9 @@
                                 <span class="text-slate-500">•</span>
                                 <span class="text-blue-400 font-bold">{{ d.cards_per_page }} كرت</span>
                             </div>
+                            {% if d.package_id and (package_names or {}).get(d.package_id|int) %}
+                            <div class="mt-1 text-[11px] text-emerald-400 font-bold"><i class="fa-solid fa-link ml-1"></i>{{ package_names[d.package_id|int] }}</div>
+                            {% endif %}
                         </td>
 
                         <!-- الأبعاد -->

@@ -39,6 +39,14 @@ class _VoucherWriter:
             return cur.lastrowid
         finally:
             cur.close()
+    def all(self, statement, params=()):
+        cur = self.conn.cursor()
+        try:
+            cur.execute(adapt_query(statement, self.conn), params)
+            names = [c[0] for c in cur.description] if cur.description else []
+            return [dict(r) if hasattr(r, 'keys') else dict(zip(names, r)) for r in cur.fetchall()]
+        finally:
+            cur.close()
     def many(self, statement, params):
         cur = self.conn.cursor()
         try:
@@ -76,7 +84,7 @@ def _write_vouchers(tx, statement, rows, month, reserved):
                 if exc.args[0] != 1062:
                     raise
                 match = re.fullmatch(
-                    r"Duplicate entry '([0-9]{12})' for key '(?:wisp_vouchers\.)?idx_voucher_serial'",
+                    r"Duplicate entry '([0-9]{1,30})' for key '(?:wisp_vouchers\.)?idx_voucher_serial'",
                     str(exc.args[1]),
                 )
                 if not match or attempt == 15:
@@ -95,6 +103,39 @@ def _write_vouchers(tx, statement, rows, month, reserved):
                     chunk[i] = (*row[:3], _new_voucher_serial(month, reserved), *row[4:])
         tx.write("RELEASE SAVEPOINT voucher_serial_chunk")
 
+MAX_BATCH_CARDS = 10000
+SERIAL_SEQUENCE_DIGITS = 5
+DEFAULT_SALE_POINT = 'توزيع عام'
+
+
+def batch_card_serial(batch_id, sequence):
+    """Batch number followed by a fixed-width card sequence starting at 1.
+
+    The fixed width (5 digits, enough for 10000 cards) keeps serials of
+    different batches distinct: 1+00012 and 10+0012 can never coincide.
+    """
+    return f"{int(batch_id)}{int(sequence):0{SERIAL_SEQUENCE_DIGITS}d}"
+
+
+def _taken_usernames(query_all_fn, names, sqlite):
+    """Existing voucher/subscriber usernames among `names`, compared case-insensitively.
+
+    One indexed IN() lookup per 500 names replaces a per-card LOWER() scan.
+    MySQL tables use a case-insensitive collation, so plain IN uses the index.
+    """
+    taken = set()
+    names = list(names)
+    for start in range(0, len(names), 500):
+        chunk = names[start:start + 500]
+        marks = ','.join('?' for _ in chunk)
+        column = 'LOWER(username)' if sqlite else 'username'
+        args = tuple(n.lower() for n in chunk) if sqlite else tuple(chunk)
+        for table in ('wisp_vouchers', 'wisp_subscribers'):
+            for row in query_all_fn(f'SELECT username FROM {table} WHERE {column} IN ({marks})', args):
+                taken.add(str(row['username']).lower())
+    return taken
+
+
 def generate_random_code(length=8, char_type='numbers'):
     if char_type == 'numbers':
         chars = string.digits
@@ -110,7 +151,8 @@ def generate_random_code(length=8, char_type='numbers'):
 
 def generate_voucher_batch(name, package_id, count, prefix='', pin_only=True,
                            char_type='numbers', code_length=8, reseller_id=None,
-                           created_by='admin', same_user_pass=False, pass_length=None, _conn=None):
+                           created_by='admin', same_user_pass=False, pass_length=None, _conn=None,
+                           sale_point=None):
     import math
     from core.ownership import generation_owner
     reseller_id = generation_owner(reseller_id, package_id)
@@ -138,7 +180,7 @@ def generate_voucher_batch(name, package_id, count, prefix='', pin_only=True,
         count = int(count)
         code_length = int(code_length)
         pass_length = int(pass_length or code_length)
-        if count > 5000 or not 4 <= code_length <= 32 or not 4 <= pass_length <= 32 or char_type not in ('numbers','alphanumeric','letters'):
+        if count > MAX_BATCH_CARDS or not 4 <= code_length <= 32 or not 4 <= pass_length <= 32 or char_type not in ('numbers','alphanumeric','letters'):
             raise ValueError('عدد الكروت أو طول الرمز أو نوع الأحرف غير صالح.')
         if count <= 0:
             raise ValueError('العدد المطلوب توليده يجب أن يكون أكبر من الصفر.')
@@ -181,6 +223,7 @@ def generate_voucher_batch(name, package_id, count, prefix='', pin_only=True,
         pkg_simul = int(pkg.get('simultaneous_sessions') or 1)
         pkg_mgroup = str(pkg.get('mikrotik_group') or '').strip()
     
+        sale_point = (str(sale_point).strip() if sale_point is not None else '')[:100] or DEFAULT_SALE_POINT
         batch_id = execute_write('''
             INSERT INTO wisp_voucher_batches (
                 batch_number, name, package_id, reseller_id, card_count,
@@ -188,16 +231,22 @@ def generate_voucher_batch(name, package_id, count, prefix='', pin_only=True,
                 price, cost, volume_quota_mb, uptime_limit_mins,
                 validity_value, validity_unit, validity_days,
                 rate_download, rate_upload, rate_limit_str,
-                simultaneous_sessions, mikrotik_group
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                simultaneous_sessions, mikrotik_group, sale_point
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             batch_num, name, package_id, reseller_id or None, count,
             prefix, 1 if (pin_only or same_user_pass) else 0, char_type, code_length, created_by,
             pkg_price, pkg_cost, pkg_quota, pkg_uptime,
             pkg_val, pkg_unit, pkg_days,
             pkg['rate_download'], pkg['rate_upload'], rate_str,
-            pkg_simul, pkg_mgroup
+            pkg_simul, pkg_mgroup, sale_point
         ))
+        # The batch number is the batch id; a pre-existing (e.g. imported) number
+        # that equals it keeps the generated timestamp number instead.
+        if not query_one('SELECT id FROM wisp_voucher_batches WHERE batch_number = ? AND id <> ?',
+                         (str(batch_id), batch_id)):
+            execute_write('UPDATE wisp_voucher_batches SET batch_number = ? WHERE id = ?', (str(batch_id), batch_id))
+            batch_num = str(batch_id)
     
         if reseller_id:
             mgr = query_one('SELECT * FROM wisp_managers WHERE id = ?' + lock, (reseller_id,))
@@ -252,32 +301,44 @@ def generate_voucher_batch(name, package_id, count, prefix='', pin_only=True,
     
         pkg_name = pkg['name']
     
-        issued = set()
         serial_month = now_dt.strftime('%y%m')
         reserved_serials = set()
-        for i in range(count):
-            serial = _new_voucher_serial(serial_month, reserved_serials)
-        
-            for attempt in range(100):
-                if pin_only:
-                    pin = f"{prefix}{generate_random_code(code_length, char_type)}"
-                    user = pin
-                    pwd = pin
-                elif same_user_pass:
-                    user = f"{prefix}{generate_random_code(code_length, char_type)}"
-                    pwd = user
-                    pin = user
-                else:
-                    user = f"{prefix}{generate_random_code(code_length, char_type)}"
-                    p_len = int(pass_length) if pass_length else code_length
-                    pwd = generate_random_code(p_len, 'numbers' if char_type == 'numbers' else 'alphanumeric')
-                    pin = pwd
-            
-                if user.lower() not in issued and not query_one("SELECT id FROM wisp_vouchers WHERE LOWER(username)=LOWER(?) UNION ALL SELECT id FROM wisp_subscribers WHERE LOWER(username)=LOWER(?)", (user,user)):
-                    issued.add(user.lower())
-                    break
-            else:
+        p_len = int(pass_length) if pass_length else code_length
+
+        def credentials():
+            if pin_only:
+                pin = f"{prefix}{generate_random_code(code_length, char_type)}"
+                return pin, pin, pin
+            if same_user_pass:
+                user = f"{prefix}{generate_random_code(code_length, char_type)}"
+                return user, user, user
+            user = f"{prefix}{generate_random_code(code_length, char_type)}"
+            pwd = generate_random_code(p_len, 'numbers' if char_type == 'numbers' else 'alphanumeric')
+            return user, pwd, pwd
+
+        # Draw all usernames first, then verify them against the database in
+        # bulk. Collisions are redrawn; the bounded rounds keep the old limit.
+        sqlite = not is_mysql_conn(conn)
+        cards = {}
+        rounds = 0
+        while len(cards) < count:
+            rounds += 1
+            if rounds > 100:
                 raise ValueError("تعذر توليد رموز فريدة؛ زد طول الرمز.")
+            fresh = {}
+            for _ in range((count - len(cards)) * 2 if rounds > 1 else count - len(cards)):
+                user, pwd, pin = credentials()
+                key = user.lower()
+                if key not in cards and key not in fresh:
+                    fresh[key] = (user, pwd, pin)
+            taken = _taken_usernames(tx.all, [v[0] for v in fresh.values()], sqlite)
+            for key, value in fresh.items():
+                if key not in taken and len(cards) < count:
+                    cards[key] = value
+
+        reserved_serials.update(batch_card_serial(batch_id, seq) for seq in range(1, count + 1))
+        for i, (user, pwd, pin) in enumerate(cards.values()):
+            serial = batch_card_serial(batch_id, i + 1)
 
             vouchers_data.append((
                 batch_id, package_id, reseller_id or None, serial, user, pwd, pin, 'unused',
@@ -488,7 +549,7 @@ def delete_batch(batch_id, admin_username='admin'):
         log_audit(1, admin_username, 'DELETE_BATCH', 'vouchers', f'Deleted batch {batch_id}; refund committed atomically')
     return ok
 
-def update_voucher_batch(batch_id, name, package_id, admin_username='admin'):
+def update_voucher_batch(batch_id, name, package_id, admin_username='admin', sale_point=None):
     from database.db import db_session, adapt_query, is_mysql_conn
     with db_session() as conn:
         cur = conn.cursor()
@@ -546,6 +607,9 @@ def update_voucher_batch(batch_id, name, package_id, admin_username='admin'):
                 # Remove only package overrides, leaving identity/MAC checks intact.
                 run("DELETE FROM radreply WHERE username=? AND attribute IN ('Mikrotik-Rate-Limit','Mikrotik-Group','Session-Timeout','Mikrotik-Total-Limit','Mikrotik-Total-Limit-Gigawords')", (card['username'],))
         run('UPDATE wisp_voucher_batches SET name=?,package_id=? WHERE id=?', (name,package_id,batch_id))
+        if sale_point is not None:
+            run('UPDATE wisp_voucher_batches SET sale_point=? WHERE id=?',
+                ((str(sale_point).strip()[:100] or DEFAULT_SALE_POINT), batch_id))
 
     log_audit(1, admin_username, 'UPDATE_BATCH', 'vouchers', f'Updated batch {batch_id} to name "{name}" and package "{new_pkg["name"]}"')
     return True

@@ -51,6 +51,10 @@ def create_app(config=None):
                 'runtime_integrity': integrity_status()}
 
     start_integrity_observer()
+
+    from services.data_cost_service import format_cost as _format_data_cost, cost_enabled as _data_cost_enabled
+    app.add_template_global(_format_data_cost, 'data_cost')
+    app.add_template_global(_data_cost_enabled, 'data_cost_enabled')
     
     app.secret_key = SECRET_KEY
     app.config['TEMPLATES_AUTO_RELOAD'] = True

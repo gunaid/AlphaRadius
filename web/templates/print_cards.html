@@ -1,3 +1,4 @@
+{% from "components/card_sheet.html" import card_sheet %}
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -100,7 +101,7 @@
                 <span>قالب التصميم:</span>
             </label>
             <select id="designSelector" onchange="switchDesign(this.value)" class="bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer">
-                <option value="" {% if not selected_design %}selected{% endif %}>القالب الافتراضي الكلاسيكي (شبكي / إيصالات)</option>
+                <option value="0" {% if not selected_design %}selected{% endif %}>القالب الافتراضي الكلاسيكي (شبكي / إيصالات)</option>
                 {% for d in designs %}
                 <option value="{{ d.id }}" {% if selected_design and selected_design.id == d.id %}selected{% endif %}>
                     {{ d.name }} ({{ d.width_mm }} × {{ d.height_mm }} مم - {{ d.cards_per_row }}×{{ d.cards_per_col }} في A4)
@@ -128,144 +129,7 @@
         <div class="no-print text-center text-xs text-slate-500 font-bold mb-2">
             --- ورقة A4 (الصفحة {{ loop.index }} من {{ card_pages|length }}) ---
         </div>
-        <div class="sheet" style="
-            width: 210mm;
-            min-height: 297mm;
-            max-height: 297mm;
-            height: 297mm;
-            margin: 0 auto 12mm auto;
-            background: #ffffff;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
-            box-sizing: border-box;
-            padding-top: {{ selected_design.margin_top_mm if selected_design.margin_top_mm is not none else 10 }}mm;
-            padding-bottom: {{ selected_design.margin_top_mm if selected_design.margin_top_mm is not none else 10 }}mm;
-            padding-left: {{ selected_design.margin_page_mm if selected_design.margin_page_mm is not none else 10 }}mm;
-            padding-right: {{ selected_design.margin_page_mm if selected_design.margin_page_mm is not none else 10 }}mm;
-            display: grid;
-            grid-template-columns: repeat({{ selected_design.cards_per_row|default(2) }}, 1fr);
-            grid-template-rows: repeat({{ selected_design.cards_per_col|default(5) }}, 1fr);
-            gap: {{ selected_design.card_spacing_mm if selected_design.card_spacing_mm is not none else 0 }}mm;
-            position: relative;
-            overflow: hidden;
-        ">
-            {% for c in page %}
-            <div class="custom-card-cell" style="
-                width: 100%;
-                height: 100%;
-                position: relative;
-                overflow: hidden;
-                box-sizing: border-box;
-                border-radius: 0px !important;
-                {% if selected_design.cut_lines %}
-                border: 1px dashed {{ selected_design.border_color or '#94a3b8' }};
-                {% else %}
-                border: 1px solid {{ selected_design.border_color or '#cbd5e1' }};
-                {% endif %}
-                background-color: {{ selected_design.background_color or '#ffffff' }};
-            ">
-                {% if selected_design.bg_image and selected_design.design_type != 'clean' %}
-                <img src="{{ selected_design.bg_image }}" class="card-bg-img" alt="" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; z-index: 1; pointer-events: none; border-radius: 0px;" />
-                {% endif %}
-                <div style="position: absolute; inset: 0; z-index: 10; pointer-events: none;">
-                {% set cfg = selected_design.config %}
-                {% if cfg and cfg.elements %}
-                    {% set el = cfg.elements %}
-
-                    {# 1. Username #}
-                    {% if el.username and el.username.enabled %}
-                    <div style="position: absolute; left: {{ el.username.x }}%; top: {{ el.username.y }}%; transform: translate(-50%, -50%); font-family: '{{ el.username.font_family or 'Tajawal' }}', sans-serif; font-size: {{ el.username.font_size or 12 }}pt; color: {{ el.username.color or '#0f172a' }}; font-weight: {{ 'bold' if el.username.bold else 'normal' }}; font-style: {{ 'italic' if el.username.italic else 'normal' }}; text-decoration: {{ 'underline' if el.username.underline else 'none' }}; letter-spacing: {{ el.username.letter_spacing or 0 }}px; white-space: nowrap; line-height: 1;">
-                        {{ (el.username.prefix or '') ~ c.username }}
-                    </div>
-                    {% endif %}
-
-                    {# 2. Password #}
-                    {% if el.password and el.password.enabled %}
-                    <div style="position: absolute; left: {{ el.password.x }}%; top: {{ el.password.y }}%; transform: translate(-50%, -50%); font-family: '{{ el.password.font_family or 'Tajawal' }}', sans-serif; font-size: {{ el.password.font_size or 12 }}pt; color: {{ el.password.color or '#0f172a' }}; font-weight: {{ 'bold' if el.password.bold else 'normal' }}; font-style: {{ 'italic' if el.password.italic else 'normal' }}; text-decoration: {{ 'underline' if el.password.underline else 'none' }}; letter-spacing: {{ el.password.letter_spacing or 0 }}px; white-space: nowrap; line-height: 1;">
-                        {{ (el.password.prefix or '') ~ c.password }}
-                    </div>
-                    {% endif %}
-
-                    {# 3. PIN Code #}
-                    {% if el.pin_code and el.pin_code.enabled %}
-                    <div style="position: absolute; left: {{ el.pin_code.x }}%; top: {{ el.pin_code.y }}%; transform: translate(-50%, -50%); font-family: '{{ el.pin_code.font_family or 'Tajawal' }}', sans-serif; font-size: {{ el.pin_code.font_size or 14 }}pt; color: {{ el.pin_code.color or '#0f172a' }}; font-weight: {{ 'bold' if el.pin_code.bold else 'normal' }}; font-style: {{ 'italic' if el.pin_code.italic else 'normal' }}; text-decoration: {{ 'underline' if el.pin_code.underline else 'none' }}; letter-spacing: {{ el.pin_code.letter_spacing or 0 }}px; white-space: nowrap; line-height: 1;">
-                        {{ (el.pin_code.prefix or '') ~ (c.pin_code if c.pin_code else c.username) }}
-                    </div>
-                    {% endif %}
-
-                    {# 4. Serial #}
-                    {% if el.serial and el.serial.enabled %}
-                    <div style="position: absolute; left: {{ el.serial.x }}%; top: {{ el.serial.y }}%; transform: translate(-50%, -50%); font-family: '{{ el.serial.font_family or 'Tajawal' }}', sans-serif; font-size: {{ el.serial.font_size or 9 }}pt; color: {{ el.serial.color or '#475569' }}; font-weight: {{ 'bold' if el.serial.bold else 'normal' }}; font-style: {{ 'italic' if el.serial.italic else 'normal' }}; text-decoration: {{ 'underline' if el.serial.underline else 'none' }}; letter-spacing: {{ el.serial.letter_spacing or 0 }}px; white-space: nowrap; line-height: 1;">
-                        {{ (el.serial.prefix or '') ~ c.serial_number }}
-                    </div>
-                    {% endif %}
-
-                    {# 5. Price #}
-                    {% if el.price and el.price.enabled %}
-                    <div style="position: absolute; left: {{ el.price.x }}%; top: {{ el.price.y }}%; transform: translate(-50%, -50%); font-family: '{{ el.price.font_family or 'Tajawal' }}', sans-serif; font-size: {{ el.price.font_size or 12 }}pt; color: {{ el.price.color or '#2563eb' }}; font-weight: {{ 'bold' if el.price.bold else 'normal' }}; font-style: {{ 'italic' if el.price.italic else 'normal' }}; text-decoration: {{ 'underline' if el.price.underline else 'none' }}; letter-spacing: {{ el.price.letter_spacing or 0 }}px; white-space: nowrap; line-height: 1;">
-                        {{ (el.price.prefix or '') ~ (el.price.text if el.price.text else (c.price ~ ' ' ~ c.currency)) }}
-                    </div>
-                    {% endif %}
-
-                    {# 6. Profile / Package #}
-                    {% if el.profile and el.profile.enabled %}
-                    <div style="position: absolute; left: {{ el.profile.x }}%; top: {{ el.profile.y }}%; transform: translate(-50%, -50%); font-family: '{{ el.profile.font_family or 'Tajawal' }}', sans-serif; font-size: {{ el.profile.font_size or 11 }}pt; color: {{ el.profile.color or '#0f172a' }}; font-weight: {{ 'bold' if el.profile.bold else 'normal' }}; font-style: {{ 'italic' if el.profile.italic else 'normal' }}; text-decoration: {{ 'underline' if el.profile.underline else 'none' }}; letter-spacing: {{ el.profile.letter_spacing or 0 }}px; white-space: nowrap; line-height: 1;">
-                        {{ (el.profile.prefix or '') ~ (el.profile.text if el.profile.text else c.package_name) }}
-                    </div>
-                    {% endif %}
-
-                    {# 7. Quota #}
-                    {% if el.quota and el.quota.enabled %}
-                    <div style="position: absolute; left: {{ el.quota.x }}%; top: {{ el.quota.y }}%; transform: translate(-50%, -50%); font-family: '{{ el.quota.font_family or 'Tajawal' }}', sans-serif; font-size: {{ el.quota.font_size or 10 }}pt; color: {{ el.quota.color or '#334155' }}; font-weight: {{ 'bold' if el.quota.bold else 'normal' }}; font-style: {{ 'italic' if el.quota.italic else 'normal' }}; text-decoration: {{ 'underline' if el.quota.underline else 'none' }}; letter-spacing: {{ el.quota.letter_spacing or 0 }}px; white-space: nowrap; line-height: 1;">
-                        {{ (el.quota.prefix or '') ~ (el.quota.text if el.quota.text else c.quota) }}
-                    </div>
-                    {% endif %}
-
-                    {# 8. Validity #}
-                    {% if el.validity and el.validity.enabled %}
-                    <div style="position: absolute; left: {{ el.validity.x }}%; top: {{ el.validity.y }}%; transform: translate(-50%, -50%); font-family: '{{ el.validity.font_family or 'Tajawal' }}', sans-serif; font-size: {{ el.validity.font_size or 10 }}pt; color: {{ el.validity.color or '#334155' }}; font-weight: {{ 'bold' if el.validity.bold else 'normal' }}; font-style: {{ 'italic' if el.validity.italic else 'normal' }}; text-decoration: {{ 'underline' if el.validity.underline else 'none' }}; letter-spacing: {{ el.validity.letter_spacing or 0 }}px; white-space: nowrap; line-height: 1;">
-                        {{ (el.validity.prefix or '') ~ (el.validity.text if el.validity.text else c.validity) }}
-                    </div>
-                    {% endif %}
-
-                    {# 9. Speed #}
-                    {% if el.speed and el.speed.enabled %}
-                    <div style="position: absolute; left: {{ el.speed.x }}%; top: {{ el.speed.y }}%; transform: translate(-50%, -50%); font-family: '{{ el.speed.font_family or 'Tajawal' }}', sans-serif; font-size: {{ el.speed.font_size or 9 }}pt; color: {{ el.speed.color or '#475569' }}; font-weight: {{ 'bold' if el.speed.bold else 'normal' }}; font-style: {{ 'italic' if el.speed.italic else 'normal' }}; text-decoration: {{ 'underline' if el.speed.underline else 'none' }}; letter-spacing: {{ el.speed.letter_spacing or 0 }}px; white-space: nowrap; line-height: 1;">
-                        {{ (el.speed.prefix or '') ~ (el.speed.text if el.speed.text else c.speed) }}
-                    </div>
-                    {% endif %}
-
-                    {# 10. Hotspot / ISP Name #}
-                    {% if el.hotspot_name and el.hotspot_name.enabled %}
-                    <div style="position: absolute; left: {{ el.hotspot_name.x }}%; top: {{ el.hotspot_name.y }}%; transform: translate(-50%, -50%); font-family: '{{ el.hotspot_name.font_family or 'Tajawal' }}', sans-serif; font-size: {{ el.hotspot_name.font_size or 12 }}pt; color: {{ el.hotspot_name.color or '#0f172a' }}; font-weight: {{ 'bold' if el.hotspot_name.bold else 'normal' }}; font-style: {{ 'italic' if el.hotspot_name.italic else 'normal' }}; text-decoration: {{ 'underline' if el.hotspot_name.underline else 'none' }}; letter-spacing: {{ el.hotspot_name.letter_spacing or 0 }}px; white-space: nowrap; line-height: 1;">
-                        {{ (el.hotspot_name.prefix or '') ~ (el.hotspot_name.text if el.hotspot_name.text else c.isp_name) }}
-                    </div>
-                    {% endif %}
-
-                    {# 11. Custom Text 1 #}
-                    {% if el.custom_text_1 and el.custom_text_1.enabled %}
-                    <div style="position: absolute; left: {{ el.custom_text_1.x }}%; top: {{ el.custom_text_1.y }}%; transform: translate(-50%, -50%); font-family: '{{ el.custom_text_1.font_family or 'Tajawal' }}', sans-serif; font-size: {{ el.custom_text_1.font_size or 9 }}pt; color: {{ el.custom_text_1.color or '#475569' }}; font-weight: {{ 'bold' if el.custom_text_1.bold else 'normal' }}; font-style: {{ 'italic' if el.custom_text_1.italic else 'normal' }}; text-decoration: {{ 'underline' if el.custom_text_1.underline else 'none' }}; letter-spacing: {{ el.custom_text_1.letter_spacing or 0 }}px; white-space: nowrap; line-height: 1;">
-                        {{ (el.custom_text_1.prefix or '') ~ (el.custom_text_1.text or '') }}
-                    </div>
-                    {% endif %}
-
-                    {# 12. Custom Text 2 #}
-                    {% if el.custom_text_2 and el.custom_text_2.enabled %}
-                    <div style="position: absolute; left: {{ el.custom_text_2.x }}%; top: {{ el.custom_text_2.y }}%; transform: translate(-50%, -50%); font-family: '{{ el.custom_text_2.font_family or 'Tajawal' }}', sans-serif; font-size: {{ el.custom_text_2.font_size or 9 }}pt; color: {{ el.custom_text_2.color or '#475569' }}; font-weight: {{ 'bold' if el.custom_text_2.bold else 'normal' }}; font-style: {{ 'italic' if el.custom_text_2.italic else 'normal' }}; text-decoration: {{ 'underline' if el.custom_text_2.underline else 'none' }}; letter-spacing: {{ el.custom_text_2.letter_spacing or 0 }}px; white-space: nowrap; line-height: 1;">
-                        {{ (el.custom_text_2.prefix or '') ~ (el.custom_text_2.text or '') }}
-                    </div>
-                    {% endif %}
-
-                    {# 13. QR Code #}
-                    {% if el.qr_code and el.qr_code.enabled %}
-                    {% set qr_mm = ((el.qr_code.size or 55) * 0.264583)|round(1) %}
-                    <div id="cqr_{{ c.id }}" style="position: absolute; left: {{ el.qr_code.x }}%; top: {{ el.qr_code.y }}%; transform: translate(-50%, -50%); width: {{ qr_mm }}mm; height: {{ qr_mm }}mm; background: white; border: 0.5px solid #cbd5e1; border-radius: 0px; display: flex; align-items: center; justify-content: center; padding: 0.5mm; box-sizing: border-box;">
-                    </div>
-                    {% endif %}
-                {% endif %}
-                </div>
-            </div>
-            {% endfor %}
-        </div>
+        {{ card_sheet(page, selected_design) }}
         {% endfor %}
     </div>
     {% else %}
@@ -361,25 +225,13 @@
                 // Custom Design QR Codes
                 {% if selected_design.config and selected_design.config.elements and selected_design.config.elements.qr_code and selected_design.config.elements.qr_code.enabled %}
                     {% set qr_px = ((selected_design.config.elements.qr_code.size or 55) * 1.5)|int %}
-                    {% for c in cards %}
-                    const cqrEl_{{ c.id }} = document.getElementById("cqr_{{ c.id }}");
-                    if (cqrEl_{{ c.id }}) {
-                        new QRCode(cqrEl_{{ c.id }}, {
-                            text: {{ c.login_url|tojson }},
-                            width: {{ [qr_px, 64]|max }},
-                            height: {{ [qr_px, 64]|max }},
-                            colorDark : "#0f172a",
-                            colorLight : "#ffffff",
-                            correctLevel : QRCode.CorrectLevel.M
-                        });
-                        const img = cqrEl_{{ c.id }}.querySelector('img, canvas');
-                        if (img) {
-                            img.style.width = '100%';
-                            img.style.height = '100%';
-                            img.style.display = 'block';
-                        }
-                    }
-                    {% endfor %}
+                    const qrSize = {{ [qr_px, 64]|max }};
+                    document.querySelectorAll('.cqr[data-qr]').forEach(el => {
+                        new QRCode(el, {text: el.dataset.qr, width: qrSize, height: qrSize,
+                                        colorDark: "#0f172a", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M});
+                        const img = el.querySelector('img, canvas');
+                        if (img) { img.style.width = '100%'; img.style.height = '100%'; img.style.display = 'block'; }
+                    });
                 {% endif %}
             {% else %}
                 // Apply saved layout if available in default view

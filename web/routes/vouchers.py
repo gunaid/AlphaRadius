@@ -138,7 +138,12 @@ def vouchers():
         WHERE (m.is_deleted = 0 OR m.is_deleted IS NULL) AND (m.is_active = 1 OR m.is_active IS NULL)
         ORDER BY m.id ASC
     """)
+    from services.batch_form_defaults import load as load_batch_form_defaults
+    manager = get_current_manager() or {}
+    auto_pdf_batch = request.args.get('auto_pdf', '').strip()
     return render_template('vouchers.html',
+                           batch_form_defaults=load_batch_form_defaults(manager.get('id')),
+                           auto_pdf_batch=int(auto_pdf_batch) if auto_pdf_batch.isdigit() else None,
                            list_sort=list_sort,
                            batches=batches,
                            cards=cards,
@@ -152,6 +157,7 @@ def vouchers():
                            reseller_id=reseller_id,
                            status=status,
                            card_designs=get_all_card_designs(),
+                           linked_design_by_package=linked_design_ids(),
                            issue_policy=get_issue_policy() if owner_id() else None)
 
 
@@ -183,6 +189,8 @@ def generate_vouchers_action():
         name = '' if request.form.get('auto_name') == '1' else request.form.get('name', '').strip()
         same_user_pass = request.form.get('same_user_pass') == '1'
         pin_only = (format_type == 'pin_only')
+        sale_point = request.form.get('sale_point', '').strip()
+        auto_pdf = request.form.get('auto_pdf') == '1'
         
         batch_id, batch_num = generate_voucher_batch(
             name=name,
@@ -195,9 +203,15 @@ def generate_vouchers_action():
             reseller_id=reseller_id,
             created_by=get_current_manager().get('username') or 'admin',
             same_user_pass=same_user_pass,
-            pass_length=pass_length
+            pass_length=pass_length,
+            sale_point=sale_point
         )
+        from services.batch_form_defaults import save as save_batch_form_defaults
+        save_batch_form_defaults((get_current_manager() or {}).get('id'), request.form)
         flash(f'تم توليد الحزمة بنجاح برقم {batch_num} ومزامنة الكروت مع FreeRADIUS.', 'success')
+        if auto_pdf:
+            # The list page starts the PDF download with the package-linked design.
+            return redirect(url_for('vouchers', auto_pdf=batch_id))
         return redirect(url_for('view_batch_details', batch_id=batch_id))
     except Exception as e:
         flash(f'خطأ أثناء توليد الحزمة: {str(e)}', 'danger')
@@ -228,7 +242,7 @@ def view_batch_details(batch_id):
     if not batch:
         flash('الدفعة المطلوبة غير موجودة.', 'danger')
         return redirect(url_for('vouchers'))
-    cards = get_vouchers(batch_id=batch_id, limit=5000)
+    cards = get_vouchers(batch_id=batch_id, limit=10000)
     packages = query_all("SELECT id, name, price FROM wisp_packages WHERE service_type IN ('hotspot', 'both')")
     return render_template('batch_details.html', batch=batch, cards=cards, packages=packages, q=search, status=status)
 
@@ -239,7 +253,7 @@ def edit_batch_action(batch_id):
     try:
         name = request.form['name'].strip()
         pkg_id = int(request.form['package_id'])
-        update_voucher_batch(batch_id, name, pkg_id)
+        update_voucher_batch(batch_id, name, pkg_id, sale_point=request.form.get('sale_point'))
         flash('تم تعديل بيانات الحزمة وتحديث باقة المستخدمين في FreeRADIUS (radusergroup) بنجاح.', 'success')
     except Exception as e:
         flash(f'خطأ أثناء تعديل الحزمة: {str(e)}', 'danger')
@@ -1183,7 +1197,8 @@ def api_activate_voucher():
 def voucher_designs_list():
     """عرض صفحة قائمة تصاميم الكروت المحفوظة"""
     designs = get_all_card_designs()
-    return render_template('designs_list.html', designs=designs)
+    package_names = {int(p['id']): p['name'] for p in query_all('SELECT id, name FROM wisp_packages')}
+    return render_template('designs_list.html', designs=designs, package_names=package_names)
 
 
 @vouchers_bp.route('/vouchers/designs/new', endpoint="new_voucher_design")
@@ -1203,6 +1218,7 @@ def new_voucher_design():
         'design_editor.html',
         design=None,
         default_config=DEFAULT_CARD_CONFIG,
+        design_packages=query_all("SELECT id, name FROM wisp_packages WHERE service_type IN ('hotspot', 'both') ORDER BY name"),
         is_new=True,
         system_isp_name=system_isp_name,
         system_currency=system_currency,
@@ -1232,6 +1248,7 @@ def edit_voucher_design(design_id):
         'design_editor.html',
         design=design,
         default_config=DEFAULT_CARD_CONFIG,
+        design_packages=query_all("SELECT id, name FROM wisp_packages WHERE service_type IN ('hotspot', 'both') ORDER BY name"),
         is_new=False,
         system_isp_name=system_isp_name,
         system_currency=system_currency,
@@ -1366,16 +1383,21 @@ def print_cards(batch_id):
     pdf_export = request.args.get('export') == 'pdf'
     if pdf_export:
         size=query_one('SELECT COUNT(*) AS n FROM wisp_vouchers WHERE batch_id=?',(batch_id,))['n']
-        if not 1 <= size <= 2000:
-            return jsonify(success=False,message='تصدير PDF متاح للحزم من 1 إلى 2000 كرت.'),400
+        if not 1 <= size <= MAX_BATCH_CARDS:
+            return jsonify(success=False,message='تصدير PDF متاح للحزم من 1 إلى 10000 كرت.'),400
     batch, cards, template = get_batch_cards_for_print(batch_id)
     if not batch:
         flash('الدفعة المطلوبة غير موجودة.', 'danger')
         return redirect(url_for('vouchers'))
 
-    design_id = request.values.get('design_id')
+    # No design_id: the design linked to the batch package, else the default
+    # design. design_id=0 explicitly selects the classic built-in layout.
+    design_id = (request.values.get('design_id') or '').strip()
     selected_design = None
-    if design_id:
+    if design_id == '':
+        selected_design = resolve_card_design(batch.get('package_id'))
+        design_id = str(selected_design['id']) if selected_design else ''
+    elif design_id != '0':
         try:
             selected_design = get_card_design_by_id(int(design_id))
         except Exception:
@@ -1425,27 +1447,37 @@ def print_cards(batch_id):
                                saved_config_json=saved_config_json,
                                designs=designs,
                                selected_design=selected_design,
-                               selected_design_id=int(design_id) if (design_id and str(design_id).isdigit()) else None)
+                               selected_design_id=int(design_id) if (design_id and str(design_id).isdigit() and design_id != '0') else None)
         return html
-    if not cards or len(cards) > 2000:
-        return jsonify(success=False, message='تصدير PDF متاح للحزم من 1 إلى 2000 كرت.'), 400
+    if not cards or len(cards) > MAX_BATCH_CARDS:
+        return jsonify(success=False, message='تصدير PDF متاح للحزم من 1 إلى 10000 كرت.'), 400
     try:
-        import io
-        from services.batch_export_service import batch_download_name, iter_card_pdf_groups
-        from services.pdf_export_service import render_parts
+        import math
+        from services.batch_export_service import batch_export_name, iter_card_pdf_groups
+        from services.pdf_export_service import render_parts, default_workers
         from services.heavy_operation_service import ExportCancelled
-        def parts():
-            # Render several existing A4 sheets together; the visible grid and
-            # individual sheet boundaries remain controlled by the template.
-            for subset, pages in iter_card_pdf_groups(
-                    cards, cards_per_page if selected_design else None):
-                yield render_template('print_cards.html',batch=batch,cards=subset,
-                    card_pages=pages,tpl=template,saved_config_json=saved_config_json,
-                    designs=designs,selected_design=selected_design,
-                    selected_design_id=int(design_id) if design_id and str(design_id).isdigit() else None)
-        payload=render_parts(parts(),current_app.static_folder,timeout=600,parts_per_worker=8)
+        workers = default_workers()
+        if selected_design:
+            # Lean PDF page (no Tailwind runtime, vector QR codes): many sheets
+            # per browser page, groups balanced over the parallel renderers.
+            groups = list(iter_card_pdf_groups(cards, cards_per_page, max_cards=500 if workers > 1 else 1000))
+            def parts():
+                for subset, pages in groups:
+                    yield render_template('print_cards_pdf.html', batch=batch, card_pages=pages,
+                                          selected_design=selected_design)
+        else:
+            groups = list(iter_card_pdf_groups(cards, None))
+            def parts():
+                for subset, pages in groups:
+                    yield render_template('print_cards.html',batch=batch,cards=subset,
+                        card_pages=pages,tpl=template,saved_config_json=saved_config_json,
+                        designs=designs,selected_design=None,selected_design_id=None)
+        rounds = math.ceil(len(groups) / (8 * workers))
+        per_worker = max(1, min(8, math.ceil(len(groups) / (workers * rounds))))
+        payload=render_parts(parts(),current_app.static_folder,timeout=1800,
+                             parts_per_worker=per_worker,workers=workers)
         response = send_file(payload, mimetype='application/pdf',
-                             as_attachment=True, download_name=batch_download_name(batch['name'], 'pdf'), max_age=0)
+                             as_attachment=True, download_name=batch_export_name(batch_id, 'pdf', batch['name']), max_age=0)
         response.call_on_close(payload.close)
         response.headers['Cache-Control'] = 'no-store, private'
         response.headers['X-Content-Type-Options'] = 'nosniff'
@@ -1463,12 +1495,12 @@ def export_batch_excel(batch_id):
     batch = query_one('SELECT * FROM wisp_voucher_batches WHERE id=?', (batch_id,))
     if not batch:
         return jsonify(success=False, message='الحزمة غير موجودة.'), 404
-    from services.batch_export_service import export_snapshot, make_workbook, batch_download_name
+    from services.batch_export_service import export_snapshot, make_workbook, batch_export_name
     try:
         batch, cards, totals = export_snapshot(batch_id, owner_id())
         response = send_file(make_workbook(batch, cards, totals),
                              mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                             as_attachment=True, download_name=batch_download_name(batch['name'], 'xlsx'), max_age=0)
+                             as_attachment=True, download_name=batch_export_name(batch_id, 'xlsx', batch['name']), max_age=0)
         response.headers['Cache-Control'] = 'no-store, private'
         response.headers['X-Content-Type-Options'] = 'nosniff'
         return response
@@ -1481,12 +1513,12 @@ def export_batch_excel(batch_id):
 def export_batch_text(batch_id):
     if not query_one('SELECT id FROM wisp_voucher_batches WHERE id=?', (batch_id,)):
         return jsonify(success=False, message='الحزمة غير موجودة.'), 404
-    from services.batch_export_service import export_usernames_text, batch_download_name
+    from services.batch_export_service import export_usernames_text, batch_export_name
     payload = None
     try:
         name, payload, _ = export_usernames_text(batch_id, owner_id())
         response = send_file(payload, mimetype='text/plain', as_attachment=True,
-                             download_name=batch_download_name(name, 'txt'), max_age=0)
+                             download_name=batch_export_name(batch_id, 'txt', name), max_age=0)
         response.content_length = os.fstat(payload.fileno()).st_size
         response.call_on_close(payload.close)
         response.headers['Cache-Control'] = 'no-store, private'

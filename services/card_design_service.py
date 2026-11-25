@@ -122,6 +122,8 @@ DEFAULT_CARD_CONFIG = {
 }
 
 _schema_checked = False
+MAX_CARDS_PER_ROW = 6
+MAX_CARDS_PER_COL = 20
 
 def ensure_card_designs_table():
     """Ensure wisp_card_templates table has all modern columns."""
@@ -146,7 +148,8 @@ def ensure_card_designs_table():
             ("bg_image", "VARCHAR(255) DEFAULT ''"),
             ("config_json", "TEXT"),
             ("created_at", "VARCHAR(30)"),
-            ("updated_at", "VARCHAR(30)")
+            ("updated_at", "VARCHAR(30)"),
+            ("package_id", "INTEGER NULL")
         ]
 
         for col_name, col_def in new_columns:
@@ -248,6 +251,27 @@ def get_card_design_by_id(design_id):
     return d
 
 
+def linked_design_ids():
+    """{package_id: design_id} for designs linked to a package."""
+    ensure_card_designs_table()
+    rows = query_all("SELECT id, package_id FROM wisp_card_templates WHERE package_id IS NOT NULL ORDER BY id DESC")
+    linked = {}
+    for row in (rows or []):
+        linked.setdefault(int(row['package_id']), int(row['id']))
+    return linked
+
+
+def resolve_card_design(package_id):
+    """Design used when none is chosen: the package's linked design, else the default."""
+    ensure_card_designs_table()
+    if package_id:
+        row = query_one("SELECT id FROM wisp_card_templates WHERE package_id = ? ORDER BY id DESC LIMIT 1", (package_id,))
+        if row:
+            return get_card_design_by_id(row['id'])
+    row = query_one("SELECT id FROM wisp_card_templates WHERE is_default = 1 LIMIT 1")
+    return get_card_design_by_id(row['id']) if row else None
+
+
 def get_default_card_design():
     """Get the active default card design."""
     ensure_card_designs_table()
@@ -301,8 +325,12 @@ def save_card_design(data, upload_dir=None):
 
     width_mm = round(_parse_val(data.get('width_mm') or card_dims.get('width_mm'), 85.0, float), 1)
     height_mm = round(_parse_val(data.get('height_mm') or card_dims.get('height_mm'), 52.0, float), 1)
-    cards_per_row = int(_parse_val(data.get('cards_per_row') or page_layout.get('cards_per_row'), 2, int))
-    cards_per_col = int(_parse_val(data.get('cards_per_col') or page_layout.get('cards_per_col'), 5, int))
+    cards_per_row = min(MAX_CARDS_PER_ROW, max(1, int(_parse_val(data.get('cards_per_row') or page_layout.get('cards_per_row'), 2, int))))
+    cards_per_col = min(MAX_CARDS_PER_COL, max(1, int(_parse_val(data.get('cards_per_col') or page_layout.get('cards_per_col'), 5, int))))
+    raw_package = str(data.get('package_id') or '').strip()
+    package_id = int(raw_package) if raw_package.isdigit() and int(raw_package) > 0 else None
+    if package_id is not None and not query_one("SELECT id FROM wisp_packages WHERE id = ?", (package_id,)):
+        return {'success': False, 'message': 'الباقة المرتبطة بالتصميم غير موجودة.'}
     margin_top_mm = int(_parse_val(data.get('margin_top_mm') or page_layout.get('margin_top_mm'), 10, int))
     margin_page_mm = int(_parse_val(data.get('margin_page_mm') or page_layout.get('margin_page_mm'), 10, int))
     card_spacing_mm = int(_parse_val(data.get('card_spacing_mm') if data.get('card_spacing_mm') is not None else page_layout.get('card_spacing_mm'), 0, int))
@@ -347,6 +375,9 @@ def save_card_design(data, upload_dir=None):
 
     if is_default == 1:
         execute_write("UPDATE wisp_card_templates SET is_default = 0")
+    if package_id is not None:
+        # One design per package keeps automatic selection unambiguous.
+        execute_write("UPDATE wisp_card_templates SET package_id = NULL WHERE package_id = ?", (package_id,))
 
     if design_id and int(design_id) > 0:
         design_id = int(design_id)
@@ -355,13 +386,13 @@ def save_card_design(data, upload_dir=None):
                 name = ?, design_type = ?, width_mm = ?, height_mm = ?,
                 cards_per_row = ?, cards_per_col = ?, margin_top_mm = ?, margin_page_mm = ?,
                 card_spacing_mm = ?, cut_lines = ?, background_color = ?, border_color = ?,
-                bg_image = ?, config_json = ?, is_default = ?, updated_at = ?
+                bg_image = ?, config_json = ?, is_default = ?, updated_at = ?, package_id = ?
             WHERE id = ?
         """, (
             name, design_type, width_mm, height_mm,
             cards_per_row, cards_per_col, margin_top_mm, margin_page_mm,
             card_spacing_mm, cut_lines, bg_color, border_color,
-            bg_image, config_json_str, is_default, now_str, design_id
+            bg_image, config_json_str, is_default, now_str, package_id, design_id
         ))
         saved_id = design_id
     else:
@@ -370,13 +401,13 @@ def save_card_design(data, upload_dir=None):
                 name, design_type, width_mm, height_mm, cards_per_row, cards_per_col,
                 margin_top_mm, margin_page_mm, card_spacing_mm, cut_lines,
                 background_color, border_color, bg_image, config_json, is_default,
-                created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                created_at, updated_at, package_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             name, design_type, width_mm, height_mm,
             cards_per_row, cards_per_col, margin_top_mm, margin_page_mm,
             card_spacing_mm, cut_lines, bg_color, border_color,
-            bg_image, config_json_str, is_default, now_str, now_str
+            bg_image, config_json_str, is_default, now_str, now_str, package_id
         ))
 
     if is_default == 1 and config_json_str:
