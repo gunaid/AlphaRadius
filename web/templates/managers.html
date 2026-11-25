@@ -262,6 +262,10 @@
                                     <i class="fa-solid {% if m.is_active %}fa-user-slash{% else %}fa-user-check{% endif %}"></i><span>{% if m.is_active %}إيقاف الحساب{% else %}تنشيط الحساب{% endif %}</span>
                                 </button>{% endif %}{% endif %}{% endif %}
 
+                                {% if can_access_endpoint('reset_manager_2fa_action') and not is_reseller_scope() %}<form method="POST" action="{{ url_for('reset_manager_2fa_action', manager_id=m.id) }}" onsubmit="return confirm('إيقاف التحقق بخطوتين لهذا الحساب؟ استخدمه عند فقدان الهاتف.')">
+                                    <button type="submit" class="manager-menu-item text-slate-300" title="إيقاف التحقق بخطوتين (فقدان الهاتف)"><i class="fa-solid fa-mobile-screen-button"></i><span>إعادة ضبط التحقق بخطوتين</span></button>
+                                </form>{% endif %}
+
                                 <!-- Login As / Impersonate (For Super Admin) -->
                                 {% if current_manager and (current_manager.id == 1 or current_manager.role_code == 'superadmin' or session.get('original_admin_id') == 1) %}
                                 {% if m.id != current_manager.id %}

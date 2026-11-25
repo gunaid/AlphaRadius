@@ -254,6 +254,7 @@ ENDPOINT_PERMISSIONS = {
  'system_services_page': ['system.view_services'],
  'system_update_page': ['system.settings'],
  'toggle_manager_status_action': ['managers.manage'],
+ 'reset_manager_2fa_action': ['managers.manage'],
  'tools_backups_short': ['system.settings'],
  'topup_reseller_action': ['managers.billing'],
  'traffic_analytics_page': ['subscribers.view', 'vouchers.view'],

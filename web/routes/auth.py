@@ -107,8 +107,22 @@ def login():
         flash('اسم المستخدم أو كلمة المرور غير صحيحة.', 'danger')
         return render_template('login.html'), 401
 
-    # Successful Login
+    next_page = request.form.get('next') or request.args.get('next')
+    from services import two_factor_service as tfa
+    if tfa.needs_second_factor(manager['id'], request.cookies.get(tfa.DEVICE_COOKIE)):
+        # Password is right but this browser is new: ask for the authenticator code.
+        session.pop('admin_id', None)
+        session['pending_2fa'] = {'manager_id': int(manager['id']), 'at': time.time(), 'attempts': 0,
+                                  'next': next_page or ''}
+        log_audit(manager['id'], username, 'LOGIN_2FA_REQUIRED', 'auth', f'New device for [{username}]; code requested')
+        return redirect(url_for('login_verify'))
+    return _complete_login(manager, next_page)
+
+
+def _complete_login(manager, next_page=None, device_token=None):
+    username = manager['username']
     session.permanent = True
+    session.pop('pending_2fa', None)
     session['admin_id'] = manager['id']
     session['admin_username'] = manager['username']
     session['role_code'] = manager['role_code']
@@ -120,10 +134,94 @@ def login():
     log_audit(manager['id'], username, 'LOGIN_SUCCESS', 'auth', f'Manager [{username}] ({manager["role_name"]}) logged in successfully')
 
     flash(f'مرحباً بك مجدداً، {manager["full_name"]}', 'success')
-    next_page = request.form.get('next') or request.args.get('next')
     if next_page and next_page.startswith('/') and not next_page.startswith('//') and not next_page.startswith('/login'):
-        return redirect(next_page)
-    return redirect(url_for('dashboard'))
+        response = redirect(next_page)
+    else:
+        response = redirect(url_for('dashboard'))
+    if device_token:
+        from services import two_factor_service as tfa
+        response.set_cookie(tfa.DEVICE_COOKIE, device_token, max_age=tfa.TRUST_DAYS * 86400, httponly=True,
+                            secure=request.is_secure, samesite='Lax')
+    return response
+
+
+@auth_bp.route('/login/verify', methods=['GET', 'POST'], endpoint="login_verify")
+def login_verify():
+    """Second step of a login from a new device: the authenticator code."""
+    from services import two_factor_service as tfa
+    pending = session.get('pending_2fa')
+    if not tfa.pending_valid(pending):
+        session.pop('pending_2fa', None)
+        flash('انتهت مهلة التحقق؛ سجّل الدخول مجددًا.', 'warning')
+        return redirect(url_for('login'))
+    if request.method == 'GET':
+        return render_template('login_verify.html')
+    manager = query_one('''SELECT m.*, r.name as role_name, r.code as role_code FROM wisp_managers m
+                           JOIN wisp_roles r ON m.role_id = r.id WHERE m.id = ?''', (pending['manager_id'],))
+    if not manager or not manager.get('is_active'):
+        session.pop('pending_2fa', None)
+        return redirect(url_for('login'))
+    if tfa.verify_code(manager['id'], request.form.get('code', '')):
+        token = tfa.trust_device(manager['id'], request.headers.get('User-Agent', '')) \
+            if request.form.get('trust') == 'on' else None
+        log_audit(manager['id'], manager['username'], 'LOGIN_2FA_SUCCESS', 'auth',
+                  'Authenticator code accepted' + ('; device trusted' if token else ''))
+        return _complete_login(manager, pending.get('next'), token)
+    pending['attempts'] = int(pending.get('attempts') or 0) + 1
+    session['pending_2fa'] = pending
+    log_audit(manager['id'], manager['username'], 'LOGIN_2FA_FAILED', 'auth', f"Wrong code (attempt {pending['attempts']})")
+    if not tfa.pending_valid(pending):
+        session.pop('pending_2fa', None)
+        flash('محاولات كثيرة خاطئة؛ سجّل الدخول مجددًا.', 'danger')
+        return redirect(url_for('login'))
+    flash('الرمز غير صحيح.', 'danger')
+    return render_template('login_verify.html'), 401
+
+
+@auth_bp.route('/profile/security', methods=['GET'], endpoint="profile_security")
+def profile_security():
+    from services import two_factor_service as tfa
+    manager = get_current_manager()
+    if not manager:
+        return redirect(url_for('login'))
+    record = tfa.totp_record(manager['id'])
+    setup = record if record and not int(record.get('enabled') or 0) else None
+    return render_template('profile_security.html', enabled=tfa.is_enabled(manager['id']),
+                           setup_secret=setup['secret_b32'] if setup else '',
+                           setup_uri=tfa.provisioning_uri(setup['secret_b32'], manager['username']) if setup else '',
+                           devices=tfa.devices(manager['id']), trust_days=tfa.TRUST_DAYS)
+
+
+@auth_bp.route('/profile/security/<action>', methods=['POST'], endpoint="profile_security_action")
+def profile_security_action(action):
+    from services import two_factor_service as tfa
+    manager = get_current_manager()
+    if not manager:
+        return redirect(url_for('login'))
+    try:
+        if action == 'setup':
+            tfa.start_setup(manager['id'])
+            flash('امسح الرمز بتطبيق المصادقة ثم أدخل الرمز الظاهر لتفعيل التحقق.', 'info')
+        elif action == 'enable':
+            tfa.enable(manager['id'], request.form.get('code', ''))
+            log_audit(manager['id'], manager['username'], '2FA_ENABLED', 'auth', 'Authenticator enabled')
+            flash('فُعّل التحقق بخطوتين؛ سيُطلب الرمز عند الدخول من جهاز جديد فقط.', 'success')
+        elif action == 'disable':
+            full = get_manager_by_id(manager['id'])
+            if not verify_manager_password(full['password_hash'], request.form.get('password', '')):
+                raise ValueError('كلمة المرور غير صحيحة.')
+            tfa.disable(manager['id'])
+            log_audit(manager['id'], manager['username'], '2FA_DISABLED', 'auth', 'Authenticator disabled')
+            flash('أُوقف التحقق بخطوتين وحُذفت الأجهزة الموثوقة.', 'warning')
+        elif action == 'forget-devices':
+            count = tfa.forget_devices(manager['id'])
+            log_audit(manager['id'], manager['username'], '2FA_DEVICES_FORGOTTEN', 'auth', f'{count} devices')
+            flash('حُذفت الأجهزة الموثوقة؛ سيُطلب الرمز في الدخول التالي من أي جهاز.', 'info')
+        else:
+            flash('إجراء غير معروف.', 'danger')
+    except ValueError as exc:
+        flash(str(exc), 'danger')
+    return redirect(url_for('profile_security'))
 
 
 @auth_bp.route('/logout', methods=['GET', 'POST'], endpoint="logout")

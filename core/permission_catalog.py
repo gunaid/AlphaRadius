@@ -64,6 +64,7 @@ DETAILS = (
  ('managers.create', 'إضافة مدير أو موزع', 'managers.manage', 'add_manager_action add_reseller_action'),
  ('managers.edit', 'تعديل المدير أو الموزع', 'managers.manage', 'edit_manager_action'),
  ('managers.status', 'إيقاف وتنشيط المدير أو الموزع', 'managers.manage', 'toggle_manager_status_action'),
+ ('managers.reset_2fa', 'إيقاف التحقق بخطوتين لمدير فقد هاتفه', 'managers.manage', 'reset_manager_2fa_action'),
  ('managers.delete', 'حذف المدير أو الموزع', 'managers.manage', 'delete_manager_action'),
  ('managers.statement', 'عرض كشف حساب الموزع', 'managers.billing', 'manager_statement_page'),
  ('managers.invoices', 'عرض فواتير الموزعين', 'managers.billing', 'manager_invoices_page manager_operation_receipt'),

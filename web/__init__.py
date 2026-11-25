@@ -137,7 +137,7 @@ def create_app(config=None):
             path.startswith('/api/v1/license') or
             path.startswith('/api/hotspot') or
             path in ('/settings/license', '/license', '/settings/license/activate', '/settings/license/sync-heartbeat', '/settings/license/offline-renewal') or
-            path in ('/login', '/logout') or
+            path in ('/login', '/login/verify', '/logout') or
             path.startswith('/user/')
         ):
             return None
@@ -169,7 +169,7 @@ def create_app(config=None):
     @app.before_request
     def check_authentication():
         public_endpoints = {
-            'login', 'logout', 'static', 'api_coa_status', 'health_check',
+            'login', 'login_verify', 'logout', 'static', 'api_coa_status', 'health_check',
             
             'api_download_hotspot_package_zip'
         }
@@ -178,7 +178,7 @@ def create_app(config=None):
         if request.endpoint in public_endpoints or ep in public_endpoints:
             return None
         if request.path.startswith('/static') or request.path.startswith('/user') or request.path.startswith('/api/hotspot') or request.path in [
-            '/login', '/logout', '/health', '/api/backup/health', '/favicon.ico',
+            '/login', '/login/verify', '/logout', '/health', '/api/backup/health', '/favicon.ico',
             '/settings/license', '/settings/license/activate', '/settings/license/sync-heartbeat', '/settings/license/offline-renewal'
         ]:
             return None
@@ -472,6 +472,12 @@ def create_app(config=None):
     if DB_TYPE=='mysql' and app.config.get('SESSION_CONTROL',True):
         from services.session_control_service import start_worker as start_session_control
         start_session_control()
+    try:
+        # Optional authenticator second factor for managers (new devices only).
+        from services.two_factor_service import ensure_tables as ensure_two_factor_tables
+        ensure_two_factor_tables()
+    except Exception:
+        logger.exception('Unable to prepare two-factor tables')
     if DB_TYPE=='mysql' and app.config.get('ROAMING_WORKER',True):
         # Frees an idle old seat when a card returns with a new random MAC.
         from services.roaming_service import start_worker as start_roaming_worker

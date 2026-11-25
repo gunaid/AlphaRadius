@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}أمان الحساب{% endblock %}
+{% block page_title %}أمان الحساب: التحقق بخطوتين{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl space-y-6" dir="rtl">
+  <div class="bg-[#0b0f19] border border-[#1c2840] rounded-2xl p-6 space-y-3 text-xs text-slate-300 leading-6">
+    <h3 class="font-bold text-white text-base flex items-center gap-2.5">
+      <span class="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center justify-center text-sm"><i class="fa-solid fa-shield-halved"></i></span>
+      التحقق بخطوتين عند الدخول من جهاز جديد
+    </h3>
+    <p>اختياري. بعد تفعيله يُطلب رمز من تطبيق مصادقة على هاتفك (Google Authenticator أو Microsoft Authenticator أو غيرهما)
+       <b>فقط عند الدخول من متصفح أو جهاز جديد</b>، ثم لا يُطلب على ذلك الجهاز {{ trust_days }} يومًا. لا يحتاج رسائل SMS.</p>
+
+    {% if enabled %}
+      <div class="text-emerald-400 font-bold"><i class="fa-solid fa-circle-check ml-1"></i>مفعّل</div>
+      <form method="POST" action="{{ url_for('profile_security_action', action='disable') }}" class="flex flex-wrap items-end gap-3">
+        <label>كلمة المرور لتأكيد الإيقاف
+          <input type="password" name="password" required class="block mt-1 bg-[#070b14] border border-slate-700 rounded-lg px-2 py-1.5 text-white">
+        </label>
+        <button type="submit" class="px-4 py-2 rounded-xl font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30">إيقاف التحقق بخطوتين</button>
+      </form>
+    {% elif setup_secret %}
+      <ol class="list-decimal pr-5 space-y-1">
+        <li>افتح تطبيق المصادقة وأضف حسابًا بمسح الرمز، أو أدخل المفتاح يدويًا.</li>
+        <li>أدخل الرمز الظاهر في التطبيق لإكمال التفعيل.</li>
+      </ol>
+      <div class="flex flex-wrap items-center gap-6">
+        <div id="totpQr" class="bg-white p-2 rounded-lg" data-uri="{{ setup_uri }}" style="width: 176px; height: 176px;"></div>
+        <div class="space-y-2">
+          <div class="text-slate-400">المفتاح:</div>
+          <code dir="ltr" class="block font-mono text-sm text-white bg-[#070b14] border border-slate-700 rounded-lg px-3 py-2 select-all">{{ setup_secret }}</code>
+          <form method="POST" action="{{ url_for('profile_security_action', action='enable') }}" class="flex items-end gap-2">
+            <label>الرمز من التطبيق
+              <input type="text" name="code" required inputmode="numeric" autocomplete="one-time-code" maxlength="7" dir="ltr" class="block mt-1 w-32 bg-[#070b14] border border-slate-700 rounded-lg px-2 py-1.5 text-white font-mono text-center">
+            </label>
+            <button type="submit" class="px-4 py-2 rounded-xl font-bold bg-emerald-600 text-white">تفعيل</button>
+          </form>
+        </div>
+      </div>
+    {% else %}
+      <div class="text-slate-400">غير مفعّل.</div>
+      <form method="POST" action="{{ url_for('profile_security_action', action='setup') }}">
+        <button type="submit" class="px-4 py-2 rounded-xl font-bold bg-blue-600 text-white">بدء التفعيل</button>
+      </form>
+    {% endif %}
+  </div>
+
+  {% if enabled %}
+  <div class="bg-[#0b0f19] border border-[#1c2840] rounded-2xl p-6 space-y-3 text-xs">
+    <h3 class="font-bold text-white text-sm">الأجهزة الموثوقة ({{ devices|length }})</h3>
+    <table class="w-full text-right">
+      <thead class="text-slate-400"><tr><th class="py-1.5">المتصفح</th><th>أُضيف</th><th>آخر استخدام</th><th>ينتهي</th></tr></thead>
+      <tbody class="divide-y divide-[#1c2840] text-slate-200">
+        {% for d in devices %}<tr><td class="py-1.5 truncate max-w-xs" dir="ltr">{{ d.label or '—' }}</td><td dir="ltr">{{ d.created_at }}</td><td dir="ltr">{{ d.last_seen_at or '—' }}</td><td dir="ltr">{{ d.expires_at }}</td></tr>
+        {% else %}<tr><td colspan="4" class="py-3 text-center text-slate-500">لا أجهزة موثوقة.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+    <form method="POST" action="{{ url_for('profile_security_action', action='forget-devices') }}">
+      <button type="submit" class="px-4 py-2 rounded-xl font-bold bg-slate-700 text-white">نسيان كل الأجهزة</button>
+    </form>
+  </div>
+  {% endif %}
+</div>
+{% if setup_uri %}
+<script src="{{ url_for('static', filename='vendor/qrcode/qrcode.min.js') }}"></script>
+<script>
+  (function () {
+    var box = document.getElementById('totpQr');
+    if (box && window.QRCode) new QRCode(box, {text: box.getAttribute('data-uri'), width: 160, height: 160, correctLevel: QRCode.CorrectLevel.M});
+  })();
+</script>
+{% endif %}
+{% endblock %}

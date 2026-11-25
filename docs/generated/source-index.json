@@ -585,27 +585,27 @@
     },
     {
       "file": "core/permission_catalog.py",
-      "sha256": "8026dc8d88df0108a8fa9226d4e1bba660613fa1c87ae51d2624c2073aea68a7",
+      "sha256": "932162d7d91939b269719b6a91c9d695bc02ae8963d2b25c41eec3125bde739a",
       "imports": [],
       "definitions": [
         {
           "name": "permission_rows",
-          "line": 155,
+          "line": 156,
           "kind": "FunctionDef"
         },
         {
           "name": "base_permission_rows",
-          "line": 209,
+          "line": 210,
           "kind": "FunctionDef"
         },
         {
           "name": "standard_role_permissions",
-          "line": 214,
+          "line": 215,
           "kind": "FunctionDef"
         },
         {
           "name": "required_detail",
-          "line": 258,
+          "line": 259,
           "kind": "FunctionDef"
         }
       ]
@@ -9436,6 +9436,116 @@
       ]
     },
     {
+      "file": "services/two_factor_service.py",
+      "sha256": "8815349d9a336e21e4a0aeebd87cf4983e92c9784aac9e0be329675d88db7bfa",
+      "imports": [
+        "database.db",
+        "urllib.parse"
+      ],
+      "definitions": [
+        {
+          "name": "new_secret",
+          "line": 53,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_key",
+          "line": 57,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "code_at",
+          "line": 62,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "matching_step",
+          "line": 69,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "provisioning_uri",
+          "line": 81,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "token_hash",
+          "line": 86,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "ensure_tables",
+          "line": 92,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "totp_record",
+          "line": 109,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "is_enabled",
+          "line": 117,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "start_setup",
+          "line": 122,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "verify_code",
+          "line": 137,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "enable",
+          "line": 150,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "disable",
+          "line": 157,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "is_trusted_device",
+          "line": 166,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "trust_device",
+          "line": 177,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "devices",
+          "line": 188,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "forget_devices",
+          "line": 197,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_now",
+          "line": 202,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "needs_second_factor",
+          "line": 208,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "pending_valid",
+          "line": 216,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
       "file": "services/user_portal_service.py",
       "sha256": "39b2cf786fa20a144fa2db67c5b86b38bbb2a004cff60d96548094d5d317f720",
       "imports": [
@@ -10221,7 +10331,7 @@
     },
     {
       "file": "web/__init__.py",
-      "sha256": "b2548f1a3096030199451ac8638e0d8a3b65ed66049d3e38afb6ff522b60da61",
+      "sha256": "499f4db08e37ea728b79c5d29ca46dc7d7921337d7a64f439bd552b8f20c4c9a",
       "imports": [
         "core.config",
         "core.license_feature_policy",
@@ -10242,6 +10352,7 @@
         "services.sales_source_service",
         "services.session_control_service",
         "services.traffic_sample_service",
+        "services.two_factor_service",
         "web._embedded_templates",
         "web.access_policy",
         "web.license_features",
@@ -10307,7 +10418,7 @@
         },
         {
           "name": "operation_busy",
-          "line": 481,
+          "line": 487,
           "kind": "FunctionDef"
         }
       ]
@@ -10456,12 +10567,12 @@
     },
     {
       "file": "web/endpoint_permissions.py",
-      "sha256": "b9721cd65dd7ce7c7c992d800043ca9d7ef50e54ab072ebc0c7e26e1ce1b8cea",
+      "sha256": "8462fdda2ba1092bf854e3033183a978e1f4d7cb862344f7c16373fae42890c2",
       "imports": [],
       "definitions": [
         {
           "name": "endpoint_permissions",
-          "line": 279,
+          "line": 280,
           "kind": "FunctionDef"
         }
       ]
@@ -10617,7 +10728,7 @@
     },
     {
       "file": "web/routes/auth.py",
-      "sha256": "c6debad59fe09ad828181cb60b0aea7277f1c7500199690cb81f140f5427352b",
+      "sha256": "0aabe97af9cdd7344651002dc3a1d6ccd0ef69e4e9fbbfcd3daef86ae6842807",
       "imports": [
         "core.config",
         "core.mikrotik_api",
@@ -10626,6 +10737,7 @@
         "core.time_service",
         "database.db",
         "flask",
+        "services",
         "services.backup_scheduler_service",
         "services.backup_service",
         "services.card_design_service",
@@ -10656,23 +10768,43 @@
           "kind": "FunctionDef"
         },
         {
+          "name": "_complete_login",
+          "line": 122,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "login_verify",
+          "line": 149,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "profile_security",
+          "line": 182,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "profile_security_action",
+          "line": 196,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "logout",
-          "line": 131,
+          "line": 229,
           "kind": "FunctionDef"
         },
         {
           "name": "profile_update",
-          "line": 142,
+          "line": 240,
           "kind": "FunctionDef"
         },
         {
           "name": "impersonate_manager",
-          "line": 186,
+          "line": 284,
           "kind": "FunctionDef"
         },
         {
           "name": "impersonate_exit",
-          "line": 225,
+          "line": 323,
           "kind": "FunctionDef"
         }
       ]
@@ -11337,7 +11469,7 @@
     },
     {
       "file": "web/routes/resellers.py",
-      "sha256": "4fbf8de00483ed2734dc48af860059ff72b53f78d93944549c859e305dbc7cb3",
+      "sha256": "94cdaf3a7ff2b646fd2901255dc58f29297bc100d6c14271fcdcee69d46add60",
       "imports": [
         "core.config",
         "core.license_feature_policy",
@@ -11348,6 +11480,7 @@
         "core.time_service",
         "database.db",
         "flask",
+        "services",
         "services.backup_scheduler_service",
         "services.backup_service",
         "services.card_design_service",
@@ -11395,98 +11528,103 @@
           "kind": "FunctionDef"
         },
         {
-          "name": "delete_manager_action",
+          "name": "reset_manager_2fa_action",
           "line": 135,
           "kind": "FunctionDef"
         },
         {
+          "name": "delete_manager_action",
+          "line": 148,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "deposit_manager_action",
-          "line": 147,
+          "line": 160,
           "kind": "FunctionDef"
         },
         {
           "name": "deduct_manager_action",
-          "line": 164,
+          "line": 177,
           "kind": "FunctionDef"
         },
         {
           "name": "settle_manager_debt_action",
-          "line": 185,
+          "line": 198,
           "kind": "FunctionDef"
         },
         {
           "name": "void_manager_invoice_action",
-          "line": 200,
-          "kind": "FunctionDef"
-        },
-        {
-          "name": "manager_statement_page",
           "line": 213,
           "kind": "FunctionDef"
         },
         {
+          "name": "manager_statement_page",
+          "line": 226,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "manager_invoices_page",
-          "line": 230,
+          "line": 243,
           "kind": "FunctionDef"
         },
         {
           "name": "roles_page",
-          "line": 245,
+          "line": 258,
           "kind": "FunctionDef"
         },
         {
           "name": "add_role_action",
-          "line": 254,
-          "kind": "FunctionDef"
-        },
-        {
-          "name": "edit_role_action",
           "line": 267,
           "kind": "FunctionDef"
         },
         {
-          "name": "delete_role_action",
+          "name": "edit_role_action",
           "line": 280,
           "kind": "FunctionDef"
         },
         {
+          "name": "delete_role_action",
+          "line": 293,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "api_role_permissions",
-          "line": 292,
-          "kind": "FunctionDef"
-        },
-        {
-          "name": "resellers",
-          "line": 299,
-          "kind": "FunctionDef"
-        },
-        {
-          "name": "add_reseller_action",
           "line": 305,
           "kind": "FunctionDef"
         },
         {
-          "name": "topup_reseller_action",
-          "line": 311,
+          "name": "resellers",
+          "line": 312,
           "kind": "FunctionDef"
         },
         {
-          "name": "reseller_wallets_page",
+          "name": "add_reseller_action",
           "line": 318,
           "kind": "FunctionDef"
         },
         {
+          "name": "topup_reseller_action",
+          "line": 324,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "reseller_wallets_page",
+          "line": 331,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "api_reseller_wallet_transfer",
-          "line": 327,
+          "line": 340,
           "kind": "FunctionDef"
         },
         {
           "name": "api_reseller_wallet_deposit",
-          "line": 342,
+          "line": 355,
           "kind": "FunctionDef"
         },
         {
           "name": "manager_operation_receipt",
-          "line": 358,
+          "line": 371,
           "kind": "FunctionDef"
         }
       ]
@@ -12718,6 +12856,40 @@
       "line": 74
     },
     {
+      "rule": "/login/verify",
+      "blueprint": "auth_bp",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "endpoint": "login_verify",
+      "handler": "login_verify",
+      "file": "web/routes/auth.py",
+      "line": 149
+    },
+    {
+      "rule": "/profile/security",
+      "blueprint": "auth_bp",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "profile_security",
+      "handler": "profile_security",
+      "file": "web/routes/auth.py",
+      "line": 182
+    },
+    {
+      "rule": "/profile/security/<action>",
+      "blueprint": "auth_bp",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "profile_security_action",
+      "handler": "profile_security_action",
+      "file": "web/routes/auth.py",
+      "line": 196
+    },
+    {
       "rule": "/logout",
       "blueprint": "auth_bp",
       "methods": [
@@ -12727,7 +12899,7 @@
       "endpoint": "logout",
       "handler": "logout",
       "file": "web/routes/auth.py",
-      "line": 131
+      "line": 229
     },
     {
       "rule": "/profile/update",
@@ -12738,7 +12910,7 @@
       "endpoint": "profile_update",
       "handler": "profile_update",
       "file": "web/routes/auth.py",
-      "line": 142
+      "line": 240
     },
     {
       "rule": "/managers/<int:manager_id>/impersonate",
@@ -12749,7 +12921,7 @@
       "endpoint": "impersonate_manager",
       "handler": "impersonate_manager",
       "file": "web/routes/auth.py",
-      "line": 186
+      "line": 284
     },
     {
       "rule": "/impersonate/exit",
@@ -12760,7 +12932,7 @@
       "endpoint": "impersonate_exit",
       "handler": "impersonate_exit",
       "file": "web/routes/auth.py",
-      "line": 225
+      "line": 323
     },
     {
       "rule": "/",
@@ -13990,6 +14162,17 @@
       "line": 122
     },
     {
+      "rule": "/managers/<int:manager_id>/reset-2fa",
+      "blueprint": "resellers_bp",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "reset_manager_2fa_action",
+      "handler": "reset_manager_2fa_action",
+      "file": "web/routes/resellers.py",
+      "line": 135
+    },
+    {
       "rule": "/managers/delete/<int:manager_id>",
       "blueprint": "resellers_bp",
       "methods": [
@@ -13998,7 +14181,7 @@
       "endpoint": "delete_manager_action",
       "handler": "delete_manager_action",
       "file": "web/routes/resellers.py",
-      "line": 135
+      "line": 148
     },
     {
       "rule": "/managers/<int:manager_id>/deposit",
@@ -14009,7 +14192,7 @@
       "endpoint": "deposit_manager_action",
       "handler": "deposit_manager_action",
       "file": "web/routes/resellers.py",
-      "line": 147
+      "line": 160
     },
     {
       "rule": "/managers/<int:manager_id>/deduct",
@@ -14020,7 +14203,7 @@
       "endpoint": "deduct_manager_action",
       "handler": "deduct_manager_action",
       "file": "web/routes/resellers.py",
-      "line": 164
+      "line": 177
     },
     {
       "rule": "/managers/<int:manager_id>/settle-debt",
@@ -14031,7 +14214,7 @@
       "endpoint": "settle_manager_debt_action",
       "handler": "settle_manager_debt_action",
       "file": "web/routes/resellers.py",
-      "line": 185
+      "line": 198
     },
     {
       "rule": "/managers/invoices/<int:invoice_id>/void",
@@ -14042,7 +14225,7 @@
       "endpoint": "void_manager_invoice_action",
       "handler": "void_manager_invoice_action",
       "file": "web/routes/resellers.py",
-      "line": 200
+      "line": 213
     },
     {
       "rule": "/managers/<int:manager_id>/statement",
@@ -14053,7 +14236,7 @@
       "endpoint": "manager_statement_page",
       "handler": "manager_statement_page",
       "file": "web/routes/resellers.py",
-      "line": 213
+      "line": 226
     },
     {
       "rule": "/managers/invoices",
@@ -14064,7 +14247,7 @@
       "endpoint": "manager_invoices_page",
       "handler": "manager_invoices_page",
       "file": "web/routes/resellers.py",
-      "line": 230
+      "line": 243
     },
     {
       "rule": "/roles",
@@ -14075,7 +14258,7 @@
       "endpoint": "roles_page",
       "handler": "roles_page",
       "file": "web/routes/resellers.py",
-      "line": 245
+      "line": 258
     },
     {
       "rule": "/roles/add",
@@ -14086,7 +14269,7 @@
       "endpoint": "add_role_action",
       "handler": "add_role_action",
       "file": "web/routes/resellers.py",
-      "line": 254
+      "line": 267
     },
     {
       "rule": "/roles/edit/<int:role_id>",
@@ -14097,7 +14280,7 @@
       "endpoint": "edit_role_action",
       "handler": "edit_role_action",
       "file": "web/routes/resellers.py",
-      "line": 267
+      "line": 280
     },
     {
       "rule": "/roles/delete/<int:role_id>",
@@ -14108,7 +14291,7 @@
       "endpoint": "delete_role_action",
       "handler": "delete_role_action",
       "file": "web/routes/resellers.py",
-      "line": 280
+      "line": 293
     },
     {
       "rule": "/api/roles/<int:role_id>/permissions",
@@ -14119,7 +14302,7 @@
       "endpoint": "api_role_permissions",
       "handler": "api_role_permissions",
       "file": "web/routes/resellers.py",
-      "line": 292
+      "line": 305
     },
     {
       "rule": "/resellers",
@@ -14130,7 +14313,7 @@
       "endpoint": "resellers",
       "handler": "resellers",
       "file": "web/routes/resellers.py",
-      "line": 299
+      "line": 312
     },
     {
       "rule": "/resellers/add",
@@ -14141,7 +14324,7 @@
       "endpoint": "add_reseller_action",
       "handler": "add_reseller_action",
       "file": "web/routes/resellers.py",
-      "line": 305
+      "line": 318
     },
     {
       "rule": "/resellers/topup",
@@ -14152,7 +14335,7 @@
       "endpoint": "topup_reseller_action",
       "handler": "topup_reseller_action",
       "file": "web/routes/resellers.py",
-      "line": 311
+      "line": 324
     },
     {
       "rule": "/reseller-wallets",
@@ -14163,7 +14346,7 @@
       "endpoint": "reseller_wallets_page",
       "handler": "reseller_wallets_page",
       "file": "web/routes/resellers.py",
-      "line": 318
+      "line": 331
     },
     {
       "rule": "/api/reseller-wallets/transfer",
@@ -14174,7 +14357,7 @@
       "endpoint": "api_reseller_wallet_transfer",
       "handler": "api_reseller_wallet_transfer",
       "file": "web/routes/resellers.py",
-      "line": 327
+      "line": 340
     },
     {
       "rule": "/api/reseller-wallets/deposit",
@@ -14185,7 +14368,7 @@
       "endpoint": "api_reseller_wallet_deposit",
       "handler": "api_reseller_wallet_deposit",
       "file": "web/routes/resellers.py",
-      "line": 342
+      "line": 355
     },
     {
       "rule": "/managers/invoices/<int:invoice_id>/receipt",
@@ -14196,7 +14379,7 @@
       "endpoint": "manager_operation_receipt",
       "handler": "manager_operation_receipt",
       "file": "web/routes/resellers.py",
-      "line": 358
+      "line": 371
     },
     {
       "rule": "/api/subscribers/<int:account_id>/mac-policy",

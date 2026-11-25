@@ -129,6 +129,19 @@ def toggle_manager_status_action(manager_id):
     return redirect(url_for('managers_page'))
 
 
+@resellers_bp.route('/managers/<int:manager_id>/reset-2fa', methods=['POST'], endpoint="reset_manager_2fa_action")
+
+@require_permission('managers.manage')
+def reset_manager_2fa_action(manager_id):
+    """Lost phone: remove a manager's authenticator and trusted devices."""
+    from services import two_factor_service as tfa
+    current = get_current_manager() or {}
+    tfa.disable(manager_id)
+    log_audit(current.get('id'), current.get('username', 'admin'), '2FA_RESET', 'managers', f'manager_id={manager_id}')
+    flash('أُوقف التحقق بخطوتين لهذا الحساب وحُذفت أجهزته الموثوقة.', 'warning')
+    return redirect(url_for('managers_page'))
+
+
 @resellers_bp.route('/managers/delete/<int:manager_id>', methods=['POST'], endpoint="delete_manager_action")
 
 @require_permission('managers.manage')
