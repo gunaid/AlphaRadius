@@ -102,12 +102,16 @@ services:
       - DB_PASSWORD=radpass
       - DB_NAME=radius_wisp
       - PORT=5090
+      # Separate admin panel port (opt-in): set ALPHA_ADMIN_PORT in .env, e.g. 43333.
+      # Then 5090 (and Nginx on 80) serve only the subscriber portal.
+      - ADMIN_PORT=${ALPHA_ADMIN_PORT:-}
       - RADIUS_COA_PORT=37990
       - L2TP_CONTAINER=alpha_radius_l2tp
       - TZ=${SYSTEM_TIMEZONE:-Asia/Riyadh}
       - DEFAULT_TIMEZONE=Asia/Riyadh
     ports:
       - "5090:5090/tcp"
+      - "${ALPHA_ADMIN_PORT:-43333}:${ALPHA_ADMIN_PORT:-43333}/tcp"
     volumes:
       - ./storage:/app/storage
       - ./storage/uploads:/app/web/static/uploads

@@ -90,16 +90,27 @@ def main():
     port = APP_PORT
     host = APP_HOST
     lan_ip = get_local_lan_ip()
-    
-    print("\n  🌐 روابط لوحة التحكم (المنفذ 5090):")
-    print(f"     1. من هذا الكمبيوتر (Localhost):  http://localhost:{port}")
-    print(f"     2. من أي جهاز آخر في الشبكة:       http://{lan_ip}:{port}")
+    admin = app.config.get('ADMIN_PORT')
+
+    if admin:
+        print(f"\n  🔐 لوحة تحكم المدير (المنفذ {admin}):  http://{lan_ip}:{admin}")
+        print(f"  🌐 بوابة المشتركين (المنفذ {port}):    http://{lan_ip}:{port}")
+    else:
+        print(f"\n  🌐 روابط لوحة التحكم (المنفذ {port}):")
+        print(f"     1. من هذا الكمبيوتر (Localhost):  http://localhost:{port}")
+        print(f"     2. من أي جهاز آخر في الشبكة:       http://{lan_ip}:{port}")
     print("=" * 72 + "\n")
 
     try:
         from waitress import serve
-        print(f"[*] تشغيل خادم الإنتاج السريع Waitress WSGI على 0.0.0.0:{port}...")
-        serve(app, host=host, port=port, threads=8)
+        if admin:
+            # One process, two sockets: each request carries its socket's port.
+            listen = f"{host}:{port} {host}:{admin}"
+            print(f"[*] تشغيل Waitress WSGI على {listen} (المشتركون:{port} / المدير:{admin})...")
+            serve(app, listen=listen, threads=8)
+        else:
+            print(f"[*] تشغيل خادم الإنتاج السريع Waitress WSGI على 0.0.0.0:{port}...")
+            serve(app, host=host, port=port, threads=8)
     except ImportError:
         print(f"[*] تشغيل خادم التطوير الداخلي Flask على 0.0.0.0:{port}...")
         app.run(host=host, port=port, debug=True)

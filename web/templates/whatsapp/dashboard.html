@@ -291,7 +291,7 @@
                     <i class="fa-solid fa-link text-slate-500"></i>
                 </div>
                 <div class="p-2 bg-[#0b0f19] rounded border border-slate-800 text-[10px] text-slate-300 font-mono break-all select-all">
-                    {{ request.host_url }}api/whatsapp/webhook
+                    {% if panel_surface == 'admin' %}{{ request.scheme }}://{{ request.host.rsplit(':', 1)[0] if request.host.count(':') == 1 else request.host }}/api/whatsapp/webhook{% else %}{{ request.host_url }}api/whatsapp/webhook{% endif %}
                 </div>
             </div>
         </div>

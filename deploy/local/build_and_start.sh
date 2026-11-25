@@ -112,8 +112,9 @@ net.ipv4.udp_rmem_min = 16384
 net.ipv4.udp_wmem_min = 16384
 EOF
 sysctl --system -q 2>/dev/null || true
+admin_port=$(sed -n 's/^ALPHA_ADMIN_PORT=\([0-9][0-9]*\)[[:space:]]*$/\1/p' "$INSTALL_DIR/.env" 2>/dev/null | tail -n1)
 if command -v ufw >/dev/null && ufw status | grep -q 'Status: active'; then
-  for port in 80/tcp 5090/tcp 1812/udp 1813/udp 37990/udp 1701/udp; do ufw allow "$port" >/dev/null; done
+  for port in 80/tcp 5090/tcp ${admin_port:+$admin_port/tcp} 1812/udp 1813/udp 37990/udp 1701/udp; do ufw allow "$port" >/dev/null; done
 fi
 
 compose=(docker compose --project-directory "$INSTALL_DIR" --env-file "$INSTALL_DIR/.env"
@@ -129,5 +130,10 @@ step "[7/7] Status"
 "${compose[@]}" ps
 echo
 echo "Images: $WEB_IMAGE  $CORE_IMAGE  $L2TP_IMAGE"
-echo "Panel:  http://<this-machine-ip>:5090"
+if [[ -n "$admin_port" ]]; then
+  echo "Admin panel:       http://<this-machine-ip>:$admin_port"
+  echo "Subscriber portal: http://<this-machine-ip> (Nginx 80) or :5090"
+else
+  echo "Panel:  http://<this-machine-ip>:5090"
+fi
 echo "Config backups of the previous run (if any): $backup"

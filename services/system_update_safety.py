@@ -18,7 +18,7 @@ y=query_one("""SELECT r.is_valid,
  WHERE r.id=1 AND i.id=(SELECT MAX(id) FROM wisp_license_info)""")
 v=subprocess.run(['python','/opt/alpha-protection/verify.py'],capture_output=True,timeout=8)
 try:
- with urllib.request.urlopen('http://127.0.0.1:'+os.environ.get('APP_PORT','5090')+'/login',timeout=2) as response:http=response.status==200
+ with urllib.request.urlopen('http://127.0.0.1:'+(os.environ.get('ADMIN_PORT') or os.environ.get('APP_PORT') or os.environ.get('PORT') or '5090')+'/login',timeout=2) as response:http=response.status==200
 except Exception:http=False
 rows=query_all('SELECT radacctid,acctinputoctets,acctoutputoctets,acctsessiontime,acctuniqueid FROM radacct ORDER BY radacctid DESC LIMIT 300')
 print(json.dumps(dict(version=APP_VERSION,http=http,verified=v.returncode==0,license=bool(x.get('valid')),

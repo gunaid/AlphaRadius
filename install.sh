@@ -136,8 +136,9 @@ net.ipv4.udp_rmem_min = 16384
 net.ipv4.udp_wmem_min = 16384
 EOF
 sysctl --system -q 2>/dev/null || true
+admin_port=$(sed -n 's/^ALPHA_ADMIN_PORT=\([0-9][0-9]*\)[[:space:]]*$/\1/p' "$INSTALL_DIR/.env" 2>/dev/null | tail -n1)
 if command -v ufw >/dev/null && ufw status | grep -q 'Status: active'; then
-  for port in 80/tcp 5090/tcp 1812/udp 1813/udp 37990/udp 1701/udp; do ufw allow "$port" >/dev/null; done
+  for port in 80/tcp 5090/tcp ${admin_port:+$admin_port/tcp} 1812/udp 1813/udp 37990/udp 1701/udp; do ufw allow "$port" >/dev/null; done
 fi
 
 echo '[5/6] Starting services...'
@@ -189,6 +190,10 @@ ip route replace 192.168.44.0/24 via 172.18.0.10 2>/dev/null || true
 echo '[6/6] Verifying protected runtime...'
 docker exec alpha_radius_web python /opt/alpha-protection/verify.py
 SERVER_IP=$(hostname -I | awk '{print $1}')
-printf '\nALPHA RADIUS release %s installed. Dashboard: http://%s:5090\n' "$release" "$SERVER_IP"
+if [[ -n "$admin_port" ]]; then
+  printf '\nALPHA RADIUS release %s installed. Admin panel: http://%s:%s  Subscriber portal: http://%s\n' "$release" "$SERVER_IP" "$admin_port" "$SERVER_IP"
+else
+  printf '\nALPHA RADIUS release %s installed. Dashboard: http://%s:5090\n' "$release" "$SERVER_IP"
+fi
 printf 'Existing storage, credentials and database volumes were preserved.\n'
 printf 'Initial administrator credentials apply only to a fresh database; change them after first login.\n'

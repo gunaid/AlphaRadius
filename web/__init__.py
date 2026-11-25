@@ -72,6 +72,10 @@ def create_app(config=None):
     if config:
         app.config.update(config)
 
+    # Optional separate admin port: must run before every other request hook.
+    from web.panel_surface import install as install_panel_surface
+    install_panel_surface(app)
+
     # Register Template Filters
     register_template_filters(app)
     from core.license_security import install_csrf, protects_admin_account_request

@@ -2858,7 +2858,7 @@
     },
     {
       "file": "run.py",
-      "sha256": "22eb604598a4a305ae2b705a9f6eb14a9e717f2f3bce44f44950235741672b40",
+      "sha256": "9f54646d12f8062d9445d4cf1814e8319208d144922b5f542c4d981ec901a40f",
       "imports": [
         "core.config",
         "core.time_service",
@@ -9179,7 +9179,7 @@
     },
     {
       "file": "services/system_update_safety.py",
-      "sha256": "d954a63ba3a2c5dd3d941c27afb0337e6af3e8447eecc6a25c28864f7f1b58b8",
+      "sha256": "89bac6c11313f5a0acd11ceb06b5f42412dd59bd0339c4d15feb1827a81c623d",
       "imports": [],
       "definitions": [
         {
@@ -10499,7 +10499,7 @@
     },
     {
       "file": "web/__init__.py",
-      "sha256": "7886058b145cca627e0ca59c53819789d717566b00a04434d780dbf5a25ce577",
+      "sha256": "5637c910991be1ce34854b035b8e94fac24fa5d6ef6ac7624386aed02ade8b25",
       "imports": [
         "core.config",
         "core.license_feature_policy",
@@ -10525,6 +10525,7 @@
         "web._embedded_templates",
         "web.access_policy",
         "web.license_features",
+        "web.panel_surface",
         "web.routes",
         "web.utils",
         "werkzeug.exceptions"
@@ -10542,52 +10543,52 @@
         },
         {
           "name": "add_cache_control_headers",
-          "line": 90,
+          "line": 94,
           "kind": "FunctionDef"
         },
         {
           "name": "enforce_maintenance_mode",
-          "line": 98,
+          "line": 102,
           "kind": "FunctionDef"
         },
         {
           "name": "release_maintenance_request",
-          "line": 123,
+          "line": 127,
           "kind": "FunctionDef"
         },
         {
           "name": "enforce_license_guard_interceptor",
-          "line": 133,
+          "line": 137,
           "kind": "FunctionDef"
         },
         {
           "name": "check_authentication",
-          "line": 170,
+          "line": 174,
           "kind": "FunctionDef"
         },
         {
           "name": "inject_global_settings",
-          "line": 223,
+          "line": 227,
           "kind": "FunctionDef"
         },
         {
           "name": "handle_exception",
-          "line": 370,
+          "line": 374,
           "kind": "FunctionDef"
         },
         {
           "name": "handle_blueprint_url_build_error",
-          "line": 410,
+          "line": 414,
           "kind": "FunctionDef"
         },
         {
           "name": "recover_reset_service",
-          "line": 454,
+          "line": 458,
           "kind": "FunctionDef"
         },
         {
           "name": "operation_busy",
-          "line": 492,
+          "line": 496,
           "kind": "FunctionDef"
         }
       ]
@@ -10786,6 +10787,50 @@
         {
           "name": "account_mac_response",
           "line": 7,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "file": "web/panel_surface.py",
+      "sha256": "f2ce168768d87303982bb70117aa8f0200ac7013fac7aeed56e3199afa32a4bb",
+      "imports": [
+        "flask"
+      ],
+      "definitions": [
+        {
+          "name": "_port",
+          "line": 34,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "admin_port",
+          "line": 42,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "surface",
+          "line": 50,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "portal_allows",
+          "line": 57,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "install",
+          "line": 61,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "panel_surface_guard",
+          "line": 68,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "panel_surface_context",
+          "line": 81,
           "kind": "FunctionDef"
         }
       ]
