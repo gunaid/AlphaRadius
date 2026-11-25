@@ -317,6 +317,42 @@ def sales_reports():
     return render_template('sales_reports.html', **data)
 
 
+@system_bp.route('/reports/comprehensive', endpoint="comprehensive_report")
+def comprehensive_report():
+    """Sales, consumption and best performers in one period (read-only snapshot)."""
+    from services.comprehensive_report_service import report, PERIODS
+    from services.network_traffic_service import format_bytes
+    try:
+        data = report(request.args)
+    except ValueError as exc:
+        return render_template('comprehensive_report.html', filter_error=str(exc), periods=PERIODS,
+                               selected=dict(period=request.args.get('period', ''), date_from='', date_to=''),
+                               traffic_bytes=format_bytes), 400
+    except Exception:
+        current_app.logger.exception('Comprehensive report unavailable')
+        return render_template('comprehensive_report.html', report_unavailable=True, periods=PERIODS,
+                               selected=dict(period='this_month', date_from='', date_to=''),
+                               traffic_bytes=format_bytes), 503
+    return render_template('comprehensive_report.html', traffic_bytes=format_bytes, **data)
+
+
+@system_bp.route('/reports/comprehensive/export', endpoint="comprehensive_report_export")
+@heavy_operation
+def comprehensive_report_export():
+    from services.comprehensive_report_service import report, workbook
+    try:
+        data = report(request.args)
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
+    name = f"التقرير الشامل-{data['selected']['period']}-{data['generated_at']:%Y-%m-%d_%H-%M}.xlsx"
+    from urllib.parse import quote
+    response = send_file(workbook(data), as_attachment=True, download_name='comprehensive-report.xlsx',
+                         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response.headers['Content-Disposition'] = f"attachment; filename=\"comprehensive-report.xlsx\"; filename*=UTF-8''{quote(name)}"
+    response.headers['Cache-Control'] = 'no-store'
+    return response
+
+
 @system_bp.route('/sales/export', endpoint="export_sales")
 
 @system_bp.route('/reports/sales/export', endpoint="export_sales")

@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block title %}التقرير الشامل{% endblock %}
+{% block page_title %}التقرير الشامل: المبيعات والاستهلاك{% endblock %}
+
+{% macro money(v) %}{% if v is none %}—{% else %}<bdi dir="ltr">{{ '{:,.2f}'.format(v) }}</bdi>{% endif %}{% endmacro %}
+{% macro bar(value, top, color='bg-emerald-500') %}<div class="h-1.5 rounded-full bg-slate-800 mt-1 overflow-hidden"><div class="h-full {{ color }}" style="width: {{ ((value or 0) / top * 100) if top else 0 }}%"></div></div>{% endmacro %}
+
+{% block content %}
+<div class="space-y-6" dir="rtl">
+
+  <form method="GET" action="{{ url_for('comprehensive_report') }}" class="bg-[#0b0f19] border border-[#1c2840] rounded-2xl p-4 flex flex-wrap items-end gap-3 text-xs text-slate-300">
+    <label>الفترة
+      <select name="period" class="block mt-1 bg-[#070b14] border border-slate-700 rounded-lg px-2 py-1.5 text-white">
+        {% for key, label in periods %}<option value="{{ key }}" {{ 'selected' if selected.period == key else '' }}>{{ label }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>من<input type="date" name="date_from" value="{{ selected.date_from }}" class="block mt-1 bg-[#070b14] border border-slate-700 rounded-lg px-2 py-1.5 text-white"></label>
+    <label>إلى<input type="date" name="date_to" value="{{ selected.date_to }}" class="block mt-1 bg-[#070b14] border border-slate-700 rounded-lg px-2 py-1.5 text-white"></label>
+    <button type="submit" class="px-4 py-2 rounded-xl font-bold bg-blue-600 text-white">عرض</button>
+    {% if kpi is defined and can_access_endpoint('comprehensive_report_export') %}
+    <a href="{{ url_for('comprehensive_report_export', period=selected.period, date_from=selected.date_from, date_to=selected.date_to) }}" class="px-4 py-2 rounded-xl font-bold bg-emerald-600/20 text-emerald-300 border border-emerald-500/30"><i class="fa-solid fa-file-excel ml-1"></i>تصدير Excel</a>
+    {% endif %}
+    {% if generated_at is defined %}<span class="text-slate-500 mr-auto">أُنشئ {{ generated_at.strftime('%Y-%m-%d %H:%M') }} ({{ timezone }})</span>{% endif %}
+  </form>
+
+  {% if filter_error is defined %}<div class="bg-rose-500/10 border border-rose-500/30 text-rose-300 rounded-xl p-3 text-sm">{{ filter_error }}</div>{% endif %}
+  {% if report_unavailable is defined %}<div class="bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-xl p-3 text-sm">تعذر إنشاء التقرير الآن؛ أعد المحاولة بعد قليل.</div>{% endif %}
+
+  {% if kpi is defined %}
+  {% set currency = currency_symbol if currency_symbol is defined else '' %}
+  <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3">
+    {% for label, value, hint in [
+        ('كروت مباعة (أول دخول)', kpi.sold, ''), ('تجديدات', kpi.renewals, ''),
+        ('الإيراد', money(kpi.revenue), currency), ('الربح', money(kpi.profit), 'الإيراد − التكلفة'),
+        ('الاستهلاك', traffic_bytes(kpi.bytes), 'جلسات بدأت في الفترة'),
+        ('ساعات الاستخدام', '{:,.1f}'.format(kpi.hours), ''),
+        ('المستخدمون', kpi.users, 'حسابات استخدمت الشبكة'), ('الجلسات', kpi.sessions, ''),
+        ('متوسط الاستهلاك/مستخدم', traffic_bytes(kpi.bytes_per_user) if kpi.bytes_per_user is not none else '—', ''),
+        ('متوسط الساعات/مستخدم', kpi.hours_per_user if kpi.hours_per_user is not none else '—', ''),
+        ('متوسط سعر البيع', money(kpi.avg_price), ''),
+        ('ساعة الذروة للبيع', ('%02d:00' % kpi.peak_hour) if kpi.peak_hour is not none else '—', '')
+      ] %}
+    <div class="bg-[#0b0f19] border border-[#1c2840] rounded-2xl p-4">
+      <div class="text-[11px] text-slate-400">{{ label }}</div>
+      <div class="text-white font-black text-lg mt-1"><bdi dir="ltr">{{ value }}</bdi></div>
+      {% if hint %}<div class="text-[10px] text-slate-500 mt-0.5">{{ hint }}</div>{% endif %}
+    </div>
+    {% endfor %}
+    {% if kpi.data_cost is not none %}
+    <div class="bg-[#0b0f19] border border-amber-500/30 rounded-2xl p-4"><div class="text-[11px] text-slate-400">تكلفة البيانات</div><div class="text-amber-300 font-black text-lg mt-1">{{ money(kpi.data_cost) }}</div></div>
+    <div class="bg-[#0b0f19] border border-emerald-500/30 rounded-2xl p-4"><div class="text-[11px] text-slate-400">الصافي بعد تكلفة البيانات</div><div class="text-emerald-300 font-black text-lg mt-1">{{ money(kpi.net) }}</div></div>
+    {% endif %}
+    {% if kpi.measured_bytes is not none %}
+    <div class="bg-[#0b0f19] border border-[#1c2840] rounded-2xl p-4"><div class="text-[11px] text-slate-400">الاستهلاك المقاس في الفترة</div><div class="text-white font-black text-lg mt-1"><bdi dir="ltr">{{ traffic_bytes(kpi.measured_bytes) }}</bdi></div><div class="text-[10px] text-slate-500 mt-0.5">كما في لوحة التحكم</div></div>
+    {% endif %}
+    {% if kpi.active_now is not none %}
+    <div class="bg-[#0b0f19] border border-[#1c2840] rounded-2xl p-4"><div class="text-[11px] text-slate-400">متصلون الآن</div><div class="text-white font-black text-lg mt-1">{{ kpi.active_now }}</div></div>
+    {% endif %}
+    {% if kpi.invoices %}
+    <div class="bg-[#0b0f19] border border-[#1c2840] rounded-2xl p-4"><div class="text-[11px] text-slate-400">فواتير المشتركين المدفوعة</div><div class="text-white font-black text-lg mt-1">{{ money(kpi.invoices.amount) }}</div><div class="text-[10px] text-slate-500 mt-0.5">{{ kpi.invoices.count }} فاتورة</div></div>
+    {% endif %}
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 text-xs">
+    {% for label, row, value in [
+        ('أفضل باقة مبيعًا', kpi.best_package, kpi.best_package and money(kpi.best_package.revenue)),
+        ('أكثر باقة استهلاكًا', kpi.most_used_package, kpi.most_used_package and traffic_bytes(kpi.most_used_package.total)),
+        ('أفضل نقطة بيع', kpi.best_sale_point, kpi.best_sale_point and money(kpi.best_sale_point.revenue)),
+        ('أفضل موزع', kpi.best_reseller, kpi.best_reseller and money(kpi.best_reseller.revenue)),
+        ('أكثر سيرفر/منفذ استهلاكًا', kpi.best_point, kpi.best_point and traffic_bytes(kpi.best_point.total)),
+        ('أفضل يوم', kpi.best_day, kpi.best_day and money(kpi.best_day.revenue))
+      ] %}{% if row %}
+    <div class="bg-gradient-to-l from-violet-500/10 to-transparent border border-violet-500/20 rounded-2xl p-4">
+      <div class="text-slate-400"><i class="fa-solid fa-trophy text-amber-400 ml-1"></i>{{ label }}</div>
+      <div class="text-white font-bold mt-1">{{ row.name or row.day or (row.nas_label ~ ' / ' ~ row.server_label) }}</div>
+      <div class="text-violet-300 mt-0.5"><bdi dir="ltr">{{ value }}</bdi></div>
+    </div>{% endif %}{% endfor %}
+  </div>
+
+  {% set sales_tables = [('الباقات حسب المبيعات', sales.packages), ('نقاط البيع', sales.sale_points)] %}
+  {% if sales.resellers %}{% set sales_tables = sales_tables + [('الموزعون', sales.resellers)] %}{% endif %}
+  <div class="grid grid-cols-1 xl:grid-cols-{{ sales_tables|length }} gap-4">
+    {% for title, rows in sales_tables %}
+    {% set top = rows|map(attribute='revenue')|max if rows else 0 %}
+    <div class="bg-[#0b0f19] border border-[#1c2840] rounded-2xl p-5">
+      <h3 class="font-bold text-white text-sm mb-3">{{ title }}</h3>
+      <table class="w-full text-xs text-right">
+        <thead class="text-slate-400"><tr><th class="py-1.5">الاسم</th><th>مباعة</th><th>تجديد</th><th>الإيراد</th><th>الربح</th></tr></thead>
+        <tbody class="divide-y divide-[#1c2840] text-slate-200">
+          {% for r in rows %}<tr><td class="py-1.5">{{ r.name }}{{ bar(r.revenue, top) }}</td><td>{{ r.sold }}</td><td>{{ r.renewals }}</td><td>{{ money(r.revenue) }}</td><td>{{ money(r.profit) }}</td></tr>
+          {% else %}<tr><td colspan="5" class="py-3 text-center text-slate-500">لا مبيعات في الفترة.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="bg-[#0b0f19] border border-[#1c2840] rounded-2xl p-5">
+    <h3 class="font-bold text-white text-sm mb-1">السيرفرات والمنافذ (VLAN) — الاستهلاك والمبيعات</h3>
+    <p class="text-[11px] text-slate-500 mb-3">سيرفر Hotspot أو واجهة PPPoE لكل راوتر. المبيعات من مصدر أول دخول المسجل لكل بيع.</p>
+    {% set top = points|map(attribute='total')|max if points else 0 %}
+    <div class="overflow-x-auto">
+      <table class="w-full text-xs text-right">
+        <thead class="text-slate-400"><tr><th class="py-1.5">الراوتر</th><th>السيرفر / المنفذ</th><th>النوع</th><th>الاستهلاك</th><th>الساعات</th><th>المستخدمون</th><th>الجلسات</th><th>كروت مباعة</th><th>الإيراد</th></tr></thead>
+        <tbody class="divide-y divide-[#1c2840] text-slate-200">
+          {% for p in points[:50] %}<tr><td class="py-1.5">{{ p.nas_label }}</td><td>{{ p.server_label }}{{ bar(p.total, top, 'bg-sky-500') }}</td>
+            <td>{{ 'PPPoE' if p.service_type == 'pppoe' else 'Hotspot' if p.service_type == 'hotspot' else '—' }}</td>
+            <td><bdi dir="ltr">{{ traffic_bytes(p.total) }}</bdi></td><td>{{ '{:,.1f}'.format(p.hours) }}</td><td>{{ p.users }}</td><td>{{ p.sessions }}</td><td>{{ p.sold }}</td><td>{{ money(p.revenue) }}</td></tr>
+          {% else %}<tr><td colspan="9" class="py-3 text-center text-slate-500">لا بيانات في الفترة.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+    <div class="bg-[#0b0f19] border border-[#1c2840] rounded-2xl p-5">
+      <h3 class="font-bold text-white text-sm mb-3">الباقات حسب الاستهلاك</h3>
+      {% set top = usage.packages|map(attribute='total')|max if usage.packages else 0 %}
+      <table class="w-full text-xs text-right">
+        <thead class="text-slate-400"><tr><th class="py-1.5">الباقة</th><th>المستخدمون</th><th>الاستهلاك</th><th>الساعات</th></tr></thead>
+        <tbody class="divide-y divide-[#1c2840] text-slate-200">
+          {% for r in usage.packages %}<tr><td class="py-1.5">{{ r.name }}{{ bar(r.total, top, 'bg-sky-500') }}</td><td>{{ r.users }}</td><td><bdi dir="ltr">{{ traffic_bytes(r.total) }}</bdi></td><td>{{ '{:,.1f}'.format(r.hours) }}</td></tr>
+          {% else %}<tr><td colspan="4" class="py-3 text-center text-slate-500">لا استهلاك في الفترة.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="bg-[#0b0f19] border border-[#1c2840] rounded-2xl p-5">
+      <h3 class="font-bold text-white text-sm mb-3">أعلى المستخدمين استهلاكًا</h3>
+      <table class="w-full text-xs text-right">
+        <thead class="text-slate-400"><tr><th class="py-1.5">المستخدم</th><th>الباقة</th><th>الاستهلاك</th><th>الساعات</th><th>الجلسات</th></tr></thead>
+        <tbody class="divide-y divide-[#1c2840] text-slate-200">
+          {% for r in usage.top_users %}<tr><td class="py-1.5 font-mono" dir="ltr">{{ r.username }}</td><td>{{ r.package or '—' }}</td><td><bdi dir="ltr">{{ traffic_bytes(r.total) }}</bdi></td><td>{{ '{:,.1f}'.format(r.hours) }}</td><td>{{ r.sessions }}</td></tr>
+          {% else %}<tr><td colspan="5" class="py-3 text-center text-slate-500">لا استهلاك في الفترة.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+    <div class="bg-[#0b0f19] border border-[#1c2840] rounded-2xl p-5">
+      <h3 class="font-bold text-white text-sm mb-3">المبيعات يوميًا</h3>
+      {% set top = sales.days|map(attribute='revenue')|max if sales.days else 0 %}
+      <div class="max-h-96 overflow-y-auto">
+      <table class="w-full text-xs text-right">
+        <thead class="text-slate-400"><tr><th class="py-1.5">اليوم</th><th>مباعة</th><th>تجديد</th><th>الإيراد</th></tr></thead>
+        <tbody class="divide-y divide-[#1c2840] text-slate-200">
+          {% for d in sales.days|reverse %}<tr><td class="py-1.5 font-mono" dir="ltr">{{ d.day }}{{ bar(d.revenue, top) }}</td><td>{{ d.sold }}</td><td>{{ d.renewals }}</td><td>{{ money(d.revenue) }}</td></tr>
+          {% else %}<tr><td colspan="4" class="py-3 text-center text-slate-500">لا مبيعات في الفترة.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+      </div>
+    </div>
+    <div class="bg-[#0b0f19] border border-[#1c2840] rounded-2xl p-5">
+      <h3 class="font-bold text-white text-sm mb-3">المبيعات حسب ساعة اليوم</h3>
+      {% set top = sales.hours|map(attribute='sold')|max %}
+      <div class="flex items-end gap-1 h-40" dir="ltr">
+        {% for h in sales.hours %}
+        <div class="flex-1 flex flex-col items-center justify-end h-full" title="{{ '%02d:00' % h.hour }} — {{ h.sold }} كرت">
+          <div class="w-full rounded-t bg-violet-500/70" style="height: {{ (h.sold / top * 100) if top else 0 }}%"></div>
+          <div class="text-[9px] text-slate-500 mt-1">{{ h.hour }}</div>
+        </div>
+        {% endfor %}
+      </div>
+      {% if kpi.roaming %}
+      <div class="mt-4 text-[11px] text-slate-400">الماك العشوائي في الفترة:
+        {% for outcome, n in kpi.roaming|dictsort %}<span class="inline-block ml-2 px-2 py-0.5 rounded bg-slate-800 text-slate-300">{{ {'kicked':'فُصلت القديمة','denied':'رُفض جهاز آخر','freed':'انتهت القديمة','absent':'شبح','unverified':'تعذر الفحص'}.get(outcome, outcome) }}: {{ n }}</span>{% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

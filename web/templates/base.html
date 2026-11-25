@@ -1681,6 +1681,15 @@
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                     {% endif %}
                 </a>{% endif %}
+                {% if can_access_endpoint('comprehensive_report') %}<a href="{{ url_for('comprehensive_report') }}" class="flex items-center justify-between px-3 py-2 rounded-xl font-bold transition-all duration-200 {% if request.endpoint == 'comprehensive_report' %}nav-item-active text-white shadow-xs{% else %}text-slate-300 hover:bg-[#131d31] hover:text-white{% endif %}">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-7 h-7 rounded-lg flex items-center justify-center text-xs {% if request.endpoint == 'comprehensive_report' %}bg-violet-500 text-white{% else %}bg-violet-500/10 text-violet-400{% endif %}">
+                            <i class="fa-solid fa-chart-pie"></i>
+                        </div>
+                        <span>التقرير الشامل</span>
+                    </div>
+                    {% if request.endpoint == 'comprehensive_report' %}<span class="w-1.5 h-1.5 rounded-full bg-violet-400"></span>{% endif %}
+                </a>{% endif %}
                 {% if has_feature('traffic_analytics') and can_access_endpoint('traffic_analytics_page') %}
                 <a href="{{ url_for('traffic_analytics_page') }}" class="flex items-center justify-between px-3 py-2 rounded-xl font-bold transition-all duration-200 {% if request.endpoint == 'traffic_analytics_page' %}nav-item-active text-white shadow-xs{% else %}text-slate-300 hover:bg-[#131d31] hover:text-white{% endif %}">
                     <div class="flex items-center gap-2.5">

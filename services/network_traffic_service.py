@@ -34,11 +34,13 @@ def selected_filters(args, now=None, timezone='Asia/Aden'):
     return selected
 
 
-def sessions_sql(owner=None, start=None, end=None, metadata_only=False, nas=None):
+def sessions_sql(owner=None, start=None, end=None, metadata_only=False, nas=None, with_seconds=False):
     """Deduplicate live/archive/import copies by complete stable session identity.
 
     Conflicting packet sources stay unknown; Hotspot bridge ports do not split a
     server, whereas PPPoE interfaces do. No package or sale is used for attribution.
+    with_seconds adds a ``seconds`` column (session time, sealed portion
+    excluded); it is off by default so existing reports read the same columns.
     """
     parts, values = [], []
     from services.session_service_evidence import evidence_join,protocol_fields
@@ -69,6 +71,7 @@ def sessions_sql(owner=None, start=None, end=None, metadata_only=False, nas=None
                 CASE WHEN sealed.acctuniqueid IS NULL THEN {table}.{column}
                 ELSE GREATEST(0,CAST({table}.{column} AS DECIMAL(30,0))-sealed.{sealed}) END END AS {column}'''
         counters='' if metadata_only else f',{table}.acctstoptime,{table}.acctupdatetime,'+counter('acctinputoctets','input_bytes')+','+counter('acctoutputoctets','output_bytes')
+        if with_seconds and not metadata_only:counters+=','+counter('acctsessiontime','uptime_seconds')
         parts.append(f'''SELECT {columns},{table}.acctstarttime{counters},
             {fallback} AS fallback_id,CASE WHEN sealed.acctuniqueid IS NULL THEN 1 ELSE 0 END source_session_weight
             FROM {table} LEFT JOIN wisp_account_usage_seals sealed ON sealed.acctuniqueid=CONVERT({table}.acctuniqueid USING ascii)
@@ -81,6 +84,8 @@ def sessions_sql(owner=None, start=None, end=None, metadata_only=False, nas=None
     counter_aggregates='''        MAX(CASE WHEN acctoutputoctets>=0 THEN acctoutputoctets END) AS download,
         MAX(CASE WHEN acctinputoctets>=0 THEN acctinputoctets END) AS upload,
         MAX(acctstoptime) AS stopped_at,MAX(COALESCE(acctstoptime,acctupdatetime,acctstarttime)) AS observed_at''' if not metadata_only else ''
+    if with_seconds and not metadata_only:
+        counter_aggregates+=',MAX(CASE WHEN acctsessiontime>=0 THEN acctsessiontime END) AS seconds'
     grouped=f'''SELECT acctuniqueid,username,acctsessionid,nasipaddress,acctstarttime,
         CASE WHEN MIN(NULLIF(kind,''))=MAX(NULLIF(kind,'')) AND MAX(kind)<>'conflict'
             THEN COALESCE(MAX(NULLIF(kind,'')),'') ELSE '' END AS service_type,
@@ -107,8 +112,9 @@ def sessions_sql(owner=None, start=None, end=None, metadata_only=False, nas=None
     text=lambda expr: 'CONVERT('+expr+' USING utf8mb4) COLLATE utf8mb4_bin'
     kind_summary="CASE WHEN LOWER(TRIM(h.framedprotocol))='ppp' AND LOWER(TRIM(h.servicetype)) IN ('login-user','login') THEN '' WHEN LOWER(TRIM(h.framedprotocol))='ppp' THEN 'pppoe' WHEN LOWER(TRIM(h.servicetype)) IN ('login-user','login') THEN 'hotspot' ELSE '' END"
     full=' AND '.join(complete) or '1=1'
-    summary_base=f"SELECT {text('LEFT(h.summary_key,32)')} AS acctuniqueid,{text('COALESCE(v.username,h.username)')} AS username,{text('h.summary_key')} AS acctsessionid,{text('h.nasipaddress')} AS nasipaddress,h.first_start AS acctstarttime,{text(kind_summary)} AS service_type,{text('h.calledstationid')} AS server_name,{text('h.nasportid')} AS server_interface,h.output_bytes,h.input_bytes,h.first_start,h.last_start,h.session_count,({full}) date_complete FROM wisp_account_usage_summary h LEFT JOIN wisp_vouchers v ON v.id=h.voucher_id{where}"
+    summary_base=f"SELECT {text('LEFT(h.summary_key,32)')} AS acctuniqueid,{text('COALESCE(v.username,h.username)')} AS username,{text('h.summary_key')} AS acctsessionid,{text('h.nasipaddress')} AS nasipaddress,h.first_start AS acctstarttime,{text(kind_summary)} AS service_type,{text('h.calledstationid')} AS server_name,{text('h.nasportid')} AS server_interface,h.output_bytes,h.input_bytes,h.uptime_seconds,h.first_start,h.last_start,h.session_count,({full}) date_complete FROM wisp_account_usage_summary h LEFT JOIN wisp_vouchers v ON v.id=h.voucher_id{where}"
     extra='' if metadata_only else ',CASE WHEN date_complete THEN output_bytes END AS download,CASE WHEN date_complete THEN input_bytes END AS upload,first_start AS stopped_at,last_start AS observed_at'
+    if with_seconds and not metadata_only:extra+=',CASE WHEN date_complete THEN uptime_seconds END AS seconds'
     summary=f'''SELECT acctuniqueid,username,acctsessionid,nasipaddress,acctstarttime,service_type,server_name,server_interface{extra},
         CASE WHEN date_complete THEN session_count ELSE 0 END session_weight,
         CASE WHEN date_complete THEN 0 ELSE session_count END unknown_sessions FROM ({summary_base}) summary_rows'''

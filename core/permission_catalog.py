@@ -33,6 +33,7 @@ DETAILS = (
  ('vouchers.reset_mac', 'فك ارتباط الكرت بالجهاز', 'vouchers.actions', 'api_reset_voucher_mac'),
  ('invoices.sales_view', 'تقارير المبيعات والرسم البياني', 'invoices.view', 'sales_reports'),
  ('invoices.sales_export', 'تصدير المبيعات', 'invoices.view', 'export_sales'),
+ ('invoices.comprehensive_report', 'التقرير الشامل للمبيعات والاستهلاك وتصديره', 'invoices.view', 'comprehensive_report comprehensive_report_export'),
  ('invoices.create', 'إنشاء فاتورة مشترك', 'invoices.manage', 'create_invoice_action'),
  ('invoices.pay', 'تسجيل سداد فاتورة مشترك', 'invoices.manage', 'pay_invoice_action'),
  ('invoices.design', 'تعديل تصميم الفواتير', 'invoices.manage', 'save_invoice_design_action'),

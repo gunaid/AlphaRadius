@@ -186,6 +186,8 @@ ENDPOINT_PERMISSIONS = {
  'edit_voucher_design': ['vouchers.view'],
  'edit_voucher_design_direct': ['vouchers.view'],
  'export_sales': ['invoices.view'],
+ 'comprehensive_report': ['invoices.view'],
+ 'comprehensive_report_export': ['invoices.view'],
  'generate_vouchers_action': ['vouchers.generate'],
  'hotspot_generator_page': ['nas.view'],
  'import_data_page': ['system.settings'],

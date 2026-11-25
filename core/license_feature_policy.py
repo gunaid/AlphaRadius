@@ -23,7 +23,7 @@ GROUPS={
  'quick_cards':'quick_cards_page quick_cards_history quick_cards_issue quick_cards_details quick_cards_print reseller_issue_settings',
  'reseller_management':'resellers add_reseller_action',
  'reseller_wallets':'reseller_wallets_page api_reseller_wallet_transfer api_reseller_wallet_deposit topup_reseller_action deposit_manager_action deduct_manager_action',
- 'sales_reports':'sales_reports export_sales',
+ 'sales_reports':'sales_reports export_sales comprehensive_report comprehensive_report_export',
  'invoice_management':'create_invoice_action save_invoice_design_action',
  'userman_import':'mikrotik_userman_import_page api_userman_job_fetch api_userman_job_import api_mikrotik_userman_analyze_rsc api_mikrotik_userman_test_api api_mikrotik_userman_execute',
  'data_import':'database_migration_studio api_migration_analyze api_migration_execute import_data_page download_sample_template process_import_action',
