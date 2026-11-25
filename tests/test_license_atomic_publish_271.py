@@ -116,7 +116,7 @@ class ActivationFailureResponseTests(unittest.TestCase):
         package = {'payload': {'license_id': 'local-response-proof'}}
         persist = Mock(side_effect=RuntimeError('injected storage failure'))
         namespace = dict(DEFAULT_MASTER_SERVER_URL='https://local.invalid',
-                         AMAN_LICENSE_AUTHORITY='aman-alpha', LEGACY_LICENSE_AUTHORITY='legacy-alpha',
+                         AMAN_LICENSE_AUTHORITY='aman-alpha',
                          ensure_license_tables=Mock(), clear_license_cache=Mock(),
                          decode_license_string=lambda _: (package, None),
                          get_current_system_counts=lambda: (2, 1, 2),

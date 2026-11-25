@@ -11,7 +11,7 @@
     "host/clock-guard/manage.py": "031535d904924472d327fe0907fecb4d8eee9cc8e65993b69f357fae97281bf3",
     "host/clock-guard/managed_files.py": "58492d9a707b47572745020aa01133309ddd2afdbe5c37647bd02b7e2e135763",
     "runtime-release.env": "978a74f190b5125f4f045d3bc939c938ef53c535a09e5ccf3de5ebb125991294",
-    "storage/keys/master_public_key.pem": "db15592a0478a92330e0b977a10a3f48d9c811953c7d67ec6dcd6cc6ff94d704"
+    "storage/keys/master_public_key.pem": "a8b67f0e653ea0e00ebc12b96bcec62981b514890a4d325b83014b8afac28a06"
   },
   "scope": "Immutable installer bundle; independent of future development source."
 }

@@ -11,15 +11,16 @@ class Tests(unittest.TestCase):
    sent.append(args[1])
    if error:raise error
    return {'valid':True,'status':'active'}
-  ns=dict(DEFAULT_MASTER_SERVER_URL='https://ls.amtik.online',AMAN_LICENSE_AUTHORITY='aman-alpha',LEGACY_LICENSE_AUTHORITY='legacy-alpha',ensure_license_tables=lambda:None,clear_license_cache=lambda:None,decode_license_string=lambda _: (pkg,None),get_current_system_counts=lambda:(0,0,0),verify_license_package=lambda *a,**k:(True,'',{'license_authority':authority}),get_machine_id=lambda:'HW-TEST',get_instance_uuid=lambda:'INST-TEST',APP_VERSION='test',APP_EDITION='test',STORAGE_DIR='fixture',get_master_public_key_pem=lambda *a:'fixture',authenticated_license_exchange=exchange,record_license_revocation=lambda *a:None,remove_license_revocation=lambda *a:None,get_connection=MagicMock,is_mysql_conn=lambda _:True,execute_write=lambda *a:writes.append(a),query_one=lambda *a:None,json=json,logger=logging.getLogger('test'))
+  ns=dict(DEFAULT_MASTER_SERVER_URL='https://ls.amtik.online',AMAN_LICENSE_AUTHORITY='aman-alpha',ensure_license_tables=lambda:None,clear_license_cache=lambda:None,decode_license_string=lambda _: (pkg,None),get_current_system_counts=lambda:(0,0,0),verify_license_package=lambda *a,**k:(True,'',{'license_authority':authority}),get_machine_id=lambda:'HW-TEST',get_instance_uuid=lambda:'INST-TEST',APP_VERSION='test',APP_EDITION='test',STORAGE_DIR='fixture',get_master_public_key_pem=lambda *a:'fixture',authenticated_license_exchange=exchange,record_license_revocation=lambda *a:None,remove_license_revocation=lambda *a:None,get_connection=MagicMock,is_mysql_conn=lambda _:True,execute_write=lambda *a:writes.append(a),query_one=lambda *a:None,json=json,logger=logging.getLogger('test'))
   ns['_persist_verified_package']=lambda package,url:writes.append(('persist',(json.dumps({k:v for k,v in package.items() if k!='enrollment_token'}),url)))
   tree=ast.parse((ROOT/'services/license_guard_service.py').read_text(encoding='utf8'));fn=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='install_and_activate_license');exec(compile(ast.Module(body=[fn],type_ignores=[]),'guard','exec'),ns);return ns,sent,writes
  def test_capability_is_sent_but_not_stored(self):
   ns,sent,writes=self.fixture();self.assertTrue(ns['install_and_activate_license']('fixture')[0]);self.assertEqual(sent[0]['enrollment_token'],'fixture-permit');stored=[p for _,params in writes for p in params if isinstance(p,str) and p.startswith('{"payload"')];self.assertTrue(stored);self.assertNotIn('enrollment_token',json.loads(stored[0]))
  def test_legacy_enrolled_license_remains_compatible(self):
   ns,sent,writes=self.fixture(permit=False);self.assertTrue(ns['install_and_activate_license']('fixture')[0]);self.assertNotIn('enrollment_token',sent[0])
- def test_old_signing_authority_does_not_contact_new_server(self):
-  ns,sent,writes=self.fixture(authority='legacy-alpha');ok,_=ns['install_and_activate_license']('fixture');self.assertTrue(ok);self.assertEqual(sent,[]);self.assertTrue(writes)
+ def test_activation_always_requires_license_server(self):
+  ns,sent,writes=self.fixture();ok,_=ns['install_and_activate_license']('fixture');self.assertTrue(ok);self.assertEqual(len(sent),1)
+  ns,sent,writes=self.fixture(error=TimeoutError());ok,_=ns['install_and_activate_license']('fixture');self.assertFalse(ok);self.assertEqual(writes,[])
  def test_all_enrollment_errors_fail_without_license_writes(self):
   for code in ['enrollment_required','enrollment_token_invalid','enrollment_token_expired','enrollment_license_unavailable','enrollment_binding_mismatch','enrollment_blocked','enrollment_instance_limit','enrollment_key_mismatch']:
    with self.subTest(code=code):

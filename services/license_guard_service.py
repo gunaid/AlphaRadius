@@ -20,7 +20,6 @@ from core.config import APP_VERSION, APP_EDITION
 from core.hardware_fingerprint import get_machine_id, get_instance_uuid, get_combined_binding_code
 from core.licensing import (
     AMAN_LICENSE_AUTHORITY,
-    LEGACY_LICENSE_AUTHORITY,
     decode_license_string,
     identify_license_authority,
     verify_license_package,
@@ -506,7 +505,7 @@ def get_active_license_status(force_refresh=False):
         features = info.get('features', {})
 
         authority = info.get('license_authority', AMAN_LICENSE_AUTHORITY)
-        requires_heartbeat = info.get('requires_heartbeat', True)
+        requires_heartbeat = True
 
         # Check database status override (e.g. if revoked by heartbeat or grace expired)
         db_status = row.get('status', 'active')
@@ -527,10 +526,10 @@ def get_active_license_status(force_refresh=False):
         elif db_status in ('expired', 'unlicensed', 'error', 'instance_limit'):
             valid = False
             msg = "رفض خادم التراخيص الحالي اعتماد هذا الترخيص أو انتهت صلاحيته."
-        elif db_status == 'grace_expired' and requires_heartbeat:
+        elif db_status == 'grace_expired':
             valid = False
             msg = "انتهت فترة السماح (24 ساعة) دون التمكن من مزامنة الترخيص مع السيرفر المركزي. يرجى التأكد من اتصال الإنترنت."
-        elif requires_heartbeat:
+        else:
             # Calculate offline duration
             try:
                 last_sync = row.get('last_heartbeat_at') or row.get('last_verified_at') or row.get('created_at')
@@ -552,12 +551,6 @@ def get_active_license_status(force_refresh=False):
                 valid = False
                 db_status = 'grace_expired'
                 msg = 'تعذر التحقق من وقت آخر مزامنة للترخيص.'
-        else:
-            # A legacy package remains governed by its embedded expiry, binding,
-            # quotas and local revocation records.  It must not be disabled just
-            # because the retired legacy heartbeat service is unavailable.
-            if db_status == 'grace_expired':
-                db_status = 'active'
             
         # Determine license mode ('active_sessions' vs 'legacy_subscribers')
         lic_mode = info.get('license_mode', 'active_sessions')
@@ -786,8 +779,7 @@ def check_manager_quota(additional_count=1):
 def install_and_activate_license(license_str, master_server_url=DEFAULT_MASTER_SERVER_URL):
     """
     Installs, validates and activates a new license string or JSON payload into DB.
-    Aman packages require synchronous verification with the current server.
-    Legacy packages retain their original signed offline contract.
+    Every package requires synchronous verification with the Aman license server.
     """
     ensure_license_tables()
     clear_license_cache()
@@ -819,11 +811,7 @@ def install_and_activate_license(license_str, master_server_url=DEFAULT_MASTER_S
     features = payload.get('features', {})
     current_machine_id = get_machine_id()
     
-    authority = info.get('license_authority', AMAN_LICENSE_AUTHORITY)
-
-    # 1. Live Synchronous Verification with the current Aman License Server.
-    # Legacy files are already authenticated by their retained immutable key;
-    # sending them to the new authority would incorrectly report them unlicensed.
+    # 1. Live Synchronous Verification with the Aman License Server.
     endpoint = f"{master_server_url.rstrip('/')}/api/v1/heartbeat/ping"
     verify_payload = {
         "license_id": lic_id,
@@ -842,9 +830,8 @@ def install_and_activate_license(license_str, master_server_url=DEFAULT_MASTER_S
         verify_payload['enrollment_token'] = pkg_dict['enrollment_token']
     
     try:
-        res_json = ({'valid': True, 'status': 'active'} if authority == LEGACY_LICENSE_AUTHORITY else
-                    authenticated_license_exchange(master_server_url, verify_payload, STORAGE_DIR,
-                                                   get_master_public_key_pem(AMAN_LICENSE_AUTHORITY)))
+        res_json = authenticated_license_exchange(master_server_url, verify_payload, STORAGE_DIR,
+                                                  get_master_public_key_pem(AMAN_LICENSE_AUTHORITY))
         server_status = res_json.get('status')
         remote_action = res_json.get('remote_action')
         if server_status == 'instance_limit':
@@ -879,8 +866,7 @@ def install_and_activate_license(license_str, master_server_url=DEFAULT_MASTER_S
             return False, "فشل التفعيل: رفض خادم الترخيص اعتماد هذا الترخيص أو أوقفه 🔴"
         else:
             # Master server approved (Active) -> remove from blacklist if previously revoked
-            if authority == AMAN_LICENSE_AUTHORITY:
-                remove_license_revocation(lic_id)
+            remove_license_revocation(lic_id)
     except Exception as ex:
         logger.warning(f"[License Guard] Live activation ping notice: {ex}")
         messages = {
@@ -1042,22 +1028,6 @@ def sync_license_heartbeat_with_server(max_retries=3):
         authority = identify_license_authority(installed_package)
         if authority is None:
             return False, "توقيع حزمة الترخيص المثبتة غير صالح أو غير موثوق."
-        if authority == LEGACY_LICENSE_AUTHORITY:
-            package_valid, package_message, _ = verify_license_package(
-                installed_package,
-                current_active_sessions=max(0, active_sess_count),
-                current_nas=nas_count,
-                current_subscribers=subs_count,
-            )
-            if not package_valid:
-                return False, package_message
-            # Preserve explicit local revocation/suspension, but recover the old
-            # network-only grace state after upgrading from a retired endpoint.
-            if lic.get('status') == 'grace_expired' and not is_license_blacklisted(lic['license_id']):
-                execute_write("UPDATE wisp_license_info SET status = 'active' WHERE id = %s" if is_mysql else
-                              "UPDATE wisp_license_info SET status = 'active' WHERE id = ?", (lic['id'],))
-            clear_license_cache()
-            return True, "تم التحقق محلياً من الترخيص القديم دون تغيير بياناته"
     
     last_error = ""
     for attempt in range(1, max_retries + 1):

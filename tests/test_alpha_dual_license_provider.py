@@ -44,11 +44,8 @@ def signed_package(private_key, license_id="ALPHA-TEST-1"):
 class DualAuthorityPackageTests(unittest.TestCase):
     def setUp(self):
         self.aman_key = Ed25519PrivateKey.generate()
-        self.legacy_key = Ed25519PrivateKey.generate()
-        self.trust = (
-            (licensing.AMAN_LICENSE_AUTHORITY, public_pem(self.aman_key)),
-            (licensing.LEGACY_LICENSE_AUTHORITY, public_pem(self.legacy_key)),
-        )
+        self.old_publisher_key = Ed25519PrivateKey.generate()
+        self.trust = ((licensing.AMAN_LICENSE_AUTHORITY, public_pem(self.aman_key)),)
         self.hardware = patch.multiple(
             licensing,
             get_machine_id=lambda: "HW-TEST",
@@ -66,11 +63,10 @@ class DualAuthorityPackageTests(unittest.TestCase):
         self.assertEqual(info["license_authority"], licensing.AMAN_LICENSE_AUTHORITY)
         self.assertTrue(info["requires_heartbeat"])
 
-    def test_legacy_package_remains_valid_without_new_server(self):
-        valid, _, info = self.verify(signed_package(self.legacy_key, "ALPHA-LEGACY-1"))
-        self.assertTrue(valid)
-        self.assertEqual(info["license_authority"], licensing.LEGACY_LICENSE_AUTHORITY)
-        self.assertFalse(info["requires_heartbeat"])
+    def test_package_from_another_publisher_key_is_rejected(self):
+        valid, _, info = self.verify(signed_package(self.old_publisher_key, "ALPHA-OLD-1"))
+        self.assertFalse(valid)
+        self.assertEqual(info, {})
 
     def test_unknown_or_modified_signature_is_rejected(self):
         package = signed_package(Ed25519PrivateKey.generate())
@@ -80,7 +76,7 @@ class DualAuthorityPackageTests(unittest.TestCase):
         self.assertEqual(info, {})
 
     def test_payload_cannot_claim_a_different_authority(self):
-        package = signed_package(self.legacy_key)
+        package = signed_package(self.old_publisher_key)
         package["payload"]["license_authority"] = licensing.AMAN_LICENSE_AUTHORITY
         # The signature was made before the untrusted field was added.
         valid, _, _ = self.verify(package)
@@ -91,10 +87,14 @@ class DualAuthorityPackageTests(unittest.TestCase):
             licensing.get_master_public_key_pem(),
             licensing.AMAN_MASTER_PUBLIC_KEY,
         )
-        self.assertEqual(
-            licensing.get_master_public_key_pem(licensing.LEGACY_LICENSE_AUTHORITY),
-            licensing.LEGACY_MASTER_PUBLIC_KEY,
-        )
+        self.assertEqual(licensing.TRUSTED_LICENSE_PUBLIC_KEYS,
+                         ((licensing.AMAN_LICENSE_AUTHORITY, licensing.AMAN_MASTER_PUBLIC_KEY),))
+        self.assertEqual(licensing.EMBEDDED_PUBLIC_KEY, licensing.AMAN_MASTER_PUBLIC_KEY)
+        # The pre-migration publisher key must never be trusted again.
+        self.assertNotIn("MCowBQYDK2VwAyEADT6MJTY7bmDdw6nrAzsUyZ1nGrAxTwNKgE1MQYqAgNE=",
+                         (ROOT / "core" / "licensing.py").read_text(encoding="utf-8"))
+        with self.assertRaises(ValueError):
+            licensing.get_master_public_key_pem("legacy-alpha")
 
 
 class HeartbeatStatusCompatibilityTests(unittest.TestCase):
@@ -123,7 +123,7 @@ class HeartbeatStatusCompatibilityTests(unittest.TestCase):
         self.assertEqual(verified["status"], "error")
 
 
-class LegacyGraceCompatibilityTests(unittest.TestCase):
+class HeartbeatGraceTests(unittest.TestCase):
     def status(self, authority, requires_heartbeat):
         row = {
             "id": 1,
@@ -180,13 +180,7 @@ class LegacyGraceCompatibilityTests(unittest.TestCase):
         exec(compile(ast.Module(body=[function], type_ignores=[]), "license_guard", "exec"), namespace)
         return namespace["get_active_license_status"](force_refresh=True)
 
-    def test_retired_legacy_endpoint_does_not_expire_old_signed_license(self):
-        status = self.status(licensing.LEGACY_LICENSE_AUTHORITY, False)
-        self.assertTrue(status["valid"])
-        self.assertEqual(status["status"], "active")
-        self.assertFalse(status["requires_heartbeat"])
-
-    def test_current_aman_license_still_enforces_heartbeat_grace(self):
+    def test_aman_license_enforces_heartbeat_grace(self):
         status = self.status(licensing.AMAN_LICENSE_AUTHORITY, True)
         self.assertFalse(status["valid"])
         self.assertEqual(status["status"], "grace_expired")
@@ -196,9 +190,8 @@ class ManagedHeartbeatRenewalTests(unittest.TestCase):
     """An expired managed package must still reach the server to receive renewal."""
 
     def run_heartbeat(self, package):
-        aman_key, legacy_key = Ed25519PrivateKey.generate(), Ed25519PrivateKey.generate()
-        trust = ((licensing.AMAN_LICENSE_AUTHORITY, public_pem(aman_key)),
-                 (licensing.LEGACY_LICENSE_AUTHORITY, public_pem(legacy_key)))
+        aman_key = Ed25519PrivateKey.generate()
+        trust = ((licensing.AMAN_LICENSE_AUTHORITY, public_pem(aman_key)),)
         package = package(aman_key)
         row = {"id": 1, "license_id": package["payload"]["license_id"], "status": "expired",
                "max_active_sessions": 0, "master_server_url": "https://ls.amtik.online",
@@ -226,7 +219,6 @@ class ManagedHeartbeatRenewalTests(unittest.TestCase):
             "get_connection": Connection, "is_mysql_conn": lambda _conn: False,
             "identify_license_authority": licensing.identify_license_authority,
             "verify_license_package": licensing.verify_license_package,
-            "LEGACY_LICENSE_AUTHORITY": licensing.LEGACY_LICENSE_AUTHORITY,
             "AMAN_LICENSE_AUTHORITY": licensing.AMAN_LICENSE_AUTHORITY,
             "get_master_public_key_pem": lambda authority=None: "fixture",
             "authenticated_license_exchange": exchange,

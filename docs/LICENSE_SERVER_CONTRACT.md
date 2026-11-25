@@ -8,7 +8,7 @@
 
 - مفتاح الناشر (master) زوج **Ed25519**. المفتاح الخاص يبقى في الخادم فقط.
 - المفتاح العام يُضمَّن في العميل بصيغة PEM (SubjectPublicKeyInfo) داخل `AMAN_MASTER_PUBLIC_KEY` في `core/licensing.py`. أي تغيير للمفتاح يتطلب إصدار عميل جديد.
-- العميل يثق أيضًا بمفتاح قديم `LEGACY_MASTER_PUBLIC_KEY` للتراخيص الصادرة قبل الانتقال. مصدر الترخيص يُحدَّد من التوقيع نفسه، لا من حقل داخل الحزمة. التفاصيل في [ALPHA_LICENSE_PROVIDER_MIGRATION](ALPHA_LICENSE_PROVIDER_MIGRATION.md).
+- هذا هو المفتاح الوحيد الموثوق. مفتاح الناشر القديم حُذف في 25 نوفمبر 2026، وأي حزمة موقعة بغير هذا المفتاح تُرفض. التفاصيل في [ALPHA_LICENSE_PROVIDER_MIGRATION](ALPHA_LICENSE_PROVIDER_MIGRATION.md).
 - المفتاح نفسه يوقّع **ملفات الترخيص** و**ردود النبضات**.
 - التوقيع دائمًا على الصيغة القانونية للـ JSON:
   ```python
@@ -73,7 +73,6 @@
 - مهلة العميل 6 ثوانٍ، وحجم الرد ≤ 1 MB.
 - الترويسات: `Content-Type: application/json`، و`User-Agent: ALPHA-RADIUS-License/2.0`.
 - عنوان الخادم في العميل: `MASTER_LICENSE_SERVER_URL`، والافتراضي `https://ls.amtik.online`.
-- التراخيص الموقّعة بالمفتاح القديم لا تتصل بهذه النقطة إطلاقًا؛ تعمل بالتحقق المحلي فقط.
 
 ### جسم الطلب
 

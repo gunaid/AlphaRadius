@@ -15,35 +15,26 @@ from cryptography.exceptions import InvalidSignature
 
 from core.hardware_fingerprint import get_machine_id, get_instance_uuid
 
-LEGACY_LICENSE_AUTHORITY = "legacy-alpha"
 AMAN_LICENSE_AUTHORITY = "aman-alpha"
 
-# Keep the original Alpha key permanently pinned so an application upgrade does
-# not invalidate licenses that were issued before the Aman platform migration.
-LEGACY_MASTER_PUBLIC_KEY = """-----BEGIN PUBLIC KEY-----
-MCowBQYDK2VwAyEADT6MJTY7bmDdw6nrAzsUyZ1nGrAxTwNKgE1MQYqAgNE=
------END PUBLIC KEY-----"""
-
-# Current Alpha Radius authority exposed by https://ls.amtik.online.  This is a
-# separate trust root; it never replaces or aliases the legacy key above.
+# The only trusted license authority: https://ls.amtik.online. Packages signed
+# by any other key (including the pre-migration publisher key) are rejected.
 AMAN_MASTER_PUBLIC_KEY = """-----BEGIN PUBLIC KEY-----
 MCowBQYDK2VwAyEA3G3TqEFxe9EAcbTR1WyqTMHx/BxAqc6tMb14iJAnzdU=
 -----END PUBLIC KEY-----"""
 
 # Backwards-compatible name for extensions that imported the old constant.
-EMBEDDED_PUBLIC_KEY = LEGACY_MASTER_PUBLIC_KEY
+EMBEDDED_PUBLIC_KEY = AMAN_MASTER_PUBLIC_KEY
 
 TRUSTED_LICENSE_PUBLIC_KEYS = (
     (AMAN_LICENSE_AUTHORITY, AMAN_MASTER_PUBLIC_KEY),
-    (LEGACY_LICENSE_AUTHORITY, LEGACY_MASTER_PUBLIC_KEY),
 )
 
 
 def get_master_public_key_pem(authority=AMAN_LICENSE_AUTHORITY):
     """Return the immutable response/package key for a known authority.
 
-    Network exchanges default to the current Aman authority.  Legacy callers
-    can request the old key explicitly; unknown authorities fail closed.
+    Only the Aman authority is trusted; unknown authorities fail closed.
     """
     for name, public_key in TRUSTED_LICENSE_PUBLIC_KEYS:
         if name == authority:

@@ -312,7 +312,7 @@
     "database/freeradius_standard.sql": "a048cb4a19ef5cb1824f6f1038f93ea0e873a9a7dead7472638e218e077ca833",
     "database/wisp_extensions.sql": "d535946a3e17e773e3a3294961efd660df7a1fc7acb948c5a413bb3f051c9391",
     "database/seed_data.sql": "6976e7e101e0ccff930b449136d666df71ee5726f8a5c94ee4d9c981b5785cf5",
-    "storage/keys/master_public_key.pem": "db15592a0478a92330e0b977a10a3f48d9c811953c7d67ec6dcd6cc6ff94d704",
+    "storage/keys/master_public_key.pem": "a8b67f0e653ea0e00ebc12b96bcec62981b514890a4d325b83014b8afac28a06",
     "deploy/hosted-max/update_controller.py": "55a7788a8b5909b3c96c85cd065864a20d1425e2de01e79f52cc15ccbf47ede1",
     "deploy/hosted-max/component_controller.py": "0b3ca4450e11a008c94a112ceee4943e7221fff695597533d9e1ffdf7b771b70",
     "deploy/hosted-max/provision_update_controller.py": "d548aa12f5edb387ee3ce31fec502f1330acddd64693bc59697654652545b016",
