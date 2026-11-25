@@ -104,17 +104,39 @@ class StartupRetry(unittest.TestCase):
 
 
 class LeaseBounds(unittest.TestCase):
-    def publish(self, valid=True, verified=True, capacity_error=False, expires=None, lifetime=False):
+    def publish(self, valid=True, verified=True, capacity_error=False, expires=None, lifetime=False,
+                blocked=False, status='active'):
         row = {'id': 1, 'raw_package_json': json.dumps({'payload': {'expires_at': expires}})}
-        write = Mock()
+        writes = []
+
+        class Cursor:
+            """Answers the locked re-read; records the lease upsert parameters."""
+            def __enter__(self): return self
+            def __exit__(self, *exc): return False
+            def execute(self, sql, params=()):
+                self.sql = sql
+                if 'INSERT INTO wisp_license_runtime_state' in sql:
+                    writes.append(params)
+            def fetchone(self):
+                if 'wisp_license_runtime_state' in self.sql:
+                    return {'id': 1}
+                return dict(row, status=status, blocked=int(blocked))
+
+        conn = Mock()
+        conn.cursor.side_effect = Cursor
+        db_stub = types.ModuleType('database.db')
+        db_stub.adapt_query = lambda sql, _conn: sql
         ns = dict(datetime=datetime, json=json, hashlib=hashlib,
                   get_active_license_status=lambda **_: {'valid': valid, 'capacity_read_error': capacity_error},
                   query_one=lambda _: row,
                   verify_license_package=lambda _: (verified, '', {'is_lifetime': lifetime, 'license_mode': 'active_sessions', 'max_active_sessions': 5}),
-                  execute_write=write)
+                  get_connection=lambda: conn, clear_license_cache=lambda: None)
+        extracted('_write_runtime_lease', ns)
         before = datetime.datetime.now(datetime.timezone.utc)
-        extracted('publish_radius_license_state', ns)()
-        return before, write.call_args.args[1]
+        with patch.dict(sys.modules, {'database.db': db_stub}):
+            self.assertTrue(extracted('publish_radius_license_state', ns)())
+        conn.commit.assert_called_once()
+        return before, writes[-1]
 
     def test_verified_lease_remains_bounded_to_ninety_seconds(self):
         before, params = self.publish()
@@ -136,6 +158,10 @@ class LeaseBounds(unittest.TestCase):
         expiry = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(seconds=20)
         _, params = self.publish(expires=expiry.isoformat())
         self.assertEqual(params[-1], expiry.replace(tzinfo=None))
+
+    def test_revoked_or_suspended_row_is_never_authorized(self):
+        self.assertEqual(self.publish(blocked=True)[1][2], 0)
+        self.assertEqual(self.publish(status='suspended')[1][2], 0)
 
 
 if __name__ == '__main__':

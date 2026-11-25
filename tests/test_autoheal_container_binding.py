@@ -34,7 +34,9 @@ class Binding(unittest.TestCase):
         self.ns=load_functions();self.items=[item(i+1,n,r) for i,(n,r) in enumerate(zip(NAMES,ROLES))]
         self.old=item(255,'alpha_web_previous_fixture','wisp-web',state='exited');self.items.insert(0,self.old)
         self.calls=[];self.events=[];self.inspect_hook=None
-        self.ns['_runtime_container_ids']=lambda:set()
+        # The fleet is scoped by the Web container's own proven identity
+        # (cgroup/mountinfo). A hostname alone no longer selects a project.
+        self.ns['_runtime_container_ids']=lambda:{'%064x'%3}
         self.ns['docker_api_request']=self.api
         self.ns['log_system_alert']=lambda *a,**kw:self.events.append((a,kw))
         self.ns['execute_update']=lambda *a,**kw:None
@@ -56,6 +58,10 @@ class Binding(unittest.TestCase):
     def fleet(self):return self.ns['get_container_fleet_status']()
     def web(self):return next(x for x in self.fleet() if x['role']=='web')
     def no_mutation(self):self.assertFalse(any(method!='GET' for method,_ in self.calls))
+    def test_unproven_identity_offers_no_targets(self):
+        self.ns['_runtime_container_ids']=lambda:set()
+        self.assertFalse(any(x.get('container_id') for x in self.fleet()))
+        self.assertFalse(self.ns['restart_system_container']('%064x'%3)[0]);self.no_mutation()
     def test_inherited_hostname_never_selects_stopped_archive(self):
         self.assertEqual(self.web()['container_id'],'%064x'%3)
         self.assertTrue(self.web()['is_healthy'])
@@ -69,9 +75,15 @@ class Binding(unittest.TestCase):
         self.items.append(item(300,'foreign_web','wisp-web','foreign'))
         self.assertEqual(self.web()['container_id'],'%064x'%3)
     def test_ambiguous_noncanonical_role_is_unavailable(self):
+        # The Web role is pinned by its own identity; ambiguity applies to peers.
+        self.items[2]['Names']=['/custom_core_a']
+        self.items.append(item(301,'custom_core_b','freeradius'))
+        core=next(x for x in self.fleet() if x['role']=='radius')
+        self.assertEqual(core['id'],'N/A');self.no_mutation()
+    def test_own_identity_wins_over_renamed_duplicates(self):
         self.items[3]['Names']=['/custom_web_a']
         self.items.append(item(301,'custom_web_b','wisp-web'))
-        self.assertEqual(self.web()['id'],'N/A');self.no_mutation()
+        self.assertEqual(self.web()['container_id'],'%064x'%3);self.no_mutation()
     def test_canonical_stopped_service_is_not_masked_by_archive(self):
         self.items[3]['State']='exited';self.old['State']='running'
         self.assertEqual(self.web()['container_id'],'%064x'%3)

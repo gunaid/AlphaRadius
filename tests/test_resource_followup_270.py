@@ -44,5 +44,7 @@ class Resources(unittest.TestCase):
     def test_nas_filter_is_parameterized_in_details_and_settled_summary(self):
         sql,params=sessions_sql(nas='192.0.2.1')
         self.assertEqual(params,('192.0.2.1',)*5)
-        self.assertEqual(sql.count("COALESCE(nasipaddress,'')=%s"),4)
+        # Each of the four source stores filters on its own qualified column.
+        import re
+        self.assertEqual(len(re.findall(r"COALESCE\((?:\w+\.)?nasipaddress,''\)=%s",sql)),4)
         self.assertNotIn('192.0.2.1',sql)

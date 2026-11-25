@@ -47,6 +47,8 @@ def fixture():
   def lastrowid(self):return self.cur.lastrowid
   @property
   def rowcount(self):return self.cur.rowcount
+  @property
+  def description(self):return self.cur.description
   def executemany(self,sql,args):self.cur=db.executemany(sql.replace('%s','?'),args)
  class Conn:
   def cursor(self):return Cursor()

@@ -39,6 +39,8 @@ class CapacityTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Enforce the disposable-target guard before any schema operation.
+        if os.environ.get('DB_HOST') != 'alpha-license-test-db':
+            raise unittest.SkipTest('live suite: needs the disposable alpha-license-test-db container')
         c=connect()
         assert heal_database_schema(backfill=False)
         from database.subscriber_edit_schema import install_subscriber_edit_schema

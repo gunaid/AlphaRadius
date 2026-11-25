@@ -6,7 +6,14 @@ import hashlib
 from pathlib import Path
 from services.system_update_sequence import gate
 from services.system_update_handoff import persist
-from services.system_update_runtime import UpdateError
+import sys
+
+
+def update_error():
+    # The code under test imports UpdateError at call time; another suite
+    # (test_system_update) re-executes that module, so resolve it the same way.
+    import services.system_update_runtime  # noqa: F401  (ensures it is loaded)
+    return sys.modules['services.system_update_runtime'].UpdateError
 
 
 class SequenceGateTests(unittest.TestCase):
@@ -63,13 +70,13 @@ class AttestedConfigurationTests(unittest.TestCase):
 
     def test_external_config_edit_is_never_overwritten(self):
         self.channel.write_text('{"operator":"changed"}')
-        with self.assertRaises(UpdateError): persist(self.plan, self.folder)
+        with self.assertRaises(update_error()): persist(self.plan, self.folder)
         self.assertEqual(self.channel.read_text(),'{"operator":"changed"}')
         self.assertEqual(self.compose.read_bytes(),self.before)
 
     def test_different_owner_cannot_receive_schema_stamp(self):
         self.plan['project']='foreign'
-        with self.assertRaises(UpdateError): persist(self.plan, self.folder)
+        with self.assertRaises(update_error()): persist(self.plan, self.folder)
         self.assertEqual(self.channel.read_bytes(),self.raw)
 
     def test_host_controller_gets_stamp_without_becoming_docker_executor(self):

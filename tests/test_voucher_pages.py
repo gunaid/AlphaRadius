@@ -65,9 +65,10 @@ class VoucherPageTests(unittest.TestCase):
         with self.assertRaises(ValueError):self.ns['generate_voucher_batch']('fixture',1,1,reseller_id=999)
         self.assertEqual(self.row('SELECT COUNT(*) n FROM wisp_voucher_batches')['n'],1)
     def test_generation_retries_existing_username(self):
-        values=iter(['fixture-1','fixture-new'])
+        # Usernames are drawn in bulk; a taken name is redrawn in the next round.
+        values=iter(['fixture-1','fixture-new','fixture-spare'])
         with patch.dict(self.ns,generate_random_code=lambda *a:next(values)):
-            ident,_=self.ns['generate_voucher_batch']('fixture',1,1)
+            ident,_=self.ns['generate_voucher_batch']('fixture',1,1,pin_only=True)
         self.assertEqual(self.row('SELECT username FROM wisp_vouchers WHERE batch_id=?',(ident,))['username'],'fixture-new')
     def test_generation_zero_cost_and_three_credential_modes(self):
         for pin,same in [(True,False),(False,True),(False,False)]:

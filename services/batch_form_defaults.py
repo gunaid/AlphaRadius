@@ -4,7 +4,7 @@ Only presentation defaults are stored; generation still validates every value.
 """
 import json
 
-from services.voucher_service import DEFAULT_SALE_POINT, MAX_BATCH_CARDS
+from services.batch_limits import DEFAULT_SALE_POINT, MAX_BATCH_CARDS
 
 FIELDS = ('count', 'format_type', 'char_type', 'same_user_pass', 'code_length',
           'pass_length', 'reseller_id', 'sale_point', 'auto_pdf')

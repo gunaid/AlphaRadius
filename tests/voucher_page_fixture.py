@@ -70,10 +70,11 @@ def voucher_fixture():
         sync_voucher_activations=lambda:None,log_audit=lambda *a:None,log_user_audit=lambda *a:None,
         ensure_card_designs_table=lambda:None)
     ns.update(re=re, sqlite3=sqlite3, MySQLIntegrityError=MySQLIntegrityError)
-    load_functions('services/voucher_service.py',['_new_voucher_serial','_write_vouchers','generate_random_code','generate_voucher_batch','get_batches','get_voucher_summary_counts','get_vouchers','get_batch_cards_for_print','update_voucher_card'],ns)
+    load_functions('services/voucher_service.py',['_new_voucher_serial','_write_vouchers','generate_random_code','generate_voucher_batch','get_batches','get_voucher_summary_counts','get_vouchers','get_batch_cards_for_print','update_voucher_card','batch_card_serial','_taken_usernames'],ns)
+    ns.update(MAX_BATCH_CARDS=10000,SERIAL_SEQUENCE_DIGITS=5,DEFAULT_SALE_POINT='توزيع عام',MAX_CARDS_PER_ROW=6,MAX_CARDS_PER_COL=20)
     design_tree=ast.parse((ROOT/'services/card_design_service.py').read_text(encoding='utf-8'))
     ns['DEFAULT_CARD_CONFIG']=ast.literal_eval(next(n.value for n in design_tree.body if isinstance(n,ast.Assign) and any(isinstance(t,ast.Name) and t.id=='DEFAULT_CARD_CONFIG' for t in n.targets)))
-    load_functions('services/card_design_service.py',['get_all_card_designs','get_card_design_by_id','save_card_design','delete_card_design','set_default_card_design','duplicate_card_design'],ns)
+    load_functions('services/card_design_service.py',['get_all_card_designs','get_card_design_by_id','save_card_design','delete_card_design','set_default_card_design','duplicate_card_design','linked_design_ids','resolve_card_design'],ns)
     ns['is_mysql_conn']=lambda conn:False
     class_node=next(n for n in ast.parse((ROOT/'services/voucher_service.py').read_text(encoding='utf-8')).body if isinstance(n,ast.ClassDef) and n.name=='_VoucherWriter')
     exec(compile(ast.Module(body=[class_node],type_ignores=[]),'voucher-writer','exec'),ns)

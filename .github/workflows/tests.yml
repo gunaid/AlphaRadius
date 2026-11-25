@@ -1,0 +1,47 @@
+# Isolated test suites only: no database server, router, Docker or license
+# server. Live suites skip themselves (test_license_capacity needs the
+# disposable DB; release gates need ALPHA_RELEASE_GATE=1 and the archive).
+name: tests
+
+on:
+  push:
+    branches: [main, 'claude/**']
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  isolated:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: |
+          python -m pip install -r requirements.txt
+          # PDF export suites render with a real headless Chromium.
+          python -m playwright install --with-deps chromium
+      - name: Python suites
+        run: python -B -m unittest discover -s tests -p "test_*.py"
+      - name: JavaScript suites
+        run: |
+          status=0
+          for test in tests/test_*.js; do
+            echo "== $test"
+            node "$test" || status=1
+          done
+          exit $status

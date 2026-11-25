@@ -339,7 +339,7 @@
                         <span class="text-xs font-bold text-slate-400 block mb-1">إجمالي استهلاك البيانات اليومي</span>
                         <h3 id="stat-traffic-total" class="text-2xl sm:text-3xl font-black text-sky-400 font-mono tracking-tight">{{ metrics.traffic_total_str }}</h3>
                         <span id="stat-traffic-status" class="text-xs text-amber-500">{{ metrics.traffic_status_text|default('') }}</span>
-                        {% if data_cost_enabled() %}<span class="block text-xs text-amber-400 font-bold mt-1">التكلفة: <bdi dir="ltr"><span id="stat-traffic-cost" class="font-mono">{{ metrics.traffic_total_cost or '—' }}</span> {{ currency_symbol }}</bdi></span>{% endif %}
+                        {% if (data_cost_enabled is defined and data_cost_enabled()) %}<span class="block text-xs text-amber-400 font-bold mt-1">التكلفة: <bdi dir="ltr"><span id="stat-traffic-cost" class="font-mono">{{ metrics.traffic_total_cost or '—' }}</span> {{ currency_symbol }}</bdi></span>{% endif %}
                     </div>
                     <div class="w-12 h-12 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center text-xl border border-sky-500/20">
                         <i class="fa-solid fa-arrow-right-arrow-left"></i>

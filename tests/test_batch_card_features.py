@@ -26,8 +26,8 @@ def load(path, names, namespace=None):
 
 
 class BatchSerialTests(unittest.TestCase):
-    ns = load('services/voucher_service.py', {'batch_card_serial', 'SERIAL_SEQUENCE_DIGITS', 'MAX_BATCH_CARDS',
-                                              '_taken_usernames'})
+    ns = load('services/voucher_service.py', {'batch_card_serial', '_taken_usernames'},
+             load('services/batch_limits.py', {'SERIAL_SEQUENCE_DIGITS', 'MAX_BATCH_CARDS'}))
 
     def test_serial_is_batch_number_and_sequence_from_one(self):
         serial = self.ns['batch_card_serial']

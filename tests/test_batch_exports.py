@@ -22,6 +22,9 @@ class BatchExportTests(unittest.TestCase):
         self.app, self.db, self.ns, self.stubs, self.seed = voucher_fixture()
         self.modules = patch.dict('sys.modules', self.stubs)
         self.modules.start()
+        # The shared fixture creates loose versions; these tests need the keyed tables.
+        self.db.execute("DROP TABLE IF EXISTS wisp_account_mac_policies")
+        self.db.execute("DROP TABLE IF EXISTS wisp_account_mac_addresses")
         self.db.execute("CREATE TABLE wisp_account_mac_policies(account_type TEXT,account_id INTEGER,enabled INTEGER,PRIMARY KEY(account_type,account_id))")
         self.db.execute("CREATE TABLE wisp_account_mac_addresses(account_type TEXT,account_id INTEGER,mac TEXT,note TEXT,PRIMARY KEY(account_type,account_id,mac))")
         self.client = self.app.test_client()
@@ -163,9 +166,13 @@ class BatchExportTests(unittest.TestCase):
             self.assertEqual(result.status_code,200)
             self.assertIn('attachment', result.headers['Content-Disposition'])
             from urllib.parse import unquote
-            self.assertIn('حزمة تجربة 001.pdf',unquote(result.headers['Content-Disposition']))
+            # Named الباقة-رقم الدفعة-عدد الكروت-التاريخ-الموزع-نقطة البيع (batch_export_name).
+            self.assertIn('Fixture package-FIX1-6-',unquote(result.headers['Content-Disposition']))
+            self.assertIn('-بدون موزع-توزيع عام.pdf',unquote(result.headers['Content-Disposition']))
             self.assertIn('no-store', result.headers['Cache-Control'])
-            self.assertIn('customCardsPrintContainer', captured[0])
+            # PDF uses the lean print_cards_pdf.html with the shared card_sheet macro.
+            self.assertEqual(captured[0].count('class="custom-card-cell"'), 6)
+            self.assertNotIn('tailwind', captured[0])
     def test_invalid_design_does_not_silently_export_default(self):
         self.assertEqual(self.client.get('/vouchers/print/1?design_id=999&export=pdf').status_code,400)
     def test_pdf_failure_returns_no_fake_file(self):
@@ -195,7 +202,9 @@ class BatchExportTests(unittest.TestCase):
         self.assertEqual(response.status_code,200)
         wb=openpyxl.load_workbook(io.BytesIO(response.data)); self.assertEqual(wb.active.max_row,2)
         self.assertEqual(wb.active.cell(2,FIELDS.index('uptime_seconds')+1).value,'61')
-        self.assertIn('fixture export.xlsx',response.headers['Content-Disposition'])
+        from urllib.parse import unquote
+        self.assertIn('Fixture package-2-1-',unquote(response.headers['Content-Disposition']))
+        self.assertTrue(unquote(response.headers['Content-Disposition']).endswith('-توزيع عام.xlsx'))
         self.db.execute("UPDATE radacct SET acctstarttime='2025-12-31',acctstoptime=NULL WHERE radacctid=71");self.db.commit()
         self.assertEqual(self.client.get('/vouchers/batch/2/excel').status_code,409)
     def test_restore_failure_late_in_batch_rolls_back_everything(self):

@@ -143,7 +143,14 @@ class CleanupProgressPacing(unittest.TestCase):
         node = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'delete_expired_vouchers')
         exec(compile(ast.Module(body=[node], type_ignores=[]), '<progress-fixture>', 'exec'), ns)
         cancel = Mock(return_value=cancelled)
-        with patch.dict('sys.modules', {'services.account_lifecycle_service': lifecycle}):
+
+        @contextmanager
+        def admission(*args, **kwargs):
+            yield dict(acquired=True)
+        # Admission is covered by its own suite; here it is always granted.
+        admission_module = types.SimpleNamespace(maintenance_admission=admission)
+        with patch.dict('sys.modules', {'services.account_lifecycle_service': lifecycle,
+                                        'services.maintenance_admission': admission_module}):
             result = ns['delete_expired_vouchers'](progress_callback=reports.append, cancel_callback=cancel)
         return result, reports, calls, transactions, cancel
 

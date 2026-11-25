@@ -103,9 +103,7 @@ def _write_vouchers(tx, statement, rows, month, reserved):
                     chunk[i] = (*row[:3], _new_voucher_serial(month, reserved), *row[4:])
         tx.write("RELEASE SAVEPOINT voucher_serial_chunk")
 
-MAX_BATCH_CARDS = 10000
-SERIAL_SEQUENCE_DIGITS = 5
-DEFAULT_SALE_POINT = 'توزيع عام'
+from services.batch_limits import MAX_BATCH_CARDS, SERIAL_SEQUENCE_DIGITS, DEFAULT_SALE_POINT
 
 
 def batch_card_serial(batch_id, sequence):

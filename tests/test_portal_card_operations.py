@@ -70,7 +70,7 @@ class PortalTests(unittest.TestCase):
         """)
         self.db.commit()
         self.db.execute('CREATE VIEW radacct_owned AS SELECT * FROM radacct')
-        self.db.execute('CREATE TABLE wisp_invoices(invoice_number,subscriber_id,subscriber_name,amount,status,package_name,notes,paid_at)')
+        self.db.execute("CREATE TABLE wisp_invoices(id INTEGER PRIMARY KEY,invoice_number,subscriber_id,subscriber_name,amount,status,package_name,notes,paid_at,report_cost NULL,cost_source NOT NULL DEFAULT '',package_service_type NOT NULL DEFAULT '')")
         self.db.execute("ALTER TABLE wisp_packages ADD COLUMN service_type TEXT DEFAULT 'pppoe'")
         self.db.execute("ALTER TABLE wisp_subscribers ADD COLUMN service_type TEXT DEFAULT 'pppoe'")
         self.ns = dict(datetime=datetime, db_session=self.transaction,
@@ -103,14 +103,10 @@ class PortalTests(unittest.TestCase):
         self.addCleanup(self.modules.stop)
         self.addCleanup(self.db.close)
 
-    @contextmanager
     def transaction(self):
-        try:
-            yield self.db
-            self.db.commit()
-        except BaseException:
-            self.db.rollback()
-            raise
+        # DictCursor-shaped connection: production code uses `with conn.cursor()`.
+        from sqlite_contract_fixture import transaction
+        return transaction(self.db)
 
     def one(self, sql, args=()):
         row = self.db.execute(sql, args).fetchone()

@@ -58,7 +58,7 @@ class ExistingSummaryGuards(unittest.TestCase):
             self.assertTrue(statement.startswith('SELECT'),'Deferral must precede every write')
             if statement.startswith('SELECT username'):return []
             if statement.startswith('SELECT * FROM wisp_account_usage_seals'):return [seal] if seal else []
-            return None
+            return [] if args and args[-1]=='all' else None
         with patch.object(purge,'sql',side_effect=read),patch.object(purge,'locked_details',return_value=[row]):
             result=purge.purge_details(object(),account,history_only=True,cutoff=now-dt.timedelta(days=90))
         self.assertTrue(result['deferred']);self.assertEqual(result['reason'],reason)

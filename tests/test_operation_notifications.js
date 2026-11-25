@@ -38,9 +38,10 @@ async function run() {
         'subscriber_details.html','card_inspect.html','backups.html','database_maintenance.html',
         'tools/accounting_archiver.html','system_services.html','autoheal.html','nas.html',
         'nas_details.html','notifications_center.html','packages.html','automation_rules.html','vouchers.html'];
-    let scoped = 0;
+    let scoped = 0, loadingDialogs = 0;
     for (const file of templates) {
         const source=fs.readFileSync('web/templates/'+file,'utf8');
+        loadingDialogs += (source.match(/Swal\.showLoading\(/g)||[]).length;
         const functions=/^(?<indent>[ \t]*)(?:(?:async\s+)?function\s+\w+\([^\n]*\)|window\.\w+\s*=\s*function\([^\n]*\))\s*\{/gm;
         for (const match of source.matchAll(functions)) {
             const tail=source.slice(match.index+match[0].length);
@@ -55,7 +56,10 @@ async function run() {
             scoped++;
         }
     }
-    assert.equal(scoped,51);
+    // Every loading dialog sits in exactly one checked function (49 since the
+    // legacy automation-rules page was retired); a missed one would differ.
+    assert.equal(scoped,loadingDialogs);
+    assert(scoped>=40,'template scan found too few operations');
     const watcher=fs.readFileSync('web/static/session-operations.js','utf8');
     assert(watcher.includes('const operationSwal = window.createOperationNotification();'));
     assert(!watcher.replaceAll('operationSwal.fire(', '').includes('Swal.fire('));

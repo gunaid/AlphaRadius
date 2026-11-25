@@ -27,9 +27,17 @@ class AuditRegressions(unittest.TestCase):
         cls = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == 'CapacityTests')
         setup = copy.deepcopy(next(n for n in cls.body if isinstance(n, ast.FunctionDef) and n.name == 'setUpClass'))
         setup.decorator_list = []
+        environ = {}
         ns = {'connect': Mock(side_effect=RuntimeError('disposable target required')),
-              'heal_database_schema': Mock()}
+              'heal_database_schema': Mock(), 'unittest': unittest,
+              'os': types.SimpleNamespace(environ=environ)}
         exec(compile(ast.Module(body=[setup], type_ignores=[]), 'capacity-fixture-guard', 'exec'), ns)
+        # No disposable target: the suite skips before touching anything.
+        with self.assertRaises(unittest.SkipTest):
+            ns['setUpClass'](None)
+        ns['connect'].assert_not_called()
+        # Target named: its guarded connect still precedes any schema work.
+        environ['DB_HOST'] = 'alpha-license-test-db'
         with self.assertRaisesRegex(RuntimeError, 'disposable target required'):
             ns['setUpClass'](None)
         ns['heal_database_schema'].assert_not_called()
@@ -121,7 +129,9 @@ class AuditRegressions(unittest.TestCase):
         ns['ensure_automation_tables'].assert_not_called()
         ns['_get_db'].assert_not_called()
 
-    def test_direct_automation_execution_initializes_schema_without_page_visit(self):
+    def test_retired_rule_execution_is_refused_without_side_effects(self):
+        # Legacy rules were retired in favour of automation tasks: executing one
+        # directly must neither touch the schema nor write anything.
         ns = self.automation()
         factory = types.ModuleType('services.factory_reset_service')
         factory.factory_reset_active = lambda: False
@@ -136,7 +146,7 @@ class AuditRegressions(unittest.TestCase):
         with patch.dict(sys.modules, {'services.factory_reset_service': factory,
                                      'services.account_lifecycle_service': lifecycle, 'database.db': database}):
             self.assertFalse(ns['execute_rule_now'](987654321)[0])
-        ns['ensure_automation_tables'].assert_called_once_with()
+        ns['ensure_automation_tables'].assert_not_called()
         database.execute_write.assert_not_called()
 
 
