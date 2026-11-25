@@ -1,8 +1,8 @@
 {# Release-owned assets: never derive publisher identity from tenant settings. #}
 {% macro logo(kind='horizontal', size='regular') -%}
 <span class="alpha-brand alpha-brand--{{ kind }} alpha-brand--{{ size }}" dir="ltr">
-    <img class="alpha-brand__light" src="{{ url_for('static', filename='brand/alpha-radius-' ~ kind ~ '-light-transparent.svg') }}?v=20261124-alpha-r1" alt="ALPHA RADIUS — آلفا راديوس" width="{{ 1217 if kind == 'horizontal' else 64 }}" height="{{ 245 if kind == 'horizontal' else 64 }}">
-    <img class="alpha-brand__dark" src="{{ url_for('static', filename='brand/alpha-radius-' ~ kind ~ '-dark-transparent.svg') }}?v=20261124-alpha-r1" alt="ALPHA RADIUS — آلفا راديوس" width="{{ 1217 if kind == 'horizontal' else 64 }}" height="{{ 245 if kind == 'horizontal' else 64 }}">
+    <img class="alpha-brand__light" src="{{ url_for('static', filename='brand/alpha-radius-' ~ kind ~ '-light-transparent.svg') }}?v=20261125-alpha-r2" alt="ALPHA RADIUS — ألفا راديوس" width="{{ 1093 if kind == 'horizontal' else 64 }}" height="{{ 245 if kind == 'horizontal' else 64 }}">
+    <img class="alpha-brand__dark" src="{{ url_for('static', filename='brand/alpha-radius-' ~ kind ~ '-dark-transparent.svg') }}?v=20261125-alpha-r2" alt="ALPHA RADIUS — ألفا راديوس" width="{{ 1093 if kind == 'horizontal' else 64 }}" height="{{ 245 if kind == 'horizontal' else 64 }}">
 </span>
 {%- endmacro %}
 {% macro credit(website='') -%}
