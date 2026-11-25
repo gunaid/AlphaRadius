@@ -1,6 +1,7 @@
 """Explicit synthetic MariaDB lab for random-MAC roaming; no application, NAS or FreeRADIUS.
 
-Runs the real fn_reserve_license_slot, fn_cloned_mac_profile, the roaming
+Runs the real fn_reserve_license_slot, fn_cloned_mac_profile, fn_realm_policy,
+fn_record_realm_choice, the roaming
 worker's SQL and the cloned-MAC detection query against
 a dedicated, disposable database:
 
@@ -25,7 +26,7 @@ FIXTURE_DB = 'roaming_fixture'
 TABLES = ('wisp_license_runtime_state', 'wisp_license_info', 'wisp_revoked_licenses', 'wisp_renewal_guards',
           'radcheck', 'radgroupcheck', 'radusergroup', 'radacct', 'wisp_session_reservations',
           'wisp_system_settings', 'wisp_roaming_requests', 'wisp_roaming_events',
-          'wisp_cloned_macs', 'wisp_cloned_mac_profiles')
+          'wisp_cloned_macs', 'wisp_cloned_mac_profiles', 'wisp_realm_choices')
 
 
 def connect():
@@ -65,6 +66,8 @@ def build(cur):
     install_roaming_schema(cur)
     from database.cloned_mac_schema import install_cloned_mac_schema
     install_cloned_mac_schema(cur)
+    from database.realm_policy_schema import install_realm_policy_schema
+    install_realm_policy_schema(cur)
     cur.execute("CREATE OR REPLACE FUNCTION fn_account_mac_allowed(u VARCHAR(64), s VARCHAR(50)) RETURNS INT DETERMINISTIC RETURN 1")
     cur.execute(CHECK_SQL)
     cur.execute(RESERVE_SQL)
@@ -285,10 +288,40 @@ class ClonedMacLab(RoamingLab):
         self.assertIn('جلسات مفتوحة معًا', found['EE:EE:EE:EE:EE:05']['reasons'])
 
 
+class RealmLab(RoamingLab):
+    def policy(self, realm):
+        self.cur.execute('SELECT fn_realm_policy(%s) AS p', (realm,))
+        return self.cur.fetchone()['p']
+
+    def test_domain_grammar(self):
+        cases = {'512k/2m|yes': '512k/2M;block-updates', '512k/2m=7Cyes': '512k/2M;block-updates',
+                 '1M/4M_yes': '1M/4M;block-updates', '2M/8M': '2M/8M;', 'yes': ';block-updates', 'no': ';',
+                 '1.5M/3M': '1.5M/3M;', '0/0|yes': ';block-updates',
+                 'abc': '', '512k_2M': '', 'example.com': '', '512k/2M|yes|no|yes|1': '', '': '', None: ''}
+        for realm, expected in cases.items():
+            self.assertEqual(self.policy(realm), expected, realm)
+
+    def test_settings_change_effects_not_validity(self):
+        self.cur.execute("INSERT INTO wisp_system_settings(`key`,`value`) VALUES ('realm_block_list','no-updates')")
+        self.assertEqual(self.policy('2M/8M|yes'), '2M/8M;no-updates')
+        self.cur.execute("INSERT INTO wisp_system_settings(`key`,`value`) VALUES ('realm_speed_enabled','0')")
+        self.assertEqual(self.policy('2M/8M|yes'), ';', 'still valid, so the name is stripped, but no effect')
+        self.assertEqual(self.policy('abc'), '')
+
+    def test_choice_is_recorded_from_escaped_values(self):
+        self.cur.execute('DELETE FROM wisp_realm_choices')
+        self.cur.execute("SELECT fn_record_realm_choice('card1','10.0.0.1','AA:AA:AA:AA:AA:01','512k/2m=7Cyes','512k/2M=3Bblock-updates') r")
+        self.assertEqual(self.cur.fetchone()['r'], 1)
+        self.cur.execute("SELECT fn_record_realm_choice('card1','10.0.0.1','AA:AA:AA:AA:AA:01','2M/8M','2M/8M;') r")
+        self.cur.execute('SELECT username,realm,rate,block_updates FROM wisp_realm_choices')
+        self.assertEqual(self.cur.fetchall(), [{'username': 'card1', 'realm': '2M/8M', 'rate': '2M/8M', 'block_updates': 0}])
+
+
 def _only_own_cases():
     # ClonedMacLab inherits RoamingLab's cases; drop them so each runs once.
     for name in [n for n in vars(RoamingLab) if n.startswith('test_')]:
         setattr(ClonedMacLab, name, None)
+        setattr(RealmLab, name, None)
 
 
 _only_own_cases()

@@ -175,6 +175,9 @@ def install_capacity_schema(conn):
         # Listed cloned MACs are excluded from roaming and served without MAC cookie.
         from database.cloned_mac_schema import install_cloned_mac_schema
         install_cloned_mac_schema(cur)
+        # Speed/update-block choices from the hotspot domain (card@512k/2M|yes).
+        from database.realm_policy_schema import install_realm_policy_schema
+        install_realm_policy_schema(cur)
         cur.execute("INSERT IGNORE INTO wisp_license_runtime_state(id) VALUES(1)")
         cur.execute("SHOW COLUMNS FROM wisp_session_reservations")
         columns={r['Field'] for r in cur.fetchall()}

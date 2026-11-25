@@ -187,11 +187,11 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-semibold text-slate-300 mb-1">سرعة التحميل الأساسية (Tx / Download) <span class="text-rose-400">*</span></label>
-                            <input type="text" id="inp_rate_down" name="rate_download" value="{{ package.rate_download }}" required class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-emerald-400 font-mono font-bold focus:border-blue-500 focus:outline-none" oninput="updateRatePreview()">
+                            <input type="text" id="inp_rate_down" name="rate_download" value="{{ '' if package.rate_download in ('0', 0, None) else package.rate_download }}" placeholder="فارغ = بلا سرعة (تُؤخذ من الدومين إن وُجدت)" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-emerald-400 font-mono font-bold focus:border-blue-500 focus:outline-none" oninput="updateRatePreview()">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-300 mb-1">سرعة الرفع الأساسية (Rx / Upload) <span class="text-rose-400">*</span></label>
-                            <input type="text" id="inp_rate_up" name="rate_upload" value="{{ package.rate_upload }}" required class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-emerald-400 font-mono font-bold focus:border-blue-500 focus:outline-none" oninput="updateRatePreview()">
+                            <input type="text" id="inp_rate_up" name="rate_upload" value="{{ '' if package.rate_upload in ('0', 0, None) else package.rate_upload }}" placeholder="فارغ = بلا سرعة (تُؤخذ من الدومين إن وُجدت)" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-emerald-400 font-mono font-bold focus:border-blue-500 focus:outline-none" oninput="updateRatePreview()">
                         </div>
                     </div>
 
@@ -362,7 +362,7 @@
         if (!Number.isFinite(bps(up)) || !Number.isFinite(bps(down))) { preview.innerText = 'صيغة السرعة غير صالحة'; return; }
         if ((!bps(up)) !== (!bps(down))) { preview.innerText = 'للسرعة المفتوحة أدخل 0 في الاتجاهين'; return; }
         if (!bps(up) || !bps(down)) {
-            preview.innerText = 'سرعة مفتوحة (غير محدود - Unlimited)';
+            preview.innerText = 'بلا سرعة في الباقة: تُطبق سرعة الدومين إن اختارها المستخدم، وإلا مفتوحة';
             return;
         }
         let rate = `${up}/${down}`;

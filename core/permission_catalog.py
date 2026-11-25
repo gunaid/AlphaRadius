@@ -47,6 +47,8 @@ DETAILS = (
  ('nas.setup_script', 'إنشاء وتنزيل سكربت ربط الراوتر', 'nas.manage', 'nas_setup_script_page download_nas_script_file'),
  ('nas.cloned_macs_view', 'الماكات المستنسخة وتقرير كشفها', 'nas.view', 'cloned_macs_page'),
  ('nas.cloned_macs_manage', 'إدارة الماكات المستنسخة ومزامنة بروفايلات الراوترات', 'nas.manage', 'cloned_macs_add cloned_macs_delete cloned_macs_settings cloned_macs_sync'),
+ ('nas.realm_speed_view', 'سرعة الدومين وحظر التحديثات واختيارات المستخدمين', 'nas.view', 'realm_speed_page'),
+ ('nas.realm_speed_manage', 'إعدادات سرعة الدومين وحظر التحديثات', 'nas.manage', 'realm_speed_settings'),
  ('nas.coverage_view', 'خريطة التغطية ونقاط البث', 'nas.view', 'coverage_map_page api_coverage_map_data api_access_points_list'),
  ('nas.coverage_manage', 'تعديل خريطة التغطية والأبراج ونقاط البث', 'nas.manage', 'api_coverage_map_update api_access_points_create api_access_points_update api_access_points_delete api_towers_create api_towers_delete'),
  ('nas.l2tp_view', 'عرض أنفاق L2TP وحالتها', 'nas.manage', 'l2tp_tunnels_page tunnels_short api_l2tp_live_status'),

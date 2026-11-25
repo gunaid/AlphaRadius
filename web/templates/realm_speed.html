@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}سرعة الدومين وحظر التحديثات{% endblock %}
+{% block page_title %}سرعة الدومين وحظر التحديثات{% endblock %}
+
+{% block content %}
+{% set can_manage = can_access_endpoint('realm_speed_settings') %}
+<div class="space-y-6" dir="rtl">
+
+  <div class="bg-[#0b0f19] border border-[#1c2840] rounded-2xl p-6 space-y-3 text-xs text-slate-300 leading-6">
+    <h3 class="font-bold text-white text-base flex items-center gap-2.5">
+      <span class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-sm"><i class="fa-solid fa-gauge"></i></span>
+      الاختيارات المرسلة مع الكرت في الدومين
+    </h3>
+    <p>
+      صفحة دخول الهوتسبوت ترسل الكرت مع دومين يحمل الاختيارات، مثل
+      <code dir="ltr" class="text-emerald-300">6875843@512k/2M|yes</code>،
+      ويجوز الفصل بـ <code>|</code> أو <code>_</code>. يصل الدومين ضمن اسم المستخدم أو في <code dir="ltr">Mikrotik-Realm</code>
+      حسب إعداد <code dir="ltr">split-user-domain</code>.
+    </p>
+    <ul class="list-disc pr-5 space-y-1">
+      <li><b>السرعة</b> <code dir="ltr">رفع/تنزيل</code> بترتيب MikroTik (مثل <code dir="ltr">512k/2M</code>): ترسل كـ <code dir="ltr">Mikrotik-Rate-Limit</code>
+        بدل سكربت on-login، <b>فقط إذا كانت باقة الكرت بلا سرعة</b>. سرعة الباقة إن وُجدت لها الأولوية.</li>
+      <li><b>yes</b>: يضيف الراوتر IP المستخدم إلى قائمة العناوين أدناه (<code dir="ltr">Mikrotik-Address-List</code>)، وقواعد الجدار الناري في الراوتر تحظر خدمات التحديث.</li>
+      <li>يُحذف الدومين الصحيح من اسم المستخدم، فالمحاسبة والتقارير تبقى باسم الكرت. اسم يحتوي <code>@</code> بدومين غير مطابق لهذه الصيغة لا يتغير.</li>
+      <li>السرعات الافتراضية للباقات فارغة عند الإنشاء وعند الاستيراد من الراوتر.</li>
+    </ul>
+    {% if can_manage %}
+    <form method="POST" action="{{ url_for('realm_speed_settings') }}" class="flex flex-wrap items-end gap-4 pt-2">
+      <label class="flex items-center gap-2 font-semibold">
+        <input type="checkbox" name="enabled" value="1" {{ 'checked' if settings.enabled else '' }} class="w-4 h-4 accent-emerald-500">
+        تطبيق السرعة وحظر التحديثات من الدومين
+      </label>
+      <label>اسم قائمة الحظر في الراوتر
+        <input type="text" name="block_list" maxlength="32" dir="ltr" value="{{ settings.block_list }}" class="block mt-1 w-48 bg-[#070b14] border border-slate-700 rounded-lg px-2 py-1.5 text-white font-mono">
+      </label>
+      <button type="submit" class="px-4 py-2 rounded-xl font-bold bg-blue-600 text-white">حفظ</button>
+    </form>
+    {% endif %}
+  </div>
+
+  <div class="bg-[#0b0f19] border border-[#1c2840] rounded-2xl p-6 space-y-3">
+    <h3 class="font-bold text-white text-base">سكربت حظر التحديثات للراوتر (RouterOS 6.41+ و7)</h3>
+    <p class="text-xs text-slate-400">الصقه في Terminal كل راوتر مرة واحدة. يحذف قواعده السابقة ثم يضيفها في أول الجدار الناري. جرّبه على راوتر واحد قبل التعميم.</p>
+    <pre dir="ltr" class="text-[11px] leading-5 bg-[#070b14] border border-slate-800 rounded-xl p-3 overflow-x-auto text-slate-200">{{ script }}</pre>
+  </div>
+
+  <div class="bg-[#0b0f19] border border-[#1c2840] rounded-2xl p-6 space-y-3">
+    <h3 class="font-bold text-white text-base">آخر الاختيارات المستلمة ({{ choices|length }})</h3>
+    <p class="text-xs text-slate-400">آخر اختيار لكل كرت. استخدمها للتحقق من أن الراوتر يرسل الدومين.</p>
+    <div class="overflow-x-auto">
+      <table class="w-full text-xs text-right">
+        <thead class="text-slate-400"><tr><th class="py-2">الكرت</th><th>الدومين</th><th>السرعة</th><th>حظر التحديثات</th><th>الراوتر</th><th>الماك</th><th>الوقت</th></tr></thead>
+        <tbody class="divide-y divide-[#1c2840] text-slate-200">
+          {% for c in choices %}
+          <tr><td class="py-2 font-mono" dir="ltr">{{ c.username }}</td><td class="font-mono" dir="ltr">{{ c.realm }}</td>
+              <td class="font-mono" dir="ltr">{{ c.rate or '—' }}</td><td>{{ 'نعم' if c.block_updates else 'لا' }}</td>
+              <td class="font-mono" dir="ltr">{{ c.nasipaddress }}</td><td class="font-mono" dir="ltr">{{ c.callingstationid }}</td>
+              <td class="font-mono text-slate-400" dir="ltr">{{ c.updated_at }}</td></tr>
+          {% else %}<tr><td colspan="7" class="py-4 text-center text-slate-400">لم يصل أي دومين بعد.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -41,13 +41,15 @@ def validate_package_form(form):
         values[key] = integer(values.get(key) if values.get(key) not in (None, '') else default, minimum, maximum)
     for key in ('rate_download', 'rate_upload', 'burst_download', 'burst_upload',
                 'burst_threshold_down', 'burst_threshold_up', 'min_download', 'min_upload'):
-        value = str(values.get(key, '2M' if key == 'rate_download' else '1M' if key == 'rate_upload' else '')).strip()
+        # Empty speed = open package speed ('0'); the card then takes the speed
+        # chosen in the hotspot domain (card@512k/2M), if any.
+        value = str(values.get(key) or '').strip()
         if value.lower() in ('unlimited', 'مفتوح', 'غير محدود', '0b'):
             value = '0'
         if value and not re.fullmatch(r'(?:\d+(?:\.\d+)?|\.\d+)[kKmMgG]?', value):
             raise ValueError('صيغة السرعة غير صالحة؛ استخدم مثلاً 2M أو 512k أو 0.')
         if not value and key in ('rate_download', 'rate_upload'):
-            raise ValueError('السرعة الأساسية مطلوبة؛ استخدم 0 للسرعة المفتوحة.')
+            value = '0'
         if value and float(value.rstrip('kKmMgG')) == 0:
             value = '0'
         values[key] = value

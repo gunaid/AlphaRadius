@@ -559,27 +559,27 @@
     },
     {
       "file": "core/permission_catalog.py",
-      "sha256": "1a933a706bb8999e510ebf9648c36867eba2452b28b54a21d9c03263ca3a442d",
+      "sha256": "3f6831169c8fa8e7430b8fec5734cc3da32c40cdf8ad996dbd44d9a766d5f3d5",
       "imports": [],
       "definitions": [
         {
           "name": "permission_rows",
-          "line": 152,
+          "line": 154,
           "kind": "FunctionDef"
         },
         {
           "name": "base_permission_rows",
-          "line": 206,
+          "line": 208,
           "kind": "FunctionDef"
         },
         {
           "name": "standard_role_permissions",
-          "line": 211,
+          "line": 213,
           "kind": "FunctionDef"
         },
         {
           "name": "required_detail",
-          "line": 255,
+          "line": 257,
           "kind": "FunctionDef"
         }
       ]
@@ -1176,10 +1176,11 @@
     },
     {
       "file": "database/license_capacity.py",
-      "sha256": "9f7e4502888c2165d56fc7fd806871e1bc32c92bac4d19bb2a0ee90dc4da1b31",
+      "sha256": "bc48477eeb9dcff65e6a940feb1d34da1d9923d593ad2e008dfe58291da55c1c",
       "imports": [
         "database.cloned_mac_schema",
         "database.cycle_safety",
+        "database.realm_policy_schema",
         "database.reservation_indexes",
         "database.roaming_schema",
         "database.schema_objects"
@@ -1314,6 +1315,20 @@
         {
           "name": "install_radius_message_function",
           "line": 31,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "file": "database/realm_policy_schema.py",
+      "sha256": "2a8c6bd925d222760b0aee071c9152df8575b8442a3ed14249e819b29e90ecae",
+      "imports": [
+        "database.schema_objects"
+      ],
+      "definitions": [
+        {
+          "name": "install_realm_policy_schema",
+          "line": 91,
           "kind": "FunctionDef"
         }
       ]
@@ -6064,7 +6079,7 @@
     },
     {
       "file": "services/mikrotik_userman_importer.py",
-      "sha256": "6de6d3d163cbb4d94662a2f8f818bcf804996784dde44065eea6d80d8cf9945f",
+      "sha256": "eff70dfce79ae3ccf078bf53577aba098f237e3ccb3be24f55134cd1d4178067",
       "imports": [
         "core.license_feature_policy",
         "core.mikrotik_api",
@@ -6557,7 +6572,7 @@
     },
     {
       "file": "services/package_validation.py",
-      "sha256": "a55b354a0497d8d3831d80d38bdb15f117ac8e46e666fb65563a6608d33ddf9b",
+      "sha256": "41055a553aa4e6628234cfde7621c4810b5a98a4b7b380b4f3731e066e9a1d4e",
       "imports": [],
       "definitions": [
         {
@@ -6577,7 +6592,7 @@
         },
         {
           "name": "bps",
-          "line": 54,
+          "line": 56,
           "kind": "FunctionDef"
         }
       ]
@@ -6979,6 +6994,46 @@
         {
           "name": "snapshot_rate_limit",
           "line": 22,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "file": "services/realm_speed_service.py",
+      "sha256": "5dad958806ad5c6fd78819c2de6d7e0edea7deebbdee542d7e9c8284ab9671eb",
+      "imports": [
+        "database.db",
+        "database.realm_policy_schema"
+      ],
+      "definitions": [
+        {
+          "name": "_setting",
+          "line": 22,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_store",
+          "line": 28,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "settings",
+          "line": 37,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "save_settings",
+          "line": 42,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "recent_choices",
+          "line": 52,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "router_script",
+          "line": 58,
           "kind": "FunctionDef"
         }
       ]
@@ -10252,12 +10307,12 @@
     },
     {
       "file": "web/endpoint_permissions.py",
-      "sha256": "9167418a1c51f094289f4cfb09a3585478a20525fde3164e5248bcce0cd77ff6",
+      "sha256": "7ac79810b81b70f12231c5c2465c5c9ee609db7cd5018a4a89644230b735f2b7",
       "imports": [],
       "definitions": [
         {
           "name": "endpoint_permissions",
-          "line": 274,
+          "line": 276,
           "kind": "FunctionDef"
         }
       ]
@@ -10577,7 +10632,7 @@
     },
     {
       "file": "web/routes/nas.py",
-      "sha256": "1d249d32df746b13a2025837ee3b4ce298c282dfcae3cf79cc430f9a14f63ad3",
+      "sha256": "530e2bee7fddb5fd273c4fbafcdc4ea13f2ec4448b6925c1dc411a3ee74c1d11",
       "imports": [
         "core.config",
         "core.mikrotik_api",
@@ -10841,12 +10896,22 @@
           "name": "cloned_macs_sync",
           "line": 816,
           "kind": "FunctionDef"
+        },
+        {
+          "name": "realm_speed_page",
+          "line": 836,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "realm_speed_settings",
+          "line": 849,
+          "kind": "FunctionDef"
         }
       ]
     },
     {
       "file": "web/routes/packages.py",
-      "sha256": "27954edc422c4340d3dc4cade4f7a9bd4a2efec6b3f25ea7646b206142f74bee",
+      "sha256": "c1e7620b36906ae1cc57d49048979febad3f276e43e56a19590f12d11de2ca44",
       "imports": [
         "collections.abc",
         "core.config",
@@ -13282,6 +13347,28 @@
       "handler": "cloned_macs_sync",
       "file": "web/routes/nas.py",
       "line": 816
+    },
+    {
+      "rule": "/nas/domain-speed",
+      "blueprint": "nas_bp",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "realm_speed_page",
+      "handler": "realm_speed_page",
+      "file": "web/routes/nas.py",
+      "line": 836
+    },
+    {
+      "rule": "/nas/domain-speed/settings",
+      "blueprint": "nas_bp",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "realm_speed_settings",
+      "handler": "realm_speed_settings",
+      "file": "web/routes/nas.py",
+      "line": 849
     },
     {
       "rule": "/packages",

@@ -216,6 +216,8 @@ ENDPOINT_PERMISSIONS = {
  'cloned_macs_delete': ['nas.manage'],
  'cloned_macs_settings': ['nas.manage'],
  'cloned_macs_sync': ['nas.manage'],
+ 'realm_speed_page': ['nas.view'],
+ 'realm_speed_settings': ['nas.manage'],
  'new_package_page': ['packages.manage'],
  'new_voucher_design': ['vouchers.view'],
  'notifications_center_page': ['system.settings'],

@@ -1754,7 +1754,7 @@
                 </div>{% endif %}
 
                 <!-- 6. أجهزة الميكروتيك (NAS) -> [قائمة منسدلة] -->
-                {% set nas_active = request.endpoint in ['nas', 'coverage_map_page', 'cloned_macs_page'] %}
+                {% set nas_active = request.endpoint in ['nas', 'coverage_map_page', 'cloned_macs_page', 'realm_speed_page'] %}
                 {% if can_access_endpoint('nas') or can_access_endpoint('l2tp_tunnels_page') or can_access_endpoint('coverage_map_page') %}<div class="space-y-1">
                     <button onclick="toggleMenu('nasMenu', 'nasArrow')" class="w-full flex items-center justify-between px-3 py-2 rounded-xl font-bold text-slate-300 hover:bg-[#131d31] hover:text-white transition-all duration-200 {% if nas_active %}text-indigo-400 bg-[#101728]{% endif %}">
                         <div class="flex items-center gap-2.5">
@@ -1781,6 +1781,14 @@
                                 <span>الماكات المستنسخة</span>
                             </div>
                             <i class="fa-solid fa-clone text-[9px] text-slate-600"></i>
+                        </a>{% endif %}
+                        <!-- سرعة الدومين -->
+                        {% if can_access_endpoint('realm_speed_page') %}<a href="{{ url_for('realm_speed_page') }}" class="flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-[#11192b] transition {% if request.endpoint == 'realm_speed_page' %}subnav-active{% endif %}">
+                            <div class="flex items-center gap-2">
+                                <span class="w-1.5 h-1.5 rounded-full {% if request.endpoint == 'realm_speed_page' %}bg-blue-400{% else %}bg-slate-600{% endif %}"></span>
+                                <span>سرعة الدومين وحظر التحديثات</span>
+                            </div>
+                            <i class="fa-solid fa-gauge text-[9px] text-slate-600"></i>
                         </a>{% endif %}
                         <!-- روترات الموزعين (L2TP/IPsec VPN) -->
                         {% if has_feature('vpn_tunnels') %}

@@ -826,3 +826,34 @@ def cloned_macs_sync():
         if result['failed']:
             flash(f"{result['nas']}: تعذر إنشاء {', '.join(result['failed'][:5])}؛ يبقى البروفايل الأصلي لها.", 'warning')
     return redirect(url_for('cloned_macs_page'))
+
+
+# ------------------------------------------------------------------
+# Hotspot domain choices: card@512k/2M|yes -> speed and update blocking.
+# ------------------------------------------------------------------
+@nas_bp.route('/nas/domain-speed', endpoint="realm_speed_page")
+@login_required
+def realm_speed_page():
+    from services import realm_speed_service as realm
+    values = realm.settings()
+    try:
+        choices = realm.recent_choices()
+    except Exception:
+        choices = []
+    return render_template('realm_speed.html', settings=values, choices=choices,
+                           script=realm.router_script(values['block_list']))
+
+
+@nas_bp.route('/nas/domain-speed/settings', methods=['POST'], endpoint="realm_speed_settings")
+@login_required
+def realm_speed_settings():
+    from services import realm_speed_service as realm
+    manager = get_current_manager() or {}
+    try:
+        saved = realm.save_settings(request.form)
+        log_audit(manager.get('id'), manager.get('username', 'admin'), 'realm_speed_settings', 'nas',
+                  f"enabled={int(saved['enabled'])} list={saved['block_list']}")
+        flash('حُفظت إعدادات سرعة الدومين؛ تُطبق من الدخول التالي لكل مستخدم.', 'success')
+    except ValueError as exc:
+        flash(str(exc), 'danger')
+    return redirect(url_for('realm_speed_page'))

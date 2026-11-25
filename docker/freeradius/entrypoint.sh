@@ -152,6 +152,13 @@ if ! grep -q '^[[:space:]]*max_acct_unique' "${CONF_DIR}/sites-available/default
     sed -i '/^[[:space:]]*acct_unique[[:space:]]*$/a\	max_acct_unique {\n\t\tfail = return\n\t}' "${CONF_DIR}/sites-available/default"
 fi
 
+# Hotspot domain choices (card@512k/2M|yes): strip a valid domain from
+# User-Name before filter_username (authorize) and before acct_unique (preacct).
+if ! grep -q 'ALPHA_REALM_EXTRACT' "${CONF_DIR}/sites-available/default"; then
+    sed -i '0,/^[[:space:]]*filter_username[[:space:]]*$/s//\t# ALPHA_REALM_EXTRACT\n\talpha_realm_extract\n\tfilter_username/' "${CONF_DIR}/sites-available/default"
+    sed -i '/^preacct {/a \\t# ALPHA_REALM_USERNAME\n\talpha_realm_username' "${CONF_DIR}/sites-available/default"
+fi
+
 # Reserve only after successful authentication, before sending Access-Accept.
 # The packet authenticator makes retries idempotent and new sessions distinct.
 if ! grep -q 'ALPHA_LICENSE_ATOMIC_CAPACITY' "${CONF_DIR}/sites-available/default"; then

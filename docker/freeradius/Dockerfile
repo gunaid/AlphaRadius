@@ -20,6 +20,7 @@ WORKDIR /etc/freeradius/3.0
 COPY entrypoint.sh /entrypoint.sh
 COPY license-capacity-postauth.conf /etc/freeradius/3.0/license-capacity-postauth.conf
 COPY alpha-accounting-identity.conf /etc/freeradius/3.0/policy.d/alpha-accounting-identity
+COPY alpha-realm-policy.conf /etc/freeradius/3.0/policy.d/alpha-realm-policy
 COPY queries.conf /etc/freeradius/3.0/mods-config/sql/main/mysql/queries.conf
 COPY detail /etc/freeradius/3.0/mods-available/detail
 RUN chmod +x /entrypoint.sh

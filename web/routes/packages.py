@@ -164,7 +164,7 @@ def add_package_action():
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 f['name'].strip(), f.get('service_type', 'hotspot'), float(f.get('price', 0)), float(f.get('cost', 0)),
-                f.get('rate_download', '2M').strip(), f.get('rate_upload', '1M').strip(),
+                f.get('rate_download', '0').strip(), f.get('rate_upload', '0').strip(),
                 f.get('burst_download', '').strip(), f.get('burst_upload', '').strip(),
                 f.get('burst_threshold_down', '').strip(), f.get('burst_threshold_up', '').strip(),
                 int(f.get('burst_time', 16)), int(f.get('priority', 8)),
@@ -262,7 +262,7 @@ def edit_package_action(pkg_id):
                 WHERE id = ?
             ''', (
                 new_name, f.get('service_type', 'hotspot'), float(f.get('price', 0)), float(f.get('cost', 0)),
-                f.get('rate_download', '2M').strip(), f.get('rate_upload', '1M').strip(),
+                f.get('rate_download', '0').strip(), f.get('rate_upload', '0').strip(),
                 f.get('burst_download', '').strip(), f.get('burst_upload', '').strip(),
                 f.get('burst_threshold_down', '').strip(), f.get('burst_threshold_up', '').strip(),
                 int(f.get('burst_time', 16)), int(f.get('priority', 8)),
@@ -333,7 +333,7 @@ def clone_package_action(pkg_id):
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 new_name, pkg.get('service_type', 'hotspot'), pkg.get('price', 0), pkg.get('cost', 0),
-                pkg.get('rate_download', '2M'), pkg.get('rate_upload', '1M'),
+                pkg.get('rate_download', '0'), pkg.get('rate_upload', '0'),
                 pkg.get('burst_download', ''), pkg.get('burst_upload', ''),
                 pkg.get('burst_threshold_down', ''), pkg.get('burst_threshold_up', ''),
                 pkg.get('burst_time', 16), pkg.get('priority', 8),

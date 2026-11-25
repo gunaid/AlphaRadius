@@ -733,8 +733,10 @@ def execute_userman_import(parsed_data, target_type='vouchers', fallback_package
                 p_name = prof['name'].strip()
                 p_quota = int(present_value(prof, 'quota_mb', extract_quota_from_name(p_name) or 0))
                 p_uptime = int(prof.get('uptime_mins', 0) or 0)
-                p_down = prof.get('rate_down', '10M')
-                p_up = prof.get('rate_up', '5M')
+                # Imported packages start without a speed (open); cards take the
+                # speed chosen in the hotspot domain. Existing packages are untouched.
+                p_down = '0'
+                p_up = '0'
                 p_price = float(prof.get('price', 0.0) or 0.0)
                 p_cost = float(profile_costs.get(p_name, p_price))
                 package_costs_map[p_name] = p_cost
