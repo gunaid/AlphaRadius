@@ -1157,7 +1157,7 @@
     },
     {
       "file": "database/license_capacity.py",
-      "sha256": "599c170a244b21a166a9f39e1c9eb1968a4985580fb13de7fd496e1798c1152f",
+      "sha256": "3918cf0870a89856a18bdb221aff3a7797f2f983909e291561b734a120992770",
       "imports": [
         "database.cycle_safety",
         "database.reservation_indexes",
@@ -1167,12 +1167,12 @@
       "definitions": [
         {
           "name": "resource_limit_trigger",
-          "line": 132,
+          "line": 141,
           "kind": "FunctionDef"
         },
         {
           "name": "install_capacity_schema",
-          "line": 154,
+          "line": 163,
           "kind": "FunctionDef"
         }
       ]
@@ -1286,14 +1286,14 @@
     },
     {
       "file": "database/radius_message_schema.py",
-      "sha256": "cdd17e35bbea27bf3653745392680ff3fc86320ba78767ed34dd2f8814713626",
+      "sha256": "5fc94b9854583d5705416f1f473b21988fbc1f3cddcaf466d3f51aad19f9a880",
       "imports": [
         "database.schema_objects"
       ],
       "definitions": [
         {
           "name": "install_radius_message_function",
-          "line": 32,
+          "line": 31,
           "kind": "FunctionDef"
         }
       ]
@@ -7070,7 +7070,7 @@
     },
     {
       "file": "services/roaming_service.py",
-      "sha256": "1ce26de90fbe306d43510804e563ae11deba9336d19ba7eb8ad4ed0592166105",
+      "sha256": "f262b0c3c21df6122756e08d8b40726c4a446ea2bcb50f33f4fce468c0dbc5bb",
       "imports": [
         "core.mikrotik_api",
         "database.db",
@@ -7079,62 +7079,72 @@
       "definitions": [
         {
           "name": "_mac",
-          "line": 41,
+          "line": 43,
           "kind": "FunctionDef"
         },
         {
           "name": "_idle_seconds",
-          "line": 48,
+          "line": 50,
           "kind": "FunctionDef"
         },
         {
           "name": "choose_idle_session",
-          "line": 62,
+          "line": 64,
           "kind": "FunctionDef"
         },
         {
           "name": "parse_roaming_idle",
-          "line": 105,
+          "line": 107,
           "kind": "FunctionDef"
         },
         {
           "name": "settings",
-          "line": 115,
+          "line": 117,
           "kind": "FunctionDef"
         },
         {
           "name": "_router_hosts",
-          "line": 126,
+          "line": 128,
           "kind": "FunctionDef"
         },
         {
           "name": "_claim",
-          "line": 151,
+          "line": 153,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_set_status",
+          "line": 162,
           "kind": "FunctionDef"
         },
         {
           "name": "_finish",
-          "line": 160,
+          "line": 170,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_disconnect",
+          "line": 181,
           "kind": "FunctionDef"
         },
         {
           "name": "process_request",
-          "line": 173,
+          "line": 189,
           "kind": "FunctionDef"
         },
         {
           "name": "process_pending",
-          "line": 195,
+          "line": 228,
           "kind": "FunctionDef"
         },
         {
           "name": "_loop",
-          "line": 227,
+          "line": 255,
           "kind": "FunctionDef"
         },
         {
           "name": "start_worker",
-          "line": 236,
+          "line": 264,
           "kind": "FunctionDef"
         }
       ]
@@ -8152,7 +8162,7 @@
     },
     {
       "file": "services/system_settings_service.py",
-      "sha256": "37f04b4ae92ffd9948027adcc14fcc9ac5f5f17d559ba282d95951abc7dc4bfd",
+      "sha256": "f54ea340e8feb53df551b115e28b9901544441ff8fdce2dc9ce12260111ca9e1",
       "imports": [
         "core.license_feature_policy",
         "database.db",

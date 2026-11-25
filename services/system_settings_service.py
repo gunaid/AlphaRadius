@@ -61,7 +61,7 @@ def setting_values(form):
 
 
 RADIUS_MESSAGE_KEYS = ('radius_msg_expired', 'radius_msg_quota', 'radius_msg_uptime', 'radius_msg_disabled',
-                       'radius_msg_recharged', 'radius_msg_simultaneous', 'radius_msg_roaming', 'radius_msg_mac',
+                       'radius_msg_recharged', 'radius_msg_simultaneous', 'radius_msg_mac',
                        'radius_msg_capacity', 'radius_msg_invalid', 'radius_msg_reconcile')
 
 

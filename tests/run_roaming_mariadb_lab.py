@@ -118,26 +118,33 @@ class RoamingLab(unittest.TestCase):
         self.cur.execute("SELECT * FROM wisp_roaming_requests WHERE username='card'")
         return self.cur.fetchone()
 
+    def seats(self):
+        self.cur.execute("SELECT COUNT(*) AS n FROM wisp_session_reservations WHERE username='card'")
+        return self.cur.fetchone()['n']
+
     def test_first_login_reserves_a_seat(self):
         self.assertEqual(self.reserve('AA:AA:AA:AA:AA:01'), 1)
         self.assertIsNone(self.request())
 
-    def test_new_mac_at_limit_is_rejected_with_a_roaming_request(self):
+    def test_new_mac_at_limit_is_admitted_on_one_extra_seat(self):
         self.open_session()
-        self.assertEqual(self.reserve('BB:BB:BB:BB:BB:02'), 4)
+        self.assertEqual(self.reserve('BB:BB:BB:BB:BB:02'), 1)
         row = self.request()
         self.assertEqual((row['status'], row['callingstationid'], row['nasipaddress']),
                          ('pending', 'BB:BB:BB:BB:BB:02', '10.0.0.1'))
-        self.cur.execute("SELECT COUNT(*) AS n FROM wisp_session_reservations")
-        self.assertEqual(self.cur.fetchone()['n'], 0, 'a roaming reject must not reserve a seat')
+        self.assertEqual(self.seats(), 1)
+        # Never more than one temporary extra seat: a third device is refused.
+        self.assertEqual(self.reserve('CC:CC:CC:CC:CC:03'), 2)
+        self.assertEqual(self.request()['callingstationid'], 'BB:BB:BB:BB:BB:02')
 
-    def test_retry_requeues_the_single_row(self):
+    def test_denied_mac_is_refused_for_five_minutes(self):
         self.open_session()
-        self.reserve('BB:BB:BB:BB:BB:02')
-        self.cur.execute("UPDATE wisp_roaming_requests SET status='live', requested_at=NOW()-INTERVAL 1 MINUTE")
-        self.assertEqual(self.reserve('CC:CC:CC:CC:CC:03'), 4)
-        self.cur.execute("SELECT COUNT(*) AS n, MAX(status) AS status, MAX(callingstationid) AS mac FROM wisp_roaming_requests")
-        self.assertEqual(self.cur.fetchone(), {'n': 1, 'status': 'pending', 'mac': 'CC:CC:CC:CC:CC:03'})
+        self.cur.execute("""INSERT INTO wisp_roaming_events(username,new_mac,outcome,created_at)
+                            VALUES ('card','BB:BB:BB:BB:BB:02','denied',NOW()-INTERVAL 1 MINUTE)""")
+        self.assertEqual(self.reserve('BB:BB:BB:BB:BB:02'), 2)
+        self.assertEqual(self.seats(), 0)
+        self.cur.execute("UPDATE wisp_roaming_events SET created_at=NOW()-INTERVAL 6 MINUTE")
+        self.assertEqual(self.reserve('BB:BB:BB:BB:BB:02'), 1)
 
     def test_disabled_or_unknown_mac_keeps_the_plain_limit(self):
         self.open_session()
@@ -147,39 +154,61 @@ class RoamingLab(unittest.TestCase):
         self.assertEqual(self.reserve(''), 2)
         self.assertIsNone(self.request())
 
+    def test_license_capacity_still_wins(self):
+        self.open_session()
+        self.cur.execute("UPDATE wisp_license_runtime_state SET max_active_sessions=1")
+        try:
+            self.assertEqual(self.reserve('BB:BB:BB:BB:BB:02'), 0)
+            self.assertIsNone(self.request(), 'no request without an admitted seat')
+        finally:
+            self.cur.execute("UPDATE wisp_license_runtime_state SET max_active_sessions=100")
+
     def test_unlimited_account_is_unchanged(self):
         self.cur.execute("DELETE FROM radcheck")
         self.open_session()
         self.assertEqual(self.reserve('BB:BB:BB:BB:BB:02'), 1)
+        self.assertIsNone(self.request())
 
-    def run_worker(self, idle):
+    def run_worker(self, idle, age=None):
         from services import roaming_service as roaming
+        if age is not None:
+            self.cur.execute("UPDATE wisp_roaming_requests SET requested_at=NOW()-INTERVAL %s SECOND", (age,))
         coa = types.ModuleType('services.coa_queue_service')
         coa.enqueue_disconnect = Mock(return_value=(True, 'queued'))
         hosts = [{'user': 'card', 'mac-address': 'AA:AA:AA:AA:AA:01', 'address': '10.5.0.2', 'idle-time': idle}]
-        roaming._last_check.clear()
         with patch.dict(sys.modules, {'database.db': stub_database_module(self.conn), 'services.coa_queue_service': coa}), \
                 patch.object(roaming, '_router_hosts', return_value=hosts):
             processed = roaming.process_pending()
         return processed, coa.enqueue_disconnect
 
-    def test_worker_sql_kicks_idle_and_keeps_live(self):
-        rid = self.open_session()
+    def test_idle_old_session_is_disconnected(self):
+        old = self.open_session()
         self.reserve('BB:BB:BB:BB:BB:02')
-        processed, enqueue = self.run_worker('2m10s')
+        processed, enqueue = self.run_worker('25s')
         self.assertEqual(processed, 1)
-        self.assertEqual(enqueue.call_args.kwargs['radacctid'], rid)
-        row = self.request()
-        self.assertEqual((row['status'], row['attempts']), ('kicked', 1))
+        self.assertEqual(enqueue.call_args.kwargs['radacctid'], old)
+        self.assertEqual((self.request()['status'], self.request()['attempts']), ('kicked', 1))
         self.cur.execute('SELECT outcome, idle_seconds, old_mac, new_mac FROM wisp_roaming_events')
-        self.assertEqual(self.cur.fetchone(), {'outcome': 'kicked', 'idle_seconds': 130,
+        self.assertEqual(self.cur.fetchone(), {'outcome': 'kicked', 'idle_seconds': 25,
                                                'old_mac': 'AA:AA:AA:AA:AA:01', 'new_mac': 'BB:BB:BB:BB:BB:02'})
-        self.assertEqual(self.run_worker('2m10s')[0], 0, 'a finished request is not processed again')
+        self.assertEqual(self.run_worker('25s')[0], 0, 'a finished request is not processed again')
+
+    def test_live_old_session_waits_then_new_is_disconnected_and_refused(self):
+        self.open_session()
         self.reserve('BB:BB:BB:BB:BB:02')
-        processed, enqueue = self.run_worker('4s')
-        self.assertEqual(processed, 1)
+        new = self.open_session('BB:BB:BB:BB:BB:02', '10.5.0.9')
+        processed, enqueue = self.run_worker('3s')
+        self.assertEqual((processed, self.request()['status']), (1, 'waiting'))
         enqueue.assert_not_called()
-        self.assertEqual(self.request()['status'], 'live')
+        self.assertEqual(self.run_worker('3s')[0], 0, 'rechecked only after 5 seconds')
+        self.cur.execute("UPDATE wisp_roaming_requests SET processed_at=NOW()-INTERVAL 6 SECOND")
+        processed, enqueue = self.run_worker('2s', age=55)
+        self.assertEqual(self.request()['status'], 'denied')
+        self.assertEqual(enqueue.call_args.kwargs['radacctid'], new)
+        # The real function now refuses this MAC on its next attempt.
+        self.cur.execute("UPDATE radacct SET acctstoptime=NOW() WHERE radacctid=%s", (new,))
+        self.cur.execute("DELETE FROM wisp_session_reservations")
+        self.assertEqual(self.reserve('BB:BB:BB:BB:BB:02'), 2)
 
     def test_stale_claim_is_retried(self):
         self.open_session()

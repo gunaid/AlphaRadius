@@ -42,6 +42,7 @@ BEGIN
  DECLARE existing_slot INT DEFAULT 0;
  DECLARE account_cap INT DEFAULT 0;
  DECLARE account_slots INT DEFAULT 0;
+ DECLARE roaming_seat INT DEFAULT 0;
  DECLARE EXIT HANDLER FOR SQLEXCEPTION RETURN -1;
  IF p_username='healthcheck' AND p_source IN ('127.0.0.1','::1') THEN RETURN 1; END IF;
  IF p_key IS NULL OR LENGTH(p_key)<>32 THEN RETURN -1; END IF;
@@ -71,22 +72,30 @@ BEGIN
        +(SELECT COUNT(*) FROM wisp_session_reservations WHERE username=p_username
            AND {PENDING_RESERVATION_PREDICATE}) INTO account_slots;
  IF account_cap>0 AND account_slots>=account_cap THEN
-  -- Random-MAC roaming: record the request; services.roaming_service frees an
-  -- idle old seat after checking the router. This login is still rejected.
-  IF p_station<>'' AND COALESCE((SELECT s.`value` FROM wisp_system_settings s
-       WHERE s.`key`='roaming_enabled' LIMIT 1),'1')='1' THEN
-   INSERT INTO wisp_roaming_requests(username,nasipaddress,callingstationid,nasportid,requested_at,status)
-   VALUES(p_username,COALESCE(p_nasip,''),p_station,COALESCE(p_port,''),NOW(),'pending')
-   ON DUPLICATE KEY UPDATE nasipaddress=VALUES(nasipaddress),callingstationid=VALUES(callingstationid),
-    nasportid=VALUES(nasportid),requested_at=NOW(),status='pending';
-   RETURN 4;
+  -- Random-MAC roaming: admit a new MAC on one temporary extra seat while
+  -- services.roaming_service checks the old session on the router. It then
+  -- disconnects the old session if idle, or this new one if the old is live.
+  -- A MAC refused that way stays refused for 5 minutes.
+  IF p_station IS NULL OR p_station='' OR account_slots>account_cap
+     OR COALESCE((SELECT s.`value` FROM wisp_system_settings s
+        WHERE s.`key`='roaming_enabled' LIMIT 1),'1')<>'1'
+     OR EXISTS(SELECT 1 FROM wisp_roaming_events e WHERE e.username=p_username
+        AND e.created_at>NOW()-INTERVAL 5 MINUTE AND e.new_mac=p_station
+        AND e.outcome='denied') THEN
+   RETURN 2;
   END IF;
-  RETURN 2;
+  SET roaming_seat=1;
  END IF;
  SELECT (SELECT COUNT(*) FROM radacct WHERE {ACTIVE_SESSION_PREDICATE})
  +(SELECT COUNT(*) FROM wisp_session_reservations WHERE {PENDING_RESERVATION_PREDICATE})
  INTO used_slots;
  IF mode_name='active_sessions' AND cap>0 AND used_slots>=cap THEN RETURN 0; END IF;
+ IF roaming_seat=1 THEN
+  INSERT INTO wisp_roaming_requests(username,nasipaddress,callingstationid,nasportid,requested_at,status)
+  VALUES(p_username,COALESCE(p_nasip,''),p_station,COALESCE(p_port,''),NOW(),'pending')
+  ON DUPLICATE KEY UPDATE nasipaddress=VALUES(nasipaddress),callingstationid=VALUES(callingstationid),
+   nasportid=VALUES(nasportid),requested_at=NOW(),status='pending',processed_at=NULL,detail='';
+ END IF;
  INSERT INTO wisp_session_reservations(session_key,username,nasipaddress,callingstationid,nasportid,reserved_at,expires_at,radacctid)
  VALUES(p_key,p_username,p_nasip,COALESCE(p_station,''),COALESCE(p_port,''),NOW(),NOW()+INTERVAL 5 MINUTE,NULL)
  ON DUPLICATE KEY UPDATE reserved_at=NOW(),expires_at=NOW()+INTERVAL 5 MINUTE,radacctid=NULL;

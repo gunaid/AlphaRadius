@@ -1,22 +1,24 @@
-"""Random-MAC roaming: free an idle old seat so the same card can log in again.
+"""Random-MAC roaming: a card returning with a new MAC logs in at once.
 
 A phone that rejoins Wi-Fi with a new random MAC leaves its old hotspot
-session behind until the router times it out. While that session holds the
-card's only seat, RADIUS rejects the new MAC (fn_reserve_license_slot result
-4) and records a request in wisp_roaming_requests.
+session behind until the router times it out. At the card's Simultaneous-Use
+limit, fn_reserve_license_slot admits the new MAC on one temporary extra seat
+and records a request in wisp_roaming_requests. No error is shown.
 
-This worker reads the old session's live idle time from the router itself
-(RADIUS interim updates every 180 s are too coarse to tell a gone phone from
-an active one):
+This worker then reads the OLD session's live idle time from the router
+(RADIUS interim updates every 180 s are too coarse) and decides within
+``roaming_idle_seconds + DECISION_EXTRA_SECONDS``:
 
-* idle for at least ``roaming_idle_seconds`` -> disconnect it through the
-  normal verified CoA path, so the next attempt of the new MAC passes;
-* still passing traffic -> keep it: another device is using the card;
-* router unreachable or session unmatched -> change nothing.
+* the old session reaches ``roaming_idle_seconds`` without traffic -> it is
+  the phone that left: disconnect the OLD session;
+* it keeps passing traffic for the whole window -> another device is using
+  the card: disconnect the NEW session and refuse that MAC for 5 minutes;
+* the old session is not on the router (ghost) or has already ended -> the
+  new session simply stays;
+* the router cannot be read -> nothing is disconnected; recorded as unverified.
 
-Only one seat is freed per request, the most idle one. A disconnect request
-is not a Stop: the seat is released when the router's Accounting-Stop
-arrives, exactly as for any other disconnect.
+Disconnects use the normal verified CoA path. A disconnect request is not a
+Stop: seats are released by the router's Accounting-Stop.
 """
 import logging
 import re
@@ -26,14 +28,14 @@ import time
 logger = logging.getLogger(__name__)
 
 POLL_SECONDS = 2
-RECHECK_SECONDS = 5          # one router check per account in this window
+RECHECK_SECONDS = 5          # router check interval per account while deciding
 STALE_CLAIM_SECONDS = 60     # a crashed worker's claim is retried after this
+DECISION_EXTRA_SECONDS = 30  # window = idle threshold + this, then the new MAC is refused
 BATCH = 20
 
-ROAMING_IDLE_DEFAULT = 45
+ROAMING_IDLE_DEFAULT = 20
 ROAMING_IDLE_RANGE = (10, 600)
 
-_last_check = {}
 _thread = None
 _thread_lock = threading.Lock()
 
@@ -59,7 +61,7 @@ def _idle_seconds(value):
     return sum(int(n) * _UNITS[u] for n, u in re.findall(r'(\d+)(ms|[wdhms])', text) if u != 'ms')
 
 
-def choose_idle_session(sessions, router_rows, idle_threshold, new_mac=''):
+def choose_idle_session(sessions, router_rows, idle_threshold):
     """Pick the open session to replace, or explain why none is replaced.
 
     sessions:    open radacct rows of the account.
@@ -148,21 +150,27 @@ def _router_hosts(nas_ip, username):
         ros.close()
 
 
-def _claim(username, requested_at):
+def _claim(request):
     from database.db import execute_update
     return execute_update(
         """UPDATE wisp_roaming_requests SET status='checking',processed_at=NOW(),attempts=attempts+1
-           WHERE username=? AND requested_at=? AND (status='pending'
-             OR (status='checking' AND processed_at<NOW()-INTERVAL ? SECOND))""",
-        (username, requested_at, STALE_CLAIM_SECONDS)) == 1
+           WHERE username=? AND requested_at=? AND status IN ('pending','waiting','checking')
+             AND (status<>'checking' OR processed_at<NOW()-INTERVAL ? SECOND)""",
+        (request['username'], request['requested_at'], STALE_CLAIM_SECONDS)) == 1
+
+
+def _set_status(request, status, detail):
+    from database.db import execute_update
+    # A newer admission resets the row to pending; never overwrite that one.
+    execute_update("""UPDATE wisp_roaming_requests SET status=?,processed_at=NOW(),detail=?
+                      WHERE username=? AND requested_at=? AND status='checking'""",
+                   (status, detail[:191], request['username'], request['requested_at']))
 
 
 def _finish(request, outcome, detail, old_mac='', idle=None):
-    from database.db import execute_update, execute_write
-    # A newer rejected attempt resets the row to pending; leave that one queued.
-    execute_update("""UPDATE wisp_roaming_requests SET status=?,processed_at=NOW(),detail=?
-                      WHERE username=? AND requested_at=? AND status='checking'""",
-                   (outcome, detail[:191], request['username'], request['requested_at']))
+    from database.db import execute_write
+    _set_status(request, outcome, detail)
+    # 'denied' rows here are what fn_reserve_license_slot reads to refuse the MAC.
     execute_write("""INSERT INTO wisp_roaming_events
                      (username,nasipaddress,new_mac,old_mac,idle_seconds,outcome,created_at)
                      VALUES (?,?,?,?,?,?,NOW())""",
@@ -170,26 +178,51 @@ def _finish(request, outcome, detail, old_mac='', idle=None):
                    old_mac or '', idle, outcome))
 
 
-def process_request(request, idle_threshold):
-    from database.db import query_all
-    username = request['username']
-    sessions = query_all("""SELECT radacctid,nasipaddress,callingstationid,framedipaddress,acctsessionid,framedprotocol
-                            FROM radacct WHERE username=? AND acctstoptime IS NULL""", (username,))
-    routers = {nas: _router_hosts(nas, username) for nas in {s['nasipaddress'] for s in sessions}}
-    session, idle, outcome = choose_idle_session(sessions, routers, idle_threshold, request.get('callingstationid'))
-    if session is None:
-        _finish(request, outcome, {'live': 'الجلسة السابقة نشطة', 'unverified': 'تعذر قراءة الراوتر',
-                                   'absent': 'الجلسة غير موجودة على الراوتر', 'no_session': 'لا جلسة مفتوحة'}[outcome])
-        return outcome
+def _disconnect(username, row, reason):
     from services.coa_queue_service import enqueue_disconnect
-    accepted, message = enqueue_disconnect(
-        username, nas_ip=session['nasipaddress'], framed_ip=session.get('framedipaddress'),
-        session_id=session.get('acctsessionid'), mac_address=session.get('callingstationid'),
-        radacctid=session['radacctid'], reason='Roaming: idle session replaced', admin_username='system')
-    outcome = 'kicked' if accepted else 'queue_failed'
-    _finish(request, outcome, f'خمول {idle} ثانية' if accepted else message,
-            old_mac=session.get('callingstationid'), idle=idle)
-    return outcome
+    return enqueue_disconnect(
+        username, nas_ip=row['nasipaddress'], framed_ip=row.get('framedipaddress'),
+        session_id=row.get('acctsessionid'), mac_address=row.get('callingstationid'),
+        radacctid=row['radacctid'], reason=reason, admin_username='system')
+
+
+def process_request(request, idle_threshold):
+    """One decision step; returns the outcome or 'waiting' when undecided."""
+    from database.db import query_all
+    username, new_mac = request['username'], _mac(request.get('callingstationid'))
+    sessions = query_all("""SELECT radacctid,nasipaddress,callingstationid,framedipaddress,acctsessionid,framedprotocol
+                            FROM radacct WHERE username=? AND acctstoptime IS NULL ORDER BY radacctid""", (username,))
+    new = [row for row in sessions if _mac(row.get('callingstationid')) == new_mac]
+    old = [row for row in sessions if _mac(row.get('callingstationid')) != new_mac]
+    if not old:
+        _finish(request, 'freed', 'الجلسة السابقة انتهت')
+        return 'freed'
+    routers = {nas: _router_hosts(nas, username) for nas in {row['nasipaddress'] for row in old}}
+    session, idle, outcome = choose_idle_session(old, routers, idle_threshold)
+    if outcome == 'kicked':
+        accepted, message = _disconnect(username, session, 'Roaming: idle session replaced')
+        outcome = 'kicked' if accepted else 'queue_failed'
+        _finish(request, outcome, f'فصل القديمة بعد خمول {idle} ثانية' if accepted else message,
+                old_mac=session.get('callingstationid'), idle=idle)
+        return outcome
+    if outcome == 'absent':
+        _finish(request, 'absent', 'الجلسة السابقة غير موجودة على الراوتر')
+        return 'absent'
+    if int(request.get('age') or 0) < idle_threshold + DECISION_EXTRA_SECONDS:
+        _set_status(request, 'waiting', 'بانتظار خمول الجلسة السابقة' if outcome == 'live' else 'تعذر قراءة الراوتر')
+        return 'waiting'
+    if outcome == 'unverified':
+        _finish(request, 'unverified', 'تعذر قراءة الراوتر طوال مدة الفحص')
+        return 'unverified'
+    # The old session stayed active for the whole window: another device uses the card.
+    old_mac = old[0].get('callingstationid')
+    if new:
+        accepted, message = _disconnect(username, new[-1], 'Roaming: card in use on another device')
+        if not accepted:
+            _finish(request, 'queue_failed', message, old_mac=old_mac)
+            return 'queue_failed'
+    _finish(request, 'denied', 'الكرت مستخدم على جهاز آخر؛ فُصلت الجلسة الجديدة', old_mac=old_mac)
+    return 'denied'
 
 
 def process_pending():
@@ -197,17 +230,16 @@ def process_pending():
     enabled, idle_threshold = settings()
     if not enabled:
         return 0
-    rows = query_all("""SELECT * FROM wisp_roaming_requests WHERE status='pending'
-                          OR (status='checking' AND processed_at<NOW()-INTERVAL ? SECOND)
-                        ORDER BY requested_at LIMIT ?""", (STALE_CLAIM_SECONDS, BATCH))
+    rows = query_all("""SELECT r.*, TIMESTAMPDIFF(SECOND, r.requested_at, NOW()) AS age
+                        FROM wisp_roaming_requests r
+                        WHERE r.status='pending'
+                           OR (r.status='waiting' AND r.processed_at<=NOW()-INTERVAL ? SECOND)
+                           OR (r.status='checking' AND r.processed_at<NOW()-INTERVAL ? SECOND)
+                        ORDER BY r.requested_at LIMIT ?""", (RECHECK_SECONDS, STALE_CLAIM_SECONDS, BATCH))
     done = 0
-    now = time.monotonic()
     for request in rows:
-        if now - _last_check.get(request['username'], -RECHECK_SECONDS) < RECHECK_SECONDS:
+        if not _claim(request):
             continue
-        if not _claim(request['username'], request['requested_at']):
-            continue
-        _last_check[request['username']] = now
         try:
             process_request(request, idle_threshold)
             done += 1
@@ -217,10 +249,6 @@ def process_pending():
                 _finish(request, 'error', 'خطأ داخلي')
             except Exception:
                 pass
-    if len(_last_check) > 5000:
-        for name, at in list(_last_check.items()):
-            if now - at > RECHECK_SECONDS:
-                _last_check.pop(name, None)
     return done
 
 

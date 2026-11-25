@@ -501,10 +501,6 @@
                             <input type="text" id="radius_msg_simultaneous" name="radius_msg_simultaneous" maxlength="200" dir="ltr" value="{{ settings.get('radius_msg_simultaneous', '') }}" placeholder="simultaneous session limit reached" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-mono focus:border-blue-500 focus:outline-none">
                         </div>
                         <div>
-                            <label for="radius_msg_roaming" class="block text-slate-300 font-semibold mb-1">تغيّر الماك أثناء فحص الجلسة السابقة</label>
-                            <input type="text" id="radius_msg_roaming" name="radius_msg_roaming" maxlength="200" dir="ltr" value="{{ settings.get('radius_msg_roaming', '') }}" placeholder="simultaneous session limit reached, retry in one minute" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-mono focus:border-blue-500 focus:outline-none">
-                        </div>
-                        <div>
                             <label for="radius_msg_mac" class="block text-slate-300 font-semibold mb-1">جهاز غير مسموح (MAC)</label>
                             <input type="text" id="radius_msg_mac" name="radius_msg_mac" maxlength="200" dir="ltr" value="{{ settings.get('radius_msg_mac', '') }}" placeholder="MAC address is not allowed for this account" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-mono focus:border-blue-500 focus:outline-none">
                         </div>
@@ -525,7 +521,7 @@
                         <div class="w-8 h-8 rounded-lg bg-sky-500/10 text-sky-400 border border-sky-500/20 flex items-center justify-center text-sm"><i class="fa-solid fa-shuffle"></i></div>
                         <span>الماك العشوائي: تحرير الجلسة الخاملة</span>
                     </h3>
-                    <p class="text-xs text-slate-400 mt-1">إذا وصل الكرت إلى عدد الأجهزة المسموح ودخل بماك جديد (هاتف يغيّر الماك عند إعادة الاتصال) يُرفض الدخول ويُفحص من الراوتر وقت الخمول للجلسة السابقة. إن كانت بلا ترافيك طوال المدة أدناه تُفصل، فتنجح المحاولة التالية للجهاز الجديد. إن كان فيها ترافيك حي تبقى ويستمر الرفض. يتطلب بيانات API للراوتر.</p>
+                    <p class="text-xs text-slate-400 mt-1">إذا وصل الكرت إلى عدد الأجهزة المسموح ودخل بماك جديد (هاتف يغيّر الماك عند إعادة الاتصال) يُسمح بالدخول مباشرة، ثم يُفحص من الراوتر وقت الخمول للجلسة السابقة: إن بقيت بلا ترافيك المدة أدناه تُفصل القديمة، وإن بقي فيها ترافيك حي تُفصل الجلسة الجديدة ويُمنع ذلك الماك من الدخول بهذا الكرت 5 دقائق. لا يتجاوز الكرت حده إلا بجهاز واحد مؤقتًا أثناء الفحص. يتطلب بيانات API للراوتر.</p>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                     <label class="flex items-center gap-2 text-slate-300 font-semibold">
@@ -534,7 +530,7 @@
                     </label>
                     <div>
                         <label for="roaming_idle_seconds" class="block text-slate-300 font-semibold mb-1">مدة الخمول المطلوبة (ثانية، 10–600)</label>
-                        <input type="number" id="roaming_idle_seconds" name="roaming_idle_seconds" min="10" max="600" step="1" value="{{ settings.get('roaming_idle_seconds', '45') or '45' }}" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-mono focus:border-blue-500 focus:outline-none">
+                        <input type="number" id="roaming_idle_seconds" name="roaming_idle_seconds" min="10" max="600" step="1" value="{{ settings.get('roaming_idle_seconds', '20') or '20' }}" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-mono focus:border-blue-500 focus:outline-none">
                     </div>
                 </div>
             </div>
