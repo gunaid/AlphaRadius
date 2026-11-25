@@ -136,7 +136,7 @@ def create_app(config=None):
             path.startswith('/static') or
             path.startswith('/api/v1/license') or
             path.startswith('/api/hotspot') or
-            path in ('/settings/license', '/license', '/settings/license/activate', '/settings/license/sync-heartbeat') or
+            path in ('/settings/license', '/license', '/settings/license/activate', '/settings/license/sync-heartbeat', '/settings/license/offline-renewal') or
             path in ('/login', '/logout') or
             path.startswith('/user/')
         ):
@@ -179,7 +179,7 @@ def create_app(config=None):
             return None
         if request.path.startswith('/static') or request.path.startswith('/user') or request.path.startswith('/api/hotspot') or request.path in [
             '/login', '/logout', '/health', '/api/backup/health', '/favicon.ico',
-            '/settings/license', '/settings/license/activate', '/settings/license/sync-heartbeat'
+            '/settings/license', '/settings/license/activate', '/settings/license/sync-heartbeat', '/settings/license/offline-renewal'
         ]:
             return None
         if ep and (ep.startswith('portal_') or ep.startswith('user_')):

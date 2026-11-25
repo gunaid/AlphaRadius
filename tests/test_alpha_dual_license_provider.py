@@ -3,6 +3,7 @@ import ast
 import datetime
 import hashlib
 import json
+import os
 import logging
 import time
 import unittest
@@ -176,6 +177,10 @@ class HeartbeatGraceTests(unittest.TestCase):
             "is_license_blacklisted": lambda *_: False,
             "get_pending_reservations_count": lambda: 0,
             "get_consumed_license_seats": lambda: 2,
+            "GRACE_HOURS_DEFAULT": licensing.GRACE_HOURS_DEFAULT,
+            "RADIUS_HOURS_DEFAULT": licensing.RADIUS_HOURS_DEFAULT,
+            "offline_stage": licensing.offline_stage,
+            "offline_renewal_until": lambda *_: None,
         }
         exec(compile(ast.Module(body=[function], type_ignores=[]), "license_guard", "exec"), namespace)
         return namespace["get_active_license_status"](force_refresh=True)
@@ -208,8 +213,8 @@ class ManagedHeartbeatRenewalTests(unittest.TestCase):
 
         source = (ROOT / "services" / "license_guard_service.py").read_text(encoding="utf-8")
         tree = ast.parse(source)
-        function = next(node for node in tree.body if isinstance(node, ast.FunctionDef)
-                        and node.name == "sync_license_heartbeat_with_server")
+        functions = [node for node in tree.body if isinstance(node, ast.FunctionDef)
+                     and node.name in ("sync_license_heartbeat_with_server", "license_server_candidates")]
         namespace = {
             "json": json, "time": time, "logger": logging.getLogger("heartbeat-renewal-test"),
             "query_one": lambda *_: row, "DEFAULT_MASTER_SERVER_URL": "https://ls.amtik.online",
@@ -229,8 +234,9 @@ class ManagedHeartbeatRenewalTests(unittest.TestCase):
             "check_and_update_monotonic_time": lambda: (True, ""),
             "decode_license_string": licensing.decode_license_string,
             "_apply_verified_package_to_db": lambda *_: None,
+            "os": os, "signed_heartbeat_urls": licensing.heartbeat_urls,
         }
-        exec(compile(ast.Module(body=[function], type_ignores=[]), "license_guard", "exec"), namespace)
+        exec(compile(ast.Module(body=functions, type_ignores=[]), "license_guard", "exec"), namespace)
         with patch.multiple(licensing, TRUSTED_LICENSE_PUBLIC_KEYS=trust,
                             get_machine_id=lambda: "HW-TEST", get_instance_uuid=lambda: "INST-TEST"):
             result = namespace["sync_license_heartbeat_with_server"](max_retries=1)

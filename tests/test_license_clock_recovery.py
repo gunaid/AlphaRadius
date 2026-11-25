@@ -44,6 +44,7 @@ class ClockRecovery(unittest.TestCase):
    if error:raise error
    return p
   n['authenticated_license_exchange']=exchange
+  n['license_server_candidates']=lambda primary,package=None:[primary]
   return n,s,w
  def test_successful_heartbeat_integrates_recovery(self):
   n,s,w=self.heartbeat();self.assertTrue(n['sync_license_heartbeat_with_server'](1)[0]);self.assertEqual(float(s['value']),1800000000.)

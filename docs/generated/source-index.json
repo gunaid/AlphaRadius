@@ -321,13 +321,14 @@
     },
     {
       "file": "core/licensing.py",
-      "sha256": "35d4410e1e820f2b22bdaf06bcf29099dea01ecc0eedc696d865617dc26a1143",
+      "sha256": "b21944dd36740e9e29546bd9c624119056dda07197890cf3e6235f5cc8a823a0",
       "imports": [
         "core.hardware_fingerprint",
         "cryptography.exceptions",
         "cryptography.hazmat.primitives",
         "cryptography.hazmat.primitives.asymmetric",
-        "pathlib"
+        "pathlib",
+        "urllib.parse"
       ],
       "definitions": [
         {
@@ -346,8 +347,33 @@
           "kind": "FunctionDef"
         },
         {
+          "name": "offline_policy",
+          "line": 110,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "heartbeat_urls",
+          "line": 125,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "offline_stage",
+          "line": 142,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_binding_matches",
+          "line": 159,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "verify_offline_renewal",
+          "line": 166,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "verify_license_package",
-          "line": 98,
+          "line": 212,
           "kind": "FunctionDef"
         }
       ]
@@ -559,7 +585,7 @@
     },
     {
       "file": "core/permission_catalog.py",
-      "sha256": "cbd327edaf1ec382238356dd1693655a51ff20f4602c3e831906dbaf8842ad1e",
+      "sha256": "8026dc8d88df0108a8fa9226d4e1bba660613fa1c87ae51d2624c2073aea68a7",
       "imports": [],
       "definitions": [
         {
@@ -874,7 +900,7 @@
     },
     {
       "file": "core/watchdog.py",
-      "sha256": "30f66550804e8a450d7fab3599c28a64d4ab586ae034d25eb5932f628f4aae05",
+      "sha256": "592cdf4b69693c3b2df8a54eaf46f86a4abdb451dd8fa3690076f8f7c3eccd60",
       "imports": [
         "database.db",
         "services.account_lifecycle_service",
@@ -925,37 +951,37 @@
         },
         {
           "name": "reconcile_container_alerts",
-          "line": 249,
+          "line": 253,
           "kind": "FunctionDef"
         },
         {
           "name": "run_watchdog_cycle",
-          "line": 265,
+          "line": 269,
           "kind": "FunctionDef"
         },
         {
           "name": "_watchdog_loop",
-          "line": 317,
+          "line": 321,
           "kind": "FunctionDef"
         },
         {
           "name": "start_watchdog_thread",
-          "line": 329,
+          "line": 333,
           "kind": "FunctionDef"
         },
         {
           "name": "get_system_alerts",
-          "line": 337,
+          "line": 341,
           "kind": "FunctionDef"
         },
         {
           "name": "resolve_system_alert",
-          "line": 352,
+          "line": 356,
           "kind": "FunctionDef"
         },
         {
           "name": "clear_all_resolved_alerts",
-          "line": 363,
+          "line": 367,
           "kind": "FunctionDef"
         }
       ]
@@ -5570,12 +5596,13 @@
     },
     {
       "file": "services/license_guard_service.py",
-      "sha256": "bdc9e8d6260a4589a5a6abb399a6221af14ca1bb7b78aa04286174b1e25fad9b",
+      "sha256": "802412008ea85b74dae5fc81258d1b0e49cd4a8de109d88d49b73ec3145f4255",
       "imports": [
         "core.config",
         "core.hardware_fingerprint",
         "core.license_protocol",
         "core.licensing",
+        "core.watchdog",
         "database.db",
         "database.license_capacity",
         "database.reservation_indexes",
@@ -5585,147 +5612,167 @@
       "definitions": [
         {
           "name": "clear_license_cache",
-          "line": 40,
+          "line": 45,
           "kind": "FunctionDef"
         },
         {
           "name": "ensure_license_tables",
-          "line": 44,
+          "line": 49,
           "kind": "FunctionDef"
         },
         {
           "name": "is_license_blacklisted",
-          "line": 176,
+          "line": 203,
           "kind": "FunctionDef"
         },
         {
           "name": "record_license_revocation",
-          "line": 188,
-          "kind": "FunctionDef"
-        },
-        {
-          "name": "remove_license_revocation",
-          "line": 202,
-          "kind": "FunctionDef"
-        },
-        {
-          "name": "get_current_active_sessions_count",
           "line": 215,
           "kind": "FunctionDef"
         },
         {
-          "name": "get_pending_reservations_count",
-          "line": 261,
+          "name": "remove_license_revocation",
+          "line": 229,
           "kind": "FunctionDef"
         },
         {
-          "name": "get_current_system_counts",
+          "name": "get_current_active_sessions_count",
+          "line": 242,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "get_pending_reservations_count",
           "line": 288,
           "kind": "FunctionDef"
         },
         {
+          "name": "get_current_system_counts",
+          "line": 315,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "get_consumed_license_seats",
-          "line": 304,
+          "line": 331,
           "kind": "FunctionDef"
         },
         {
           "name": "check_and_update_monotonic_time",
-          "line": 312,
+          "line": 339,
           "kind": "FunctionDef"
         },
         {
           "name": "_recover_clock_after_verified_heartbeat",
-          "line": 347,
+          "line": 374,
           "kind": "FunctionDef"
         },
         {
           "name": "_build_default_license_dict",
-          "line": 388,
+          "line": 415,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "offline_renewal_until",
+          "line": 480,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "apply_offline_renewal",
+          "line": 490,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "license_server_candidates",
+          "line": 517,
           "kind": "FunctionDef"
         },
         {
           "name": "get_active_license_status",
-          "line": 448,
+          "line": 539,
           "kind": "FunctionDef"
         },
         {
           "name": "has_license_feature",
-          "line": 689,
+          "line": 808,
           "kind": "FunctionDef"
         },
         {
           "name": "check_active_session_quota",
-          "line": 702,
+          "line": 821,
           "kind": "FunctionDef"
         },
         {
           "name": "check_subscriber_quota",
-          "line": 728,
+          "line": 847,
           "kind": "FunctionDef"
         },
         {
           "name": "check_nas_quota",
-          "line": 733,
+          "line": 852,
           "kind": "FunctionDef"
         },
         {
           "name": "check_manager_quota",
-          "line": 752,
+          "line": 871,
           "kind": "FunctionDef"
         },
         {
           "name": "install_and_activate_license",
-          "line": 779,
+          "line": 898,
           "kind": "FunctionDef"
         },
         {
           "name": "_lease_values",
-          "line": 895,
+          "line": 1014,
           "kind": "FunctionDef"
         },
         {
           "name": "_write_runtime_lease",
-          "line": 906,
+          "line": 1025,
           "kind": "FunctionDef"
         },
         {
           "name": "_persist_verified_package",
-          "line": 919,
+          "line": 1038,
           "kind": "FunctionDef"
         },
         {
           "name": "_apply_verified_package_to_db",
-          "line": 986,
+          "line": 1105,
           "kind": "FunctionDef"
         },
         {
           "name": "sync_license_heartbeat_with_server",
-          "line": 991,
+          "line": 1110,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "record_offline_stage",
+          "line": 1273,
           "kind": "FunctionDef"
         },
         {
           "name": "start_license_heartbeat_daemon",
-          "line": 1134,
+          "line": 1299,
           "kind": "FunctionDef"
         },
         {
           "name": "_worker",
-          "line": 1139,
+          "line": 1304,
           "kind": "FunctionDef"
         },
         {
           "name": "publish_radius_license_state",
-          "line": 1154,
+          "line": 1320,
           "kind": "FunctionDef"
         },
         {
           "name": "_run_radius_license_state_worker",
-          "line": 1203,
+          "line": 1370,
           "kind": "FunctionDef"
         },
         {
           "name": "start_radius_license_state_daemon",
-          "line": 1235,
+          "line": 1402,
           "kind": "FunctionDef"
         }
       ]
@@ -10174,7 +10221,7 @@
     },
     {
       "file": "web/__init__.py",
-      "sha256": "d38b71f75cd683ba378be49d4633bf8b15c635aadce1eb2cfab55c6892baa8e6",
+      "sha256": "b2548f1a3096030199451ac8638e0d8a3b65ed66049d3e38afb6ff522b60da61",
       "imports": [
         "core.config",
         "core.license_feature_policy",
@@ -10409,12 +10456,12 @@
     },
     {
       "file": "web/endpoint_permissions.py",
-      "sha256": "32044e6747aa2d1f4f71ba939b568cddeed549b9bff21a22a5e0e17942d75a68",
+      "sha256": "b9721cd65dd7ce7c7c992d800043ca9d7ef50e54ab072ebc0c7e26e1ce1b8cea",
       "imports": [],
       "definitions": [
         {
           "name": "endpoint_permissions",
-          "line": 278,
+          "line": 279,
           "kind": "FunctionDef"
         }
       ]
@@ -11577,7 +11624,7 @@
     },
     {
       "file": "web/routes/system.py",
-      "sha256": "74fb5e9bd208cbccdddcddec09b519dca77d45ee555541e7bfc049dc344c2a78",
+      "sha256": "7049556bf54ce04cc41982fecb26947ec782cf9176543c2b44c23cbde9b919c1",
       "imports": [
         "core.config",
         "core.license_feature_policy",
@@ -12146,33 +12193,38 @@
           "kind": "FunctionDef"
         },
         {
+          "name": "offline_license_renewal_action",
+          "line": 1514,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "sync_license_heartbeat_action",
-          "line": 1515,
+          "line": 1529,
           "kind": "FunctionDef"
         },
         {
           "name": "system_update_page",
-          "line": 1523,
+          "line": 1537,
           "kind": "FunctionDef"
         },
         {
           "name": "api_system_update_check",
-          "line": 1538,
+          "line": 1552,
           "kind": "FunctionDef"
         },
         {
           "name": "api_system_update_apply",
-          "line": 1547,
+          "line": 1561,
           "kind": "FunctionDef"
         },
         {
           "name": "api_system_update_progress",
-          "line": 1576,
+          "line": 1590,
           "kind": "FunctionDef"
         },
         {
           "name": "cancel_export_request",
-          "line": 1583,
+          "line": 1597,
           "kind": "FunctionDef"
         }
       ]
@@ -15505,6 +15557,17 @@
       "line": 1483
     },
     {
+      "rule": "/settings/license/offline-renewal",
+      "blueprint": "system_bp",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "offline_license_renewal_action",
+      "handler": "offline_license_renewal_action",
+      "file": "web/routes/system.py",
+      "line": 1514
+    },
+    {
       "rule": "/settings/license/sync-heartbeat",
       "blueprint": "system_bp",
       "methods": [
@@ -15513,7 +15576,7 @@
       "endpoint": "sync_license_heartbeat_action",
       "handler": "sync_license_heartbeat_action",
       "file": "web/routes/system.py",
-      "line": 1515
+      "line": 1529
     },
     {
       "rule": "/tools/system-update",
@@ -15524,7 +15587,7 @@
       "endpoint": "system_update_page",
       "handler": "system_update_page",
       "file": "web/routes/system.py",
-      "line": 1523
+      "line": 1537
     },
     {
       "rule": "/api/tools/system-update/check",
@@ -15535,7 +15598,7 @@
       "endpoint": "api_system_update_check",
       "handler": "api_system_update_check",
       "file": "web/routes/system.py",
-      "line": 1538
+      "line": 1552
     },
     {
       "rule": "/api/tools/system-update/apply",
@@ -15546,7 +15609,7 @@
       "endpoint": "api_system_update_apply",
       "handler": "api_system_update_apply",
       "file": "web/routes/system.py",
-      "line": 1547
+      "line": 1561
     },
     {
       "rule": "/api/tools/system-update/progress",
@@ -15557,7 +15620,7 @@
       "endpoint": "api_system_update_progress",
       "handler": "api_system_update_progress",
       "file": "web/routes/system.py",
-      "line": 1576
+      "line": 1590
     },
     {
       "rule": "/api/exports/<token>/cancel",
@@ -15568,7 +15631,7 @@
       "endpoint": "cancel_export",
       "handler": "cancel_export_request",
       "file": "web/routes/system.py",
-      "line": 1583
+      "line": 1597
     },
     {
       "rule": "/api/vouchers/<int:account_id>/mac-policy",

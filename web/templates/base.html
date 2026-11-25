@@ -2125,6 +2125,15 @@
             {% endif %}
         {% endwith %}
 
+        {% if license_info is defined and license_info and license_info.grace_period and not is_reseller_scope() and has_permission('system.settings') %}
+        <!-- License offline grace banner -->
+        <div class="bg-amber-950/80 border-y border-amber-500/40 text-amber-200 px-4 py-2.5 text-xs">
+            <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+                <span><i class="fa-solid fa-plug-circle-xmark ml-1"></i>تعذر الوصول لخادم التراخيص. متبقٍ <b>{{ license_info.grace_hours_left }}</b> ساعة من فترة السماح، ثم تُوقف لوحة الإدارة ويستمر دخول المستخدمين {{ license_info.radius_hours }} ساعة.</span>
+                <a href="{{ url_for('license_status_page') }}" class="font-bold underline">صفحة الترخيص</a>
+            </div>
+        </div>
+        {% endif %}
         {% if is_over_quota and not is_reseller_scope() and has_permission('system.settings') %}
         <!-- Over Quota Active Sessions Banner -->
         <div class="bg-gradient-to-r from-amber-950/90 via-rose-950/90 to-amber-950/90 border-y border-amber-500/40 text-amber-200 px-4 py-3 shadow-xl backdrop-blur-md">

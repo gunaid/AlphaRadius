@@ -24,6 +24,11 @@ from core.licensing import (
     identify_license_authority,
     verify_license_package,
     get_master_public_key_pem,
+    offline_stage,
+    verify_offline_renewal,
+    heartbeat_urls as signed_heartbeat_urls,
+    GRACE_HOURS_DEFAULT,
+    RADIUS_HOURS_DEFAULT,
 )
 from core.license_protocol import exchange as authenticated_license_exchange
 from core.config import STORAGE_DIR
@@ -82,6 +87,18 @@ def ensure_license_tables():
                 `license_id` VARCHAR(100) PRIMARY KEY,
                 `reason` TEXT,
                 `revoked_at` DATETIME DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+            """)
+            # Signed offline renewals; the nonce makes each token single-use.
+            execute_write("""
+            CREATE TABLE IF NOT EXISTS `wisp_license_offline_renewals` (
+                `nonce` VARCHAR(64) PRIMARY KEY,
+                `license_id` VARCHAR(100) NOT NULL,
+                `valid_until_epoch` BIGINT NOT NULL,
+                `token_json` TEXT NOT NULL,
+                `applied_by` VARCHAR(64) NOT NULL DEFAULT '',
+                `applied_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+                KEY `idx_offline_license` (`license_id`, `valid_until_epoch`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
             """)
             execute_write("""
@@ -153,6 +170,16 @@ def ensure_license_tables():
                 `license_id` TEXT PRIMARY KEY,
                 `reason` TEXT,
                 `revoked_at` DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+            """)
+            execute_write("""
+            CREATE TABLE IF NOT EXISTS `wisp_license_offline_renewals` (
+                `nonce` TEXT PRIMARY KEY,
+                `license_id` TEXT NOT NULL,
+                `valid_until_epoch` INTEGER NOT NULL,
+                `token_json` TEXT NOT NULL,
+                `applied_by` TEXT NOT NULL DEFAULT '',
+                `applied_at` DATETIME DEFAULT CURRENT_TIMESTAMP
             );
             """)
             execute_write("""
@@ -443,7 +470,71 @@ def _build_default_license_dict(status="unlicensed", status_text="", message="",
         "master_server_url": DEFAULT_MASTER_SERVER_URL,
         "license_authority": "none",
         "requires_heartbeat": False,
+        "radius_allowed": False,
+        "offline_stage": "ok",
+        "offline_until": "",
+        "grace_hours": GRACE_HOURS_DEFAULT,
+        "radius_hours": RADIUS_HOURS_DEFAULT,
     }
+
+def offline_renewal_until(license_id):
+    """Latest valid_until (epoch) of applied offline renewals for this license, or None."""
+    try:
+        row = query_one('SELECT MAX(valid_until_epoch) AS until FROM wisp_license_offline_renewals WHERE license_id = ?',
+                        (license_id,))
+        return int(row['until']) if row and row.get('until') is not None else None
+    except Exception:
+        return None
+
+
+def apply_offline_renewal(token_text, applied_by=''):
+    """Verify and store a signed offline renewal token (single use)."""
+    row = query_one("SELECT license_id, raw_package_json FROM wisp_license_info ORDER BY id DESC LIMIT 1")
+    if not row:
+        return False, 'لا يوجد ترخيص مثبت لتجديده.'
+    token, err = decode_license_string(token_text)
+    if err or not token:
+        return False, err or 'رمز التجديد غير صالح.'
+    try:
+        license_payload = json.loads(row['raw_package_json'])['payload']
+    except (TypeError, ValueError, KeyError):
+        return False, 'تعذر قراءة حزمة الترخيص المثبتة.'
+    ok, msg, data = verify_offline_renewal(token, license_payload)
+    if not ok:
+        return False, msg
+    if not check_and_update_monotonic_time()[0]:
+        return False, 'ساعة النظام غير موثوقة؛ لا يمكن قبول تجديد دون اتصال.'
+    if query_one('SELECT nonce FROM wisp_license_offline_renewals WHERE nonce = ?', (data['nonce'],)):
+        return False, 'سبق استخدام رمز التجديد هذا.'
+    execute_write('INSERT INTO wisp_license_offline_renewals(nonce,license_id,valid_until_epoch,token_json,applied_by) '
+                  'VALUES (?,?,?,?,?)', (data['nonce'], row['license_id'], data['valid_until'],
+                                         json.dumps(token, ensure_ascii=False), str(applied_by or '')[:64]))
+    clear_license_cache()
+    until = datetime.datetime.fromtimestamp(data['valid_until'], datetime.timezone.utc)
+    return True, f"تم قبول التجديد دون اتصال حتى {until:%Y-%m-%d %H:%M} UTC."
+
+
+def license_server_candidates(primary_url, installed_package=None):
+    """Primary server, then signed fallbacks from the package, then ALPHA_LICENSE_FALLBACK_URLS.
+
+    Only HTTPS fallbacks are used. Every response must still be signed by the
+    license key, so a fallback address cannot grant anything by itself.
+    """
+    urls = [(primary_url or DEFAULT_MASTER_SERVER_URL).rstrip('/')]
+    try:
+        urls += signed_heartbeat_urls((installed_package or {}).get('payload') or {})
+    except ValueError:
+        pass
+    for url in os.environ.get('ALPHA_LICENSE_FALLBACK_URLS', '').split(','):
+        url = url.strip().rstrip('/')
+        if url.startswith('https://'):
+            urls.append(url)
+    unique = []
+    for url in urls:
+        if url and url not in unique:
+            unique.append(url)
+    return unique[:5]
+
 
 def get_active_license_status(force_refresh=False):
     """
@@ -510,7 +601,12 @@ def get_active_license_status(force_refresh=False):
         # Check database status override (e.g. if revoked by heartbeat or grace expired)
         db_status = row.get('status', 'active')
         grace_period_active = False
-        grace_hours_left = 24
+        grace_hours_left = 0
+        radius_allowed = False
+        offline_state = 'ok'
+        offline_until = None
+        grace_hours = int(info.get('grace_hours') or GRACE_HOURS_DEFAULT)
+        radius_hours = int(info.get('radius_hours') if info.get('radius_hours') is not None else RADIUS_HOURS_DEFAULT)
         
         # Check local permanent blacklist
         if is_license_blacklisted(row['license_id']):
@@ -526,11 +622,9 @@ def get_active_license_status(force_refresh=False):
         elif db_status in ('expired', 'unlicensed', 'error', 'instance_limit'):
             valid = False
             msg = "رفض خادم التراخيص الحالي اعتماد هذا الترخيص أو انتهت صلاحيته."
-        elif db_status == 'grace_expired':
-            valid = False
-            msg = "انتهت فترة السماح (24 ساعة) دون التمكن من مزامنة الترخيص مع السيرفر المركزي. يرجى التأكد من اتصال الإنترنت."
         else:
-            # Calculate offline duration
+            # Offline stages from the last verified contact, or a signed offline
+            # renewal, using the signed offline_policy (default 48 h + 24 h).
             try:
                 last_sync = row.get('last_heartbeat_at') or row.get('last_verified_at') or row.get('created_at')
                 if not last_sync:
@@ -539,19 +633,35 @@ def get_active_license_status(force_refresh=False):
                 if lh_dt.tzinfo is None:
                     # SQL sessions store their wall clock at the fixed +03:00 database offset.
                     lh_dt = lh_dt.replace(tzinfo=datetime.timezone(datetime.timedelta(hours=3)))
-                elapsed_sec = (datetime.datetime.now(datetime.timezone.utc) - lh_dt).total_seconds()
-                if elapsed_sec > 86400: # Over 24 hours without successful sync
+                now_epoch = datetime.datetime.now(datetime.timezone.utc).timestamp()
+                offline_until = offline_renewal_until(row['license_id'])
+                if offline_until and offline_until > now_epoch:
+                    elapsed_sec = 0
+                else:
+                    elapsed_sec = now_epoch - max(lh_dt.timestamp(), offline_until or 0)
+                grace_hours = int(info.get('grace_hours') or GRACE_HOURS_DEFAULT)
+                radius_hours = int(info.get('radius_hours') if info.get('radius_hours') is not None else RADIUS_HOURS_DEFAULT)
+                offline_state, grace_hours_left = offline_stage(elapsed_sec, grace_hours, radius_hours)
+                if offline_state == 'locked':
                     valid = False
                     db_status = 'grace_expired'
-                    msg = "انتهت فترة السماح (24 ساعة) دون التمكن من مزامنة الترخيص مع السيرفر المركزي."
-                elif elapsed_sec > 3600: # More than 1 hour offline -> grace notice
+                    msg = (f"انتهت فترة السماح ({grace_hours} ساعة) ومهلة دخول المستخدمين ({radius_hours} ساعة) "
+                           "دون مزامنة الترخيص. أُوقف دخول المستخدمين. أعد الاتصال بخادم التراخيص أو أدخل رمز تجديد دون اتصال.")
+                elif offline_state == 'admin_locked':
+                    radius_allowed = valid
+                    valid = False
+                    db_status = 'grace_admin_locked'
+                    msg = (f"انتهت فترة السماح ({grace_hours} ساعة) دون مزامنة الترخيص؛ أُوقفت لوحة الإدارة. "
+                           f"يستمر دخول المستخدمين {grace_hours_left} ساعة أخرى ثم يتوقف. "
+                           "أعد الاتصال بخادم التراخيص أو أدخل رمز تجديد دون اتصال.")
+                elif offline_state == 'grace':
                     grace_period_active = True
-                    grace_hours_left = max(1, int((86400 - elapsed_sec) / 3600))
             except Exception:
                 valid = False
                 db_status = 'grace_expired'
+                offline_state = 'locked'
                 msg = 'تعذر التحقق من وقت آخر مزامنة للترخيص.'
-            
+
         # Determine license mode ('active_sessions' vs 'legacy_subscribers')
         lic_mode = info.get('license_mode', 'active_sessions')
         max_active_sessions = info.get('max_active_sessions', row.get('max_active_sessions', 0))
@@ -605,8 +715,10 @@ def get_active_license_status(force_refresh=False):
                 status_text = "الترخيص محظور وملغى 🔴"
             elif db_status == 'suspended':
                 status_text = "الترخيص معلق مؤقتاً ⏸️"
+            elif db_status == 'grace_admin_locked':
+                status_text = f"فترة السماح منتهية — لوحة الإدارة موقوفة، ودخول المستخدمين مستمر {grace_hours_left} ساعة 🟠"
             elif db_status == 'grace_expired':
-                status_text = "فترة السماح منتهية 🔴"
+                status_text = "فترة السماح منتهية — دخول المستخدمين متوقف 🔴"
             else:
                 status_text = "الترخيص منتهي أو غير صالح 🔴"
         else:
@@ -663,6 +775,13 @@ def get_active_license_status(force_refresh=False):
             "message": msg if not valid else (quota_warning or msg),
             "grace_period": grace_period_active,
             "grace_hours_left": grace_hours_left,
+            "grace_hours": grace_hours,
+            "radius_hours": radius_hours,
+            "offline_stage": offline_state,
+            "offline_until": (datetime.datetime.fromtimestamp(offline_until, datetime.timezone.utc).isoformat()
+                              if offline_until else ''),
+            # RADIUS keeps accepting logins in the admin_locked stage only.
+            "radius_allowed": bool(valid or radius_allowed),
             "last_verified_at": str(row.get('last_verified_at', '')),
             "last_heartbeat_at": str(row.get('last_heartbeat_at', '')),
             "master_server_url": row.get('master_server_url', DEFAULT_MASTER_SERVER_URL),
@@ -990,8 +1109,9 @@ def _apply_verified_package_to_db(pkg_dict, master_server_url=DEFAULT_MASTER_SER
 
 def sync_license_heartbeat_with_server(max_retries=3):
     """
-    Sends background heartbeat to master license server with automatic 3x retries.
-    Enforces immediate remote revocation and manages the 24-hour grace period window.
+    Sends background heartbeat to the license server (then signed/configured
+    fallbacks) with automatic 3x retries. Enforces immediate remote revocation;
+    offline stages follow the signed offline_policy (default 48 h + 24 h).
     """
     lic = query_one("SELECT * FROM wisp_license_info ORDER BY id DESC LIMIT 1")
     server_url = (lic.get('master_server_url') if lic else None) or DEFAULT_MASTER_SERVER_URL
@@ -1032,8 +1152,17 @@ def sync_license_heartbeat_with_server(max_retries=3):
     last_error = ""
     for attempt in range(1, max_retries + 1):
         try:
-            res_json = authenticated_license_exchange(
-                server_url, payload, STORAGE_DIR, get_master_public_key_pem(AMAN_LICENSE_AUTHORITY))
+            res_json = None
+            for candidate in license_server_candidates(server_url, installed_package if lic else None):
+                try:
+                    res_json = authenticated_license_exchange(
+                        candidate, payload, STORAGE_DIR, get_master_public_key_pem(AMAN_LICENSE_AUTHORITY))
+                    break
+                except Exception as exc:
+                    # Try the next server; the last failure is reported below.
+                    last_error = f'{candidate}: {exc}'
+            if res_json is None:
+                raise RuntimeError(last_error or 'no license server reachable')
             
             # If fresh instance with no license, check if master assigned one
             if not lic:
@@ -1131,6 +1260,42 @@ def sync_license_heartbeat_with_server(max_retries=3):
     logger.warning(f"[License Guard] All {max_retries} heartbeat retries failed: {last_error}")
     return False, f"تعذر الوصول لخادم التراخيص بعد {max_retries} محاولات: {last_error}"
 
+OFFLINE_STAGE_ALERTS = {
+    'grace': ('LICENSE_OFFLINE_GRACE', 'warning',
+              'تعذر الوصول لخادم التراخيص؛ النظام في فترة السماح ({hours} ساعة متبقية).'),
+    'admin_locked': ('LICENSE_OFFLINE_ADMIN_LOCKED', 'critical',
+                     'انتهت فترة السماح: لوحة الإدارة موقوفة، ودخول المستخدمين مستمر {hours} ساعة فقط.'),
+    'locked': ('LICENSE_OFFLINE_LOCKED', 'critical',
+               'انتهت مهلة الترخيص دون اتصال: دخول المستخدمين متوقف حتى المزامنة أو رمز تجديد دون اتصال.'),
+}
+
+
+def record_offline_stage():
+    """Raise one system alert per offline-stage change (and one on recovery)."""
+    try:
+        lic = get_active_license_status(force_refresh=True)
+        stage = lic.get('offline_stage') or 'ok'
+        row = query_one("SELECT `value` FROM wisp_system_settings WHERE `key` = 'license_offline_stage'")
+        previous = (row or {}).get('value') or 'ok'
+        if stage == previous:
+            return stage
+        if row:
+            execute_write("UPDATE wisp_system_settings SET `value` = ? WHERE `key` = 'license_offline_stage'", (stage,))
+        else:
+            execute_write("INSERT INTO wisp_system_settings (`key`, `value`) VALUES (?, ?)", ('license_offline_stage', stage))
+        from core.watchdog import log_system_alert
+        if stage in OFFLINE_STAGE_ALERTS:
+            kind, severity, text = OFFLINE_STAGE_ALERTS[stage]
+            log_system_alert(kind, severity, text.format(hours=lic.get('grace_hours_left') or 0), source='license_guard')
+        elif previous in OFFLINE_STAGE_ALERTS:
+            log_system_alert('LICENSE_OFFLINE_RECOVERED', 'info', 'عادت مزامنة الترخيص؛ انتهت حالة العمل دون اتصال.',
+                             source='license_guard', resolved=True)
+        return stage
+    except Exception as exc:
+        logger.warning(f"[License Guard] Offline stage alert notice: {exc}")
+        return None
+
+
 def start_license_heartbeat_daemon(interval_seconds=300):
     """Starts background heartbeat sync loop (Default: Every 5 minutes)."""
     import threading
@@ -1144,6 +1309,7 @@ def start_license_heartbeat_daemon(interval_seconds=300):
                 sync_license_heartbeat_with_server(max_retries=3)
             except Exception as e:
                 logger.warning(f"[License Guard Daemon] Exception: {e}")
+            record_offline_stage()
             time.sleep(interval_seconds)
             
     t = threading.Thread(target=_worker, daemon=True, name="LicenseHeartbeatWorker")
@@ -1156,7 +1322,8 @@ def publish_radius_license_state():
     import hashlib
     lic = get_active_license_status(force_refresh=True)
     row = query_one("SELECT id, raw_package_json FROM wisp_license_info ORDER BY id DESC LIMIT 1")
-    allowed = bool(row and lic.get('valid') and not lic.get('capacity_read_error'))
+    # admin_locked offline stage: the panel is locked but RADIUS still accepts logins.
+    allowed = bool(row and (lic.get('valid') or lic.get('radius_allowed')) and not lic.get('capacity_read_error'))
     lease_until = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(seconds=90)
     if row:
         package = json.loads(row['raw_package_json'])

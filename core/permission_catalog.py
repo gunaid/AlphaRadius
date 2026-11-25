@@ -90,7 +90,7 @@ DETAILS = (
  ('system.maintenance_run', 'تنفيذ تنظيف وأرشفة وتحسين القاعدة وإصلاح التدقيق', 'system.settings', 'api_clean_expired_vouchers api_cancel_cleanup_job api_maintenance_archive_sessions api_cancel_archive_job api_optimize_tables api_prune_historical_logs api_fix_audit_issue api_fix_all_audit_issues'),
  ('system.factory_reset', 'طلب وإلغاء إعادة ضبط المصنع', 'system.settings', 'api_factory_reset_database api_factory_reset_cancel api_factory_reset_status'),
  ('system.license_view', 'عرض الترخيص وحالته', 'system.settings', 'license_management license_short license_status license_status_page'),
- ('system.license_manage', 'تفعيل ومزامنة الترخيص', 'system.settings', 'activate_license_action sync_license_heartbeat_action'),
+ ('system.license_manage', 'تفعيل ومزامنة الترخيص', 'system.settings', 'activate_license_action sync_license_heartbeat_action offline_license_renewal_action'),
  ('system.settings_save', 'حفظ إعدادات النظام والشبكة', 'system.settings', 'update_settings_action'),
  ('system.time', 'عرض ومزامنة الوقت', 'system.settings', 'api_time_status api_time_sync'),
  ('system.notifications_view', 'عرض مركز الإشعارات', 'system.settings', 'notifications_center_page'),

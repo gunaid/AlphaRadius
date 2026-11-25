@@ -14,6 +14,7 @@ ENDPOINT_PERMISSIONS = {
  'quick_cards_print': ['vouchers.print'],
  'reseller_issue_settings': ['system.settings'],'accounting_archiver_page': ['system.view_services'],
  'activate_license_action': ['system.settings'],
+ 'offline_license_renewal_action': ['system.settings'],
  'active_card_user_details': ['vouchers.view'],
  'active_card_users': ['vouchers.view'],
  'add_manager_action': ['managers.manage'],

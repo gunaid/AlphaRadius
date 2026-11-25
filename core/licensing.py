@@ -95,6 +95,120 @@ def decode_license_string(lic_input):
     except Exception:
         return None, "تنسيق مفتاح الترخيص غير معروف (يجب أن يكون ملف .lic أو نص Base64 مشفر)"
 
+# ---------------------------------------------------------------- offline policy
+# Signed optional payload fields (absent = defaults):
+#   "offline_policy": {"grace_hours": 48, "radius_hours": 24}
+#   "heartbeat_urls": ["https://ls2.example.com"]
+# Out-of-range or malformed values reject the whole package, like limits.
+GRACE_HOURS_DEFAULT, GRACE_HOURS_MAX = 48, 168
+RADIUS_HOURS_DEFAULT, RADIUS_HOURS_MAX = 24, 72
+MAX_HEARTBEAT_URLS = 3
+NOTICE_AFTER_SECONDS = 3600
+OFFLINE_RENEWAL_MAX_DAYS = 30
+
+
+def offline_policy(payload):
+    policy = payload.get('offline_policy', {})
+    if policy is None:
+        policy = {}
+    if not isinstance(policy, dict):
+        raise ValueError('سياسة العمل دون اتصال في الترخيص غير صالحة')
+    grace = policy.get('grace_hours', GRACE_HOURS_DEFAULT)
+    radius = policy.get('radius_hours', RADIUS_HOURS_DEFAULT)
+    if type(grace) is not int or not 1 <= grace <= GRACE_HOURS_MAX:
+        raise ValueError(f'فترة السماح في الترخيص يجب أن تكون من 1 إلى {GRACE_HOURS_MAX} ساعة')
+    if type(radius) is not int or not 0 <= radius <= RADIUS_HOURS_MAX:
+        raise ValueError(f'مهلة دخول المستخدمين بعد السماح يجب أن تكون من 0 إلى {RADIUS_HOURS_MAX} ساعة')
+    return {'grace_hours': grace, 'radius_hours': radius}
+
+
+def heartbeat_urls(payload):
+    """Signed fallback license servers (HTTPS only, at most three)."""
+    from urllib.parse import urlsplit
+    urls = payload.get('heartbeat_urls', [])
+    if urls is None:
+        urls = []
+    if not isinstance(urls, list) or len(urls) > MAX_HEARTBEAT_URLS:
+        raise ValueError('قائمة خوادم الترخيص الاحتياطية غير صالحة')
+    clean = []
+    for url in urls:
+        parts = urlsplit(url) if isinstance(url, str) else None
+        if not parts or parts.scheme != 'https' or not parts.hostname or parts.username or parts.query or parts.fragment:
+            raise ValueError('خادم الترخيص الاحتياطي يجب أن يكون عنوان HTTPS صالحًا')
+        clean.append(url.rstrip('/'))
+    return clean
+
+
+def offline_stage(elapsed_seconds, grace_hours, radius_hours):
+    """Stage after the last verified contact (or offline renewal) and hours left in it.
+
+    ok -> notice/grace (everything works, warning) -> admin_locked (panel locked,
+    RADIUS logins still accepted) -> locked (RADIUS refused too).
+    """
+    import math
+    grace, total = grace_hours * 3600, (grace_hours + radius_hours) * 3600
+    if elapsed_seconds <= NOTICE_AFTER_SECONDS:
+        return 'ok', math.ceil(max(0, grace - elapsed_seconds) / 3600)
+    if elapsed_seconds <= grace:
+        return 'grace', max(1, math.ceil((grace - elapsed_seconds) / 3600))
+    if elapsed_seconds <= total:
+        return 'admin_locked', max(1, math.ceil((total - elapsed_seconds) / 3600))
+    return 'locked', 0
+
+
+def _binding_matches(licensed, current):
+    licensed = str(licensed or 'ANY').strip().upper()
+    if licensed in ('ANY', '*', 'ALL', 'UNLOCKED', ''):
+        return True
+    return licensed.replace('-', '') == str(current or '').strip().upper().replace('-', '')
+
+
+def verify_offline_renewal(token_dict, license_payload, now_epoch=None):
+    """Signed offline renewal: lets an instance with no route to the license
+    server keep working until ``valid_until`` (at most 30 days per token).
+
+    {"payload": {"type": "offline_renewal", "license_id", "hardware_id",
+     "instance_id", "issued_at": epoch, "valid_until": epoch, "nonce": "<32-64 hex>"},
+     "signature": "<Base64 Ed25519 by the license key over canonical(payload)>"}
+    Returns (ok, message, {"valid_until": int, "nonce": str}).
+    """
+    import re
+    import time
+    now = int(time.time() if now_epoch is None else now_epoch)
+    if not isinstance(token_dict, dict) or not isinstance(token_dict.get('payload'), dict):
+        return False, 'رمز التجديد دون اتصال غير مكتمل', {}
+    payload = token_dict['payload']
+    if payload.get('type') != 'offline_renewal':
+        return False, 'هذا ليس رمز تجديد دون اتصال', {}
+    if identify_license_authority(token_dict) != AMAN_LICENSE_AUTHORITY:
+        return False, 'توقيع رمز التجديد غير صالح', {}
+    if payload.get('license_id') != license_payload.get('license_id'):
+        return False, 'رمز التجديد صادر لترخيص آخر', {}
+    if not _binding_matches(payload.get('hardware_id'), get_machine_id()) or \
+            not _binding_matches(payload.get('instance_id'), get_instance_uuid()):
+        return False, 'رمز التجديد صادر لجهاز أو نسخة أخرى', {}
+    issued, until, nonce = payload.get('issued_at'), payload.get('valid_until'), payload.get('nonce')
+    if type(issued) is not int or type(until) is not int or not isinstance(nonce, str) \
+            or not re.fullmatch(r'[0-9a-f]{32,64}', nonce):
+        return False, 'حقول رمز التجديد غير صالحة', {}
+    if issued > now + 300:
+        return False, 'تاريخ إصدار رمز التجديد في المستقبل؛ تحقق من ساعة الخادم', {}
+    if until <= now:
+        return False, 'انتهت صلاحية رمز التجديد', {}
+    if until - issued > OFFLINE_RENEWAL_MAX_DAYS * 86400:
+        return False, f'رمز التجديد يتجاوز {OFFLINE_RENEWAL_MAX_DAYS} يومًا', {}
+    if not license_payload.get('is_lifetime'):
+        try:
+            expires = datetime.datetime.fromisoformat(str(license_payload.get('expires_at')).replace('Z', '+00:00'))
+            if expires.tzinfo is None:
+                expires = expires.replace(tzinfo=datetime.timezone.utc)
+        except ValueError:
+            return False, 'تاريخ انتهاء الترخيص غير صالح', {}
+        if until > expires.timestamp():
+            return False, 'رمز التجديد يتجاوز تاريخ انتهاء الترخيص', {}
+    return True, 'رمز التجديد دون اتصال صالح', {'valid_until': until, 'nonce': nonce}
+
+
 def verify_license_package(package_dict, current_active_sessions=0, current_nas=0, current_subscribers=0):
     """
     Performs complete verification of a license package:
@@ -189,6 +303,12 @@ def verify_license_package(package_dict, current_active_sessions=0, current_nas=
     else:
         return False, 'بيانات سقف الترخيص غير معرفة في حزمة الترخيص', payload
 
+    try:
+        policy = offline_policy(payload)
+        fallback_urls = heartbeat_urls(payload)
+    except ValueError as exc:
+        return False, str(exc), {}
+
     if max_nas and int(max_nas) > 0 and int(current_nas) > int(max_nas):
         is_over_quota = True
         nas_msg = f"عدد أجهزة الراوتر ({int(current_nas):,}) يتجاوز سقف باقة الترخيص ({int(max_nas):,})"
@@ -216,6 +336,9 @@ def verify_license_package(package_dict, current_active_sessions=0, current_nas=
         "quota_reason": quota_reason,
         "license_authority": authority,
         "requires_heartbeat": authority == AMAN_LICENSE_AUTHORITY,
+        "grace_hours": policy['grace_hours'],
+        "radius_hours": policy['radius_hours'],
+        "heartbeat_urls": fallback_urls,
     }
     
     return True, "الترخيص معتمد وصالح وموثق رقمياً بنجاح", info

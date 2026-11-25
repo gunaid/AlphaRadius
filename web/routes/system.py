@@ -1508,6 +1508,20 @@ def activate_license_action():
     return redirect(url_for('license_status_page'))
 
 
+@system_bp.route('/settings/license/offline-renewal', methods=['POST'], endpoint="offline_license_renewal_action")
+@login_required
+@require_permission('settings_manage')
+def offline_license_renewal_action():
+    """Apply a signed offline renewal token when the license server is unreachable."""
+    from services.license_guard_service import apply_offline_renewal
+    manager = get_current_manager() or {}
+    success, msg = apply_offline_renewal(request.form.get('renewal_token', ''), manager.get('username', ''))
+    if success:
+        log_audit(manager.get('id'), manager.get('username', 'admin'), 'license_offline_renewal', 'license', msg)
+    flash(msg, 'success' if success else 'danger')
+    return redirect(url_for('license_status_page'))
+
+
 @system_bp.route('/settings/license/sync-heartbeat', methods=['POST'], endpoint="sync_license_heartbeat_action")
 
 @login_required

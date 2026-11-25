@@ -201,6 +201,10 @@ def enforce_license_compliance_hook():
         from services.coa_queue_service import enqueue_disconnect
 
         lic = get_active_license_status()
+        if lic and not lic.get('valid') and lic.get('radius_allowed'):
+            # Offline admin_locked stage: the panel is locked but users keep
+            # their sessions until the RADIUS window ends; never disconnect here.
+            return
         if lic and lic.get('valid'):
             now_str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             changed = execute_update("UPDATE wisp_system_alerts SET is_resolved=1, resolved_at=? WHERE alert_type='LICENSE_NON_COMPLIANT_POD' AND is_resolved=0", (now_str,))

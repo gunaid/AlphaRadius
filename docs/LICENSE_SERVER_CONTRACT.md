@@ -53,6 +53,12 @@
   `user_portal automation_rules gis_map autoheal accounting_archiver radius_simulator traffic_analytics api_access white_label whatsapp_gateway vpn_tunnels loyalty_rewards card_designer quick_cards reseller_management reseller_wallets sales_reports invoice_management userman_import data_import hotspot_designer portal_registration portal_advance`.
   - الميزة الغائبة تعتبر مفعّلة؛ `false` يعطّلها.
   - تبعيات: `reseller_wallets` تحتاج `reseller_management`، و`portal_registration`/`portal_advance` تحتاجان `user_portal`.
+- `offline_policy` (اختياري، داخل التوقيع): `{"grace_hours": 48, "radius_hours": 24}`.
+  - `grace_hours` عدد صحيح من 1 إلى 168 (الافتراضي 48): مدة العمل الكامل دون اتصال بالخادم.
+  - `radius_hours` عدد صحيح من 0 إلى 72 (الافتراضي 24): بعد فترة السماح تُوقف لوحة الإدارة ويستمر دخول المستخدمين هذه المدة.
+  - قيمة خارج المدى أو من نوع آخر (float/نص/bool) ترفض الحزمة كلها.
+- `heartbeat_urls` (اختياري، داخل التوقيع): حتى 3 عناوين `https://` لخوادم احتياطية بنفس نقطة النبضات ونفس مفتاح التوقيع.
+  بلا مستخدم/كلمة مرور أو query. يجربها العميل بالترتيب بعد الخادم الأساسي.
 - التسليم للمستخدم: ملف `.lic` يحتوي JSON أعلاه، أو نفس JSON مشفّرًا Base64 ككود يُلصق.
 
 ### ملف التفعيل الأول
@@ -166,13 +172,44 @@ HTTP **401** بجسم JSON: `{"error": "<code>"}`. القيم المسموحة �
 | `expired` | حالة محلية `expired`؛ تُرفع عند أول رد `active` لاحق. |
 | `hwid_mismatch` / `unlicensed` / `error`، أو `remote_action:"unlicensed"`، أو `valid:false` | حالة محلية `unlicensed` دون حظر دائم؛ تُرفع عند أول رد `active` لاحق. |
 | `instance_limit` | حالة محلية `instance_limit` مع رسالة بلوغ حد النسخ. |
-| تعذر الاتصال | بعد ساعة تنبيه، وبعد **24 ساعة** قفل `grace_expired`. |
+| تعذر الاتصال بكل الخوادم | بعد ساعة تنبيه؛ بعد `grace_hours` (افتراضي 48) قفل لوحة الإدارة `grace_admin_locked` مع استمرار دخول المستخدمين؛ بعد `radius_hours` أخرى (افتراضي 24) قفل كامل `grace_expired`. رمز التجديد دون اتصال يوقف العد حتى `valid_until`. |
 
 النبضة تُرسل حتى لو كانت الحزمة المحلية منتهية أو غير مطابقة للربط، ما دام توقيعها من مفتاح الخادم الحالي؛ هكذا يصل التجديد عن بعد إلى ترخيص منتهٍ. الحزمة ذات التوقيع غير الموثوق لا تُرسل نبضة.
 
 **تحديث الترخيص عن بعد (OTA):** أرسل في `remote_payload` (أو `license_token`) ملف ترخيص كاملًا كنص JSON أو Base64، موقعًا بمفتاح الناشر.
 - يُطبّق إذا كان `remote_action:"sync_license"`، أو إذا اختلف توقيعه عن المحفوظ.
 - يُستخدم لتمديد المدة وتغيير السعة والميزات.
+
+### الخوادم الاحتياطية
+
+العميل يرسل كل محاولة إلى الخادم الأساسي ثم إلى `heartbeat_urls` الموقعة، ثم إلى `ALPHA_LICENSE_FALLBACK_URLS` (متغير بيئة، HTTPS فقط).
+أول رد موقع صالح يُعتمد. الخادم الاحتياطي يجب أن يشارك **قاعدة البيانات أو حالة النسخ** (المفاتيح المسجلة وnonce) ومفتاح التوقيع نفسه،
+وإلا سيرد `enrollment_key_mismatch` أو يقبل nonce مكررًا. التحديثات OTA منه تُحفظ دون تغيير عنوان الخادم الأساسي.
+
+## 3ب. رمز التجديد دون اتصال (offline renewal)
+
+لنسخة لا تصل للخادم (انقطاع إنترنت، حجب). يصدره الخادم من لوحته، ويُلصق في صفحة الترخيص في النسخة.
+
+```json
+{
+  "payload": {
+    "type": "offline_renewal",
+    "license_id": "LIC-2026-0001",
+    "hardware_id": "MAX-78FA-41B0-9A22-E10C",
+    "instance_id": "INST-C89B104AF210",
+    "issued_at": 1795000000,
+    "valid_until": 1795604800,
+    "nonce": "<32–64 hex صغير>"
+  },
+  "signature": "<Base64 Ed25519 بمفتاح الناشر over canonical(payload)>"
+}
+```
+- يُسلَّم JSON أو Base64 لنفس JSON. `hardware_id`/`instance_id` قيمة النسخة أو `ANY`.
+- العميل يرفضه إذا: `type` مختلف، التوقيع ليس من المفتاح الموثوق، `license_id` لا يطابق الترخيص المثبت، الربط لا يطابق،
+  `issued_at`/`valid_until` ليسا عددين صحيحين، `issued_at > now+300`، `valid_until <= now`، المدة > 30 يومًا،
+  أو `valid_until` بعد `expires_at` للترخيص غير الدائم، أو سبق استخدام `nonce` في النسخة، أو ساعة النظام متراجعة.
+- أثره: حتى `valid_until` يعمل النظام كأنه متزامن؛ بعده تبدأ فترة السماح من `valid_until`. لا يغيّر الحدود أو الميزات.
+- لوحة الخادم: «رمز تجديد دون اتصال» لكل نسخة مع المدة (حتى 30 يومًا)، وتسجيل الإصدار في سجل التدقيق.
 
 ## 4. ما تحتاجه لوحة الخادم (حد أدنى)
 
@@ -193,5 +230,8 @@ HTTP **401** بجسم JSON: `{"error": "<code>"}`. القيم المسموحة �
 4. تعديل حدود الترخيص مع `sync_license` → تتحدث السعة في النسخة دون إعادة تفعيل.
 5. إعادة إرسال نفس الطلب (nonce مكرر) → 401.
 6. رد غير موقع أو بإعادة توجيه أو HTTP → يرفضه العميل.
+7. ترخيص بـ`offline_policy: {"grace_hours": 2, "radius_hours": 1}` وقطع الوصول للخادم → تنبيه بعد ساعة، قفل اللوحة بعد ساعتين مع استمرار الدخول، قفل كامل بعد 3 ساعات.
+8. رمز تجديد دون اتصال لمدة يوم → يعود النظام للعمل فورًا؛ إعادة لصق الرمز نفسه → «سبق استخدام رمز التجديد».
+9. إيقاف الخادم الأساسي مع `heartbeat_urls` يشير لخادم احتياطي يشارك الحالة → تستمر النبضات دون فترة سماح.
 
 يمكن اختبار البروتوكول مباشرة بـ `core/license_protocol.py:exchange` من مستودع العميل.

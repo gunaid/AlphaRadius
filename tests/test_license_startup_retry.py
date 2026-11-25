@@ -105,7 +105,7 @@ class StartupRetry(unittest.TestCase):
 
 class LeaseBounds(unittest.TestCase):
     def publish(self, valid=True, verified=True, capacity_error=False, expires=None, lifetime=False,
-                blocked=False, status='active'):
+                blocked=False, status='active', radius_allowed=False):
         row = {'id': 1, 'raw_package_json': json.dumps({'payload': {'expires_at': expires}})}
         writes = []
 
@@ -127,7 +127,8 @@ class LeaseBounds(unittest.TestCase):
         db_stub = types.ModuleType('database.db')
         db_stub.adapt_query = lambda sql, _conn: sql
         ns = dict(datetime=datetime, json=json, hashlib=hashlib,
-                  get_active_license_status=lambda **_: {'valid': valid, 'capacity_read_error': capacity_error},
+                  get_active_license_status=lambda **_: {'valid': valid, 'capacity_read_error': capacity_error,
+                                                         'radius_allowed': radius_allowed},
                   query_one=lambda _: row,
                   verify_license_package=lambda _: (verified, '', {'is_lifetime': lifetime, 'license_mode': 'active_sessions', 'max_active_sessions': 5}),
                   get_connection=lambda: conn, clear_license_cache=lambda: None)
@@ -158,6 +159,13 @@ class LeaseBounds(unittest.TestCase):
         expiry = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(seconds=20)
         _, params = self.publish(expires=expiry.isoformat())
         self.assertEqual(params[-1], expiry.replace(tzinfo=None))
+
+    def test_offline_admin_lock_keeps_radius_but_not_beyond(self):
+        # Panel locked (valid False) while the signed offline window still allows logins.
+        self.assertEqual(self.publish(valid=False, radius_allowed=True)[1][2], 1)
+        self.assertEqual(self.publish(valid=False, radius_allowed=True, verified=False)[1][2], 0)
+        self.assertEqual(self.publish(valid=False, radius_allowed=True, capacity_error=True)[1][2], 0)
+        self.assertEqual(self.publish(valid=False, radius_allowed=True, blocked=True)[1][2], 0)
 
     def test_revoked_or_suspended_row_is_never_authorized(self):
         self.assertEqual(self.publish(blocked=True)[1][2], 0)

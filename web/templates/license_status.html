@@ -84,6 +84,8 @@
                         ⛔ تم حظر وإلغاء هذا الترخيص من خادم التراخيص المركزي!
                     {% elif license.status == 'suspended' %}
                         ⏸️ تم تعليق هذا الترخيص مؤقتاً من قِبل إدارة المطور!
+                    {% elif license.status == 'grace_admin_locked' %}
+                        🟠 انتهت فترة السماح: لوحة الإدارة موقوفة ودخول المستخدمين مستمر مؤقتًا!
                     {% elif license.status == 'locked_sync_failed' or license.status == 'grace_expired' %}
                         ⚠️ تعذر إتمام مزامنة الترخيص الدورية أو انتهاء فترة السماح!
                     {% elif license.status == 'expired' %}
@@ -466,6 +468,29 @@
                         <span>تفعيل وتوثيق الترخيص الرسمي</span>
                     </button>
                 </form>
+            </div>
+
+            <!-- Offline policy and offline renewal -->
+            <div class="bg-[#0b0f19] p-6 rounded-3xl border border-[#1c2840] shadow-lg space-y-3 text-xs">
+                <h4 class="font-black text-white flex items-center gap-2 border-b border-[#162136] pb-3">
+                    <i class="fa-solid fa-plug-circle-xmark text-amber-400 text-sm"></i>
+                    <span>العمل دون اتصال بخادم التراخيص</span>
+                </h4>
+                <ul class="space-y-1.5 text-slate-400 leading-relaxed">
+                    <li>بعد ساعة دون مزامنة يظهر تنبيه، ويعمل كل شيء طوال <b class="text-white">{{ license.grace_hours or 48 }} ساعة</b> (فترة السماح).</li>
+                    <li>بعدها تُوقف لوحة الإدارة، ويستمر دخول المستخدمين <b class="text-white">{{ license.radius_hours if license.radius_hours is not none else 24 }} ساعة</b> أخرى، ثم يتوقف.</li>
+                    <li>الحالة الآن:
+                        <b class="text-white">{{ {'ok':'متصل','grace':'فترة السماح','admin_locked':'لوحة الإدارة موقوفة','locked':'متوقف'}.get(license.offline_stage, license.offline_stage or '—') }}</b>
+                        {% if license.offline_stage in ('grace', 'admin_locked') %}— متبقٍ {{ license.grace_hours_left }} ساعة{% endif %}</li>
+                    {% if license.offline_until %}<li>تجديد دون اتصال ساري حتى <bdi dir="ltr" class="text-emerald-400">{{ license.offline_until[:16].replace('T', ' ') }} UTC</bdi></li>{% endif %}
+                </ul>
+                <form method="POST" action="{{ url_for('offline_license_renewal_action') }}" class="space-y-2">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+                    <label class="block font-bold text-slate-300">رمز تجديد دون اتصال (من إدارة التراخيص):</label>
+                    <textarea name="renewal_token" rows="3" dir="ltr" required class="w-full bg-[#070b14] border border-slate-700 rounded-xl p-2.5 font-mono text-[11px] text-white" placeholder="الصق الرمز هنا"></textarea>
+                    <button type="submit" class="w-full px-4 py-2 rounded-xl font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">تطبيق التجديد دون اتصال</button>
+                </form>
+                <p class="text-slate-500">الرمز موقّع من خادم التراخيص ومرتبط بهذا الترخيص وهذه النسخة، يُستخدم مرة واحدة، وأقصى مدته 30 يومًا.</p>
             </div>
 
             <!-- Help / Instructions Card -->

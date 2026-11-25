@@ -171,7 +171,7 @@
     "services/whatsapp_service.py": "49e12226d7d2c3f0017f7035d6cbd10d7a179319759fad7ce98068a6ca4784b7",
     "services/wireguard_service.py": "9cb07b9bed26ea7e36be46b1be4519f9ec94b89bb7358150e55b5a7a8a8fbc8f",
     "storage/keys/master_public_key.pem": "a8b67f0e653ea0e00ebc12b96bcec62981b514890a4d325b83014b8afac28a06",
-    "web/__init__.py": "d38b71f75cd683ba378be49d4633bf8b15c635aadce1eb2cfab55c6892baa8e6",
+    "web/__init__.py": "b2548f1a3096030199451ac8638e0d8a3b65ed66049d3e38afb6ff522b60da61",
     "web/access_policy.py": "c0bd81f630ca821b3b088ecd0ec0ba831049bcc19234a174285f32586d292359",
     "web/app.py": "1c2d198aebd45405be4b864e85700e6f5e6627002e93df6d5644417985565d59",
     "web/audit_endpoints.py": "e4bf8af0b0ebfc49bbd8d2d7f365cddc60440471b51652d7bac0cef367ff9d68",
