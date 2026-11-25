@@ -104,6 +104,7 @@ tests/*
 !tests/test_license_offline_policy.py
 !tests/test_two_factor.py
 !tests/test_provider_export.py
+!tests/test_alert_dispatch.py
 !tests/test_package_page.py
 !tests/test_subscriber_admin_safety.py
 !tests/test_subscriber_list_safety.py

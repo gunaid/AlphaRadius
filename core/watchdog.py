@@ -37,6 +37,12 @@ def log_system_alert(alert_type, severity, message, source='watchdog', resolved=
         print(f"  [Watchdog Alert] [{severity.upper()}] {alert_type}: {message}")
     except Exception as e:
         print(f"  [Watchdog] Error logging alert: {e}")
+    try:
+        # Telegram/WhatsApp copy (filtered, de-duplicated, sent in the background).
+        from services.alert_dispatch_service import notify_system_alert
+        notify_system_alert(alert_type, severity, message, resolved)
+    except Exception as e:
+        print(f"  [Watchdog] Alert notification skipped: {e}")
 
 def check_database_health():
     """Verify database responsiveness and auto-reconnect if needed."""

@@ -346,6 +346,12 @@ def trigger_nas_down_notification(nas_id, nas_name, nas_ip, status_text='Offline
         return
 
     _NAS_OFFLINE_CACHE[nas_id] = now
+    try:
+        from services.alert_dispatch_service import notify_whatsapp_copy
+        notify_whatsapp_copy('NAS_DOWN_ALERT', f"🚨 ALPHA RADIUS\nانقطاع الراوتر {nas_name} ({nas_ip}): {status_text}\n"
+                                               f"{datetime.datetime.now():%Y-%m-%d %H:%M}")
+    except Exception:
+        pass
 
     def _run():
         try:
@@ -379,6 +385,12 @@ def trigger_nas_recovered_notification(nas_id, nas_name, nas_ip):
     """
     if nas_id in _NAS_OFFLINE_CACHE:
         del _NAS_OFFLINE_CACHE[nas_id]
+        try:
+            from services.alert_dispatch_service import notify_whatsapp_copy
+            notify_whatsapp_copy('NAS_RECOVERED_ALERT', f"✅ ALPHA RADIUS\nعاد الراوتر {nas_name} ({nas_ip}) للعمل\n"
+                                                        f"{datetime.datetime.now():%Y-%m-%d %H:%M}")
+        except Exception:
+            pass
         def _run():
             try:
                 settings_data = get_notification_settings()

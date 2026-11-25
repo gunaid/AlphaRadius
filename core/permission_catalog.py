@@ -95,7 +95,7 @@ DETAILS = (
  ('system.settings_save', 'حفظ إعدادات النظام والشبكة', 'system.settings', 'update_settings_action'),
  ('system.time', 'عرض ومزامنة الوقت', 'system.settings', 'api_time_status api_time_sync'),
  ('system.notifications_view', 'عرض مركز الإشعارات', 'system.settings', 'notifications_center_page'),
- ('system.notifications_manage', 'إعداد الإشعارات والتحقق من البوت وإرسال تجربة', 'system.settings', 'api_notifications_settings_save api_notifications_verify_bot api_notifications_test_send'),
+ ('system.notifications_manage', 'إعداد الإشعارات والتحقق من البوت وإرسال تجربة', 'system.settings', 'api_notifications_settings_save api_notifications_verify_bot api_notifications_test_send system_alerts_save'),
  ('system.automation_view', 'عرض قواعد الأتمتة', 'system.settings', 'automation_rules_page api_automation_notices'),
  ('system.automation_manage', 'تفعيل وتشغيل قواعد الأتمتة', 'system.settings', 'api_automation_toggle api_automation_run api_automation_tasks api_automation_task_action'),
  ('system.loyalty_view', 'عرض المكافآت ونقاط الولاء', 'system.settings', 'loyalty_rewards_page loyalty_rewards_short api_loyalty_reward_get'),

@@ -319,7 +319,7 @@
     "web/templates/nas_add.html": "3b81aff9d2a1ac298478177605c727243a63ece37436d70b6e5a91683830d88e",
     "web/templates/nas_details.html": "6d1f9ee5ce26e871a80a103ae15a4ba09a6f0d00243f338c9a8cc819796a85a3",
     "web/templates/network_traffic.html": "10407a925f3282904c0046203ef10480e04794e23979625e84e4ac0f739e1884",
-    "web/templates/notifications_center.html": "826437d07aad5bb585ea4d39a0c62c879c0b2192a6af4032546df39eb72a772f",
+    "web/templates/notifications_center.html": "679a273eb9d0dad4b1844311120f023dcf5f3c2c36a1d694c6b58d765ad56ed0",
     "web/templates/package_add.html": "9a3a44c0af84fd91c4777851fe25a171456bcfb2e809110639a8f73ea5b5495f",
     "web/templates/package_details.html": "179f467c19abbfb740a1bf1f9b6ecc424a99ebdc756b36b22c44b067a49b9745",
     "web/templates/packages.html": "eb647ece8fa31821daf5dd85cfc960251af99eb6a1dcc2ac6bacdb49fe9f4dc2",

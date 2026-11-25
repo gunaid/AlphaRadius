@@ -226,6 +226,37 @@
 
             </form>
 
+            <!-- System alerts: Telegram / WhatsApp -->
+            {% set al = alert_settings|default({}) %}
+            <form method="POST" action="{{ url_for('system_alerts_save') }}" class="bg-[#0b0f19] border border-[#1c2840] rounded-2xl p-6 shadow-sm space-y-4 text-xs text-slate-300">
+                <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-bell text-amber-400"></i> تنبيهات النظام (Telegram / WhatsApp)
+                </h3>
+                <p class="text-slate-400 leading-6">انقطاع قاعدة البيانات أو الراديوس، امتلاء القرص، تعطل الحاويات، مراحل الترخيص دون اتصال، وعودة كل منها للعمل،
+                    إضافة إلى انقطاع الراوترات وعودتها. لا يُكرر التنبيه نفسه خلال المدة المحددة إلا إذا ارتفعت خطورته.</p>
+                <label class="flex items-center gap-2"><input type="checkbox" name="alerts_enabled" value="1" {{ 'checked' if al.get('alerts_enabled', '1') == '1' else '' }} class="rounded"> تفعيل تنبيهات النظام</label>
+                <label class="flex items-center gap-2"><input type="checkbox" name="alerts_telegram" value="1" {{ 'checked' if al.get('alerts_telegram', '1') == '1' else '' }} class="rounded"> إرسال إلى بوت تيليجرام المضبوط أعلاه</label>
+                <label class="block">أرقام واتساب للتنبيهات (حتى 5، مفصولة بفاصلة)
+                    <input type="text" name="alerts_whatsapp_phones" dir="ltr" value="{{ al.get('alerts_whatsapp_phones', '') }}" placeholder="967777123456, 771234567" class="block mt-1 w-full bg-[#070b14] border border-[#1c2840] rounded-lg px-2 py-1.5 text-white font-mono">
+                    <span class="text-[10px] text-slate-500">تُرسل عبر بوابة واتساب المضبوطة في صفحة واتساب.</span>
+                </label>
+                <div class="grid grid-cols-2 gap-3">
+                    <label>أقل خطورة تُرسل
+                        <select name="alerts_min_severity" class="block mt-1 w-full bg-[#070b14] border border-[#1c2840] rounded-lg px-2 py-1.5 text-white">
+                            {% for key, label in [('info','معلومة'),('warning','تحذير'),('danger','خطر'),('critical','حرج')] %}
+                            <option value="{{ key }}" {{ 'selected' if al.get('alerts_min_severity', 'warning') == key else '' }}>{{ label }}</option>{% endfor %}
+                        </select>
+                    </label>
+                    <label>منع التكرار (دقيقة)
+                        <input type="number" name="alerts_repeat_minutes" min="1" max="1440" value="{{ al.get('alerts_repeat_minutes', '30') }}" class="block mt-1 w-full bg-[#070b14] border border-[#1c2840] rounded-lg px-2 py-1.5 text-white">
+                    </label>
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" name="send_test" value="0" class="flex-1 px-4 py-2 rounded-xl font-bold bg-blue-600 text-white">حفظ</button>
+                    <button type="submit" name="send_test" value="1" class="px-4 py-2 rounded-xl font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">حفظ وإرسال تجربة</button>
+                </div>
+            </form>
+
         </div>
 
         <!-- Right Column: Dispatch Logs & Quick Tools (7 Cols) -->

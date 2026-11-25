@@ -887,7 +887,31 @@ def api_factory_reset_status():
 def notifications_center_page():
     from services.bot_notifications_service import get_notification_settings
     data = get_notification_settings()
-    return render_template('notifications_center.html', data=data)
+    from services.alert_dispatch_service import settings as alert_settings
+    return render_template('notifications_center.html', data=data, alert_settings=alert_settings())
+
+
+@system_bp.route('/notifications/system-alerts', methods=['POST'], endpoint="system_alerts_save")
+def system_alerts_save():
+    """Where system alerts go (Telegram/WhatsApp), threshold and repeat window."""
+    from services.alert_dispatch_service import save_settings, send_test
+    try:
+        values = save_settings(request.form)
+        manager = get_current_manager() or {}
+        log_audit(manager.get('id'), manager.get('username', 'admin'), 'SYSTEM_ALERTS_SETTINGS', 'notifications',
+                  f"enabled={values['alerts_enabled']} telegram={values['alerts_telegram']} "
+                  f"whatsapp={len([p for p in values['alerts_whatsapp_phones'].split(',') if p])} min={values['alerts_min_severity']}")
+        if request.form.get('send_test') == '1':
+            results = send_test(values)
+            if not results:
+                flash('حُفظت الإعدادات، ولا توجد قناة مهيأة لإرسال التجربة (فعّل بوت تيليجرام أو أضف رقم واتساب).', 'warning')
+            for channel, ok, detail in results:
+                flash(f"{channel}: {'أُرسلت رسالة التجربة' if ok else 'فشل الإرسال — ' + str(detail)[:150]}", 'success' if ok else 'danger')
+        else:
+            flash('حُفظت إعدادات تنبيهات النظام.', 'success')
+    except ValueError as exc:
+        flash(str(exc), 'danger')
+    return redirect(url_for('notifications_center_page'))
 
 
 @system_bp.route('/api/notifications/settings/save', methods=['POST'], endpoint="api_notifications_settings_save")

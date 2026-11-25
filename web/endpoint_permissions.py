@@ -107,6 +107,7 @@ ENDPOINT_PERMISSIONS = {
  'api_nas_test_coa': ['nas.test_coa'],
  'api_notifications_settings_save': ['system.settings'],
  'api_notifications_test_send': ['system.settings'],
+ 'system_alerts_save': ['system.settings'],
  'api_notifications_verify_bot': ['system.settings'],
  'api_optimize_tables': ['system.settings'],
  'api_prune_historical_logs': ['system.settings'],
