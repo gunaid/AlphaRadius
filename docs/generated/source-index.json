@@ -1157,21 +1157,22 @@
     },
     {
       "file": "database/license_capacity.py",
-      "sha256": "1f71189c5380ff8b1328dfac1db0f51900dff0c0ed3fb4a14d1167bec80a5bde",
+      "sha256": "599c170a244b21a166a9f39e1c9eb1968a4985580fb13de7fd496e1798c1152f",
       "imports": [
         "database.cycle_safety",
         "database.reservation_indexes",
+        "database.roaming_schema",
         "database.schema_objects"
       ],
       "definitions": [
         {
           "name": "resource_limit_trigger",
-          "line": 120,
+          "line": 132,
           "kind": "FunctionDef"
         },
         {
           "name": "install_capacity_schema",
-          "line": 142,
+          "line": 154,
           "kind": "FunctionDef"
         }
       ]
@@ -1285,14 +1286,14 @@
     },
     {
       "file": "database/radius_message_schema.py",
-      "sha256": "5fc94b9854583d5705416f1f473b21988fbc1f3cddcaf466d3f51aad19f9a880",
+      "sha256": "cdd17e35bbea27bf3653745392680ff3fc86320ba78767ed34dd2f8814713626",
       "imports": [
         "database.schema_objects"
       ],
       "definitions": [
         {
           "name": "install_radius_message_function",
-          "line": 31,
+          "line": 32,
           "kind": "FunctionDef"
         }
       ]
@@ -1329,6 +1330,18 @@
         {
           "name": "ensure_reservation_release_index",
           "line": 33,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "file": "database/roaming_schema.py",
+      "sha256": "2b929dc1d6aadd0b66256d75905ce0328f7b738f5846a34d30af93ebe7d46cc4",
+      "imports": [],
+      "definitions": [
+        {
+          "name": "install_roaming_schema",
+          "line": 38,
           "kind": "FunctionDef"
         }
       ]
@@ -7056,6 +7069,77 @@
       ]
     },
     {
+      "file": "services/roaming_service.py",
+      "sha256": "1ce26de90fbe306d43510804e563ae11deba9336d19ba7eb8ad4ed0592166105",
+      "imports": [
+        "core.mikrotik_api",
+        "database.db",
+        "services.coa_queue_service"
+      ],
+      "definitions": [
+        {
+          "name": "_mac",
+          "line": 41,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_idle_seconds",
+          "line": 48,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "choose_idle_session",
+          "line": 62,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "parse_roaming_idle",
+          "line": 105,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "settings",
+          "line": 115,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_router_hosts",
+          "line": 126,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_claim",
+          "line": 151,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_finish",
+          "line": 160,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "process_request",
+          "line": 173,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "process_pending",
+          "line": 195,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_loop",
+          "line": 227,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "start_worker",
+          "line": 236,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
       "file": "services/router_stats_service.py",
       "sha256": "f48629d838a876f4915c00e3e0ded1817310111e733ee94a9ead1865776beedd",
       "imports": [
@@ -8068,37 +8152,38 @@
     },
     {
       "file": "services/system_settings_service.py",
-      "sha256": "e3a272453b205238d12fb0a608b73bc2c6428a5d269d44da99b9da755c5bbf35",
+      "sha256": "37f04b4ae92ffd9948027adcc14fcc9ac5f5f17d559ba282d95951abc7dc4bfd",
       "imports": [
         "core.license_feature_policy",
         "database.db",
         "decimal",
-        "pathlib"
+        "pathlib",
+        "services.roaming_service"
       ],
       "definitions": [
         {
           "name": "SettingsSaveUncertain",
-          "line": 11,
+          "line": 12,
           "kind": "ClassDef"
         },
         {
           "name": "_database",
-          "line": 15,
+          "line": 16,
           "kind": "FunctionDef"
         },
         {
           "name": "setting_values",
-          "line": 20,
+          "line": 21,
           "kind": "FunctionDef"
         },
         {
           "name": "parse_gb_cost",
-          "line": 63,
+          "line": 68,
           "kind": "FunctionDef"
         },
         {
           "name": "save_system_settings",
-          "line": 75,
+          "line": 80,
           "kind": "FunctionDef"
         }
       ]
@@ -9799,7 +9884,7 @@
     },
     {
       "file": "web/__init__.py",
-      "sha256": "98ab8748d7c887f7b642ff6d6c084bbefad33d732f11bda65cff4e438ee3dd79",
+      "sha256": "d38b71f75cd683ba378be49d4633bf8b15c635aadce1eb2cfab55c6892baa8e6",
       "imports": [
         "core.config",
         "core.license_feature_policy",
@@ -9816,6 +9901,7 @@
         "services.factory_reset_service",
         "services.heavy_operation_service",
         "services.license_guard_service",
+        "services.roaming_service",
         "services.sales_source_service",
         "services.session_control_service",
         "services.traffic_sample_service",
@@ -9884,7 +9970,7 @@
         },
         {
           "name": "operation_busy",
-          "line": 477,
+          "line": 481,
           "kind": "FunctionDef"
         }
       ]

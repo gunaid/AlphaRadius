@@ -70,7 +70,19 @@ BEGIN
            AND acctstoptime IS NULL)
        +(SELECT COUNT(*) FROM wisp_session_reservations WHERE username=p_username
            AND {PENDING_RESERVATION_PREDICATE}) INTO account_slots;
- IF account_cap>0 AND account_slots>=account_cap THEN RETURN 2; END IF;
+ IF account_cap>0 AND account_slots>=account_cap THEN
+  -- Random-MAC roaming: record the request; services.roaming_service frees an
+  -- idle old seat after checking the router. This login is still rejected.
+  IF p_station<>'' AND COALESCE((SELECT s.`value` FROM wisp_system_settings s
+       WHERE s.`key`='roaming_enabled' LIMIT 1),'1')='1' THEN
+   INSERT INTO wisp_roaming_requests(username,nasipaddress,callingstationid,nasportid,requested_at,status)
+   VALUES(p_username,COALESCE(p_nasip,''),p_station,COALESCE(p_port,''),NOW(),'pending')
+   ON DUPLICATE KEY UPDATE nasipaddress=VALUES(nasipaddress),callingstationid=VALUES(callingstationid),
+    nasportid=VALUES(nasportid),requested_at=NOW(),status='pending';
+   RETURN 4;
+  END IF;
+  RETURN 2;
+ END IF;
  SELECT (SELECT COUNT(*) FROM radacct WHERE {ACTIVE_SESSION_PREDICATE})
  +(SELECT COUNT(*) FROM wisp_session_reservations WHERE {PENDING_RESERVATION_PREDICATE})
  INTO used_slots;
@@ -146,6 +158,9 @@ def install_capacity_schema(conn):
     ensure_reservation_release_index(conn)
     with conn.cursor() as cur:
         cur.execute(SCHEMA_SQL)
+        # fn_reserve_license_slot writes roaming requests; create the table first.
+        from database.roaming_schema import install_roaming_schema
+        install_roaming_schema(cur)
         cur.execute("INSERT IGNORE INTO wisp_license_runtime_state(id) VALUES(1)")
         cur.execute("SHOW COLUMNS FROM wisp_session_reservations")
         columns={r['Field'] for r in cur.fetchall()}

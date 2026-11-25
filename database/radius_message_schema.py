@@ -13,6 +13,7 @@ DEFAULTS = (
     ('disabled', 'user is disabled'),
     ('invalid', 'invalid username or password'),
     ('simultaneous', 'simultaneous session limit reached'),
+    ('roaming', 'simultaneous session limit reached, retry in one minute'),
     ('mac', 'MAC address is not allowed for this account'),
     ('capacity', 'Concurrent session capacity reached'),
     ('license', 'License verification unavailable or license invalid'),

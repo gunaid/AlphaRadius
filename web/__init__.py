@@ -472,6 +472,10 @@ def create_app(config=None):
     if DB_TYPE=='mysql' and app.config.get('SESSION_CONTROL',True):
         from services.session_control_service import start_worker as start_session_control
         start_session_control()
+    if DB_TYPE=='mysql' and app.config.get('ROAMING_WORKER',True):
+        # Frees an idle old seat when a card returns with a new random MAC.
+        from services.roaming_service import start_worker as start_roaming_worker
+        start_roaming_worker()
     from services.heavy_operation_service import OperationBusy
     @app.errorhandler(OperationBusy)
     def operation_busy(error):

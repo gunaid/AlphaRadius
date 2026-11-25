@@ -6,6 +6,7 @@ import tempfile
 import uuid
 
 from core.license_feature_policy import BRANDING_FIELDS, FeatureUnavailable, enabled
+from services.roaming_service import ROAMING_IDLE_DEFAULT, parse_roaming_idle  # noqa: F401
 
 
 class SettingsSaveUncertain(RuntimeError):
@@ -50,13 +51,17 @@ def setting_values(form):
         if key in form:
             text = ' '.join(str(form.get(key) or '').split())[:200]
             values[key] = text
+    # Present only when the roaming section was posted, so other saves keep it.
+    if 'roaming_settings_present' in form:
+        values['roaming_enabled'] = '1' if form.get('roaming_enabled') in ('1', 'on', 'true', True, 1) else '0'
+        values['roaming_idle_seconds'] = str(parse_roaming_idle(form.get('roaming_idle_seconds')))
     if 'gb_cost' in form:
         values['gb_cost'] = parse_gb_cost(form.get('gb_cost'))
     return values
 
 
 RADIUS_MESSAGE_KEYS = ('radius_msg_expired', 'radius_msg_quota', 'radius_msg_uptime', 'radius_msg_disabled',
-                       'radius_msg_recharged', 'radius_msg_simultaneous', 'radius_msg_mac',
+                       'radius_msg_recharged', 'radius_msg_simultaneous', 'radius_msg_roaming', 'radius_msg_mac',
                        'radius_msg_capacity', 'radius_msg_invalid', 'radius_msg_reconcile')
 
 
