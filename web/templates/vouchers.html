@@ -320,6 +320,8 @@
                                 </button>{% endif %}
                                 {% if can_access_endpoint('export_batch_excel') %}<button type="button" class="w-full text-right px-3.5 py-2 text-slate-200 hover:bg-blue-600 hover:text-white flex items-center gap-2.5 transition cursor-pointer" onclick="downloadBatchFile('/vouchers/batch/{{ b.id }}/excel', 'batch-{{ b.id }}.xlsx')"><i class="fa-solid fa-file-excel text-emerald-400 w-4 text-center"></i><span>تصدير الى ملف اكسل</span></button>{% endif %}
                                 {% if can_access_endpoint('export_batch_text') %}<button type="button" class="w-full text-right px-3.5 py-2 text-slate-200 hover:bg-blue-600 hover:text-white flex items-center gap-2.5 transition cursor-pointer" onclick="downloadBatchFile('/vouchers/batch/{{ b.id }}/text', 'batch-{{ b.id }}.txt')"><i class="fa-solid fa-file-lines text-sky-400 w-4 text-center"></i><span>تصدير إلى ملف نصي</span></button>{% endif %}
+                                {% if can_access_endpoint('export_batch_provider_pdf') %}<button type="button" class="w-full text-right px-3.5 py-2 text-slate-200 hover:bg-blue-600 hover:text-white flex items-center gap-2.5 transition cursor-pointer" title="مربعات الكروت فقط، للكروت غير المستخدمة" onclick="downloadBatchFile('/vouchers/batch/{{ b.id }}/provider.pdf', 'batch-{{ b.id }}-provider.pdf')"><i class="fa-solid fa-table-cells text-amber-400 w-4 text-center"></i><span>للمزود: PDF مربعات الكروت</span></button>{% endif %}
+                                {% if can_access_endpoint('export_batch_provider_excel') %}<button type="button" class="w-full text-right px-3.5 py-2 text-slate-200 hover:bg-blue-600 hover:text-white flex items-center gap-2.5 transition cursor-pointer" title="كرت في كل صف بلا عناوين، للكروت غير المستخدمة" onclick="downloadBatchFile('/vouchers/batch/{{ b.id }}/provider.xlsx', 'batch-{{ b.id }}-provider.xlsx')"><i class="fa-solid fa-table-list text-amber-400 w-4 text-center"></i><span>للمزود: Excel كرت في كل صف</span></button>{% endif %}
                                 {% if can_access_endpoint('print_cards') %}<button type="button" class="w-full text-right px-3.5 py-2 text-slate-200 hover:bg-blue-600 hover:text-white flex items-center gap-2.5 transition cursor-pointer" data-batch-id="{{ b.id }}" data-batch-name="{{ b.name }}" data-package-name="{{ b.package_name }}" data-package-id="{{ b.package_id }}" data-card-count="{{ b.card_count or 0 }}" data-export-mode="preview" onclick="handlePrintBtnClick(this)"><i class="fa-solid fa-eye text-amber-400 w-4 text-center"></i><span>معاينة</span></button>{% endif %}
                                 <!-- حذف الحزمة -->
                                 {% if can_access_endpoint('delete_batch_action') %}<button type="button" onclick="confirmDeleteBatch({{ b.id|tojson|forceescape }}, {{ b.name|tojson|forceescape }}, {{ b.batch_number|tojson|forceescape }})" class="w-full text-right px-3.5 py-2 mt-1 border-t border-[#1c2840] text-rose-400 hover:bg-rose-600 hover:text-white flex items-center gap-2.5 transition font-semibold cursor-pointer" title="حذف الحزمة">
@@ -371,7 +373,7 @@
             </div>
             <div>
                 <label for="edit_batch_sale_point" class="block text-slate-300 font-semibold mb-1">نقطة البيع</label>
-                <input type="text" id="edit_batch_sale_point" name="sale_point" maxlength="100" placeholder="توزيع عام" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none">
+                <input type="text" id="edit_batch_sale_point" name="sale_point" list="salePointOptions" maxlength="100" placeholder="توزيع عام" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none">
             </div>
             <div class="flex justify-end gap-3 pt-3 border-t border-[#1c2840]">
                 <button type="button" onclick="closeModal('editBatchModal')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold cursor-pointer">إلغاء</button>
@@ -483,8 +485,9 @@
             {% endif %}
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                    <label for="batch_sale_point" class="block text-slate-300 font-semibold mb-1">نقطة البيع</label>
-                    <input type="text" id="batch_sale_point" name="sale_point" maxlength="100" value="{{ fd.sale_point|default('توزيع عام') }}" placeholder="توزيع عام" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none">
+                    <label for="batch_sale_point" class="block text-slate-300 font-semibold mb-1">نقطة البيع {% if can_access_endpoint('sale_points_page') %}<a href="{{ url_for('sale_points_page') }}" class="text-[11px] text-blue-400 hover:underline font-normal">(إدارة)</a>{% endif %}</label>
+                    <datalist id="salePointOptions">{% for name in sale_point_names|default([]) %}<option value="{{ name }}">{% endfor %}</datalist>
+                    <input type="text" id="batch_sale_point" name="sale_point" list="salePointOptions" maxlength="100" value="{{ fd.sale_point|default('توزيع عام') }}" placeholder="توزيع عام" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none">
                 </div>
                 <div class="flex items-end">
                     <label class="flex items-center gap-2.5 cursor-pointer select-none bg-rose-500/10 border border-rose-500/25 rounded-xl px-3 py-2.5 w-full">
@@ -852,7 +855,8 @@ document.addEventListener('DOMContentLoaded',()=> {
             const link = document.createElement('a'); link.href = objectUrl; link.download = filename;
             document.body.appendChild(link); link.click(); link.remove();
             setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
-            operationSwal.fire('الملف جاهز', 'اكتمل تجهيز الملف وبدأ تنزيله.', 'success');
+            const exported = response.headers.get('X-Cards-Exported'), skippedUsed = response.headers.get('X-Cards-Skipped-Used');
+            operationSwal.fire('الملف جاهز', exported ? `صُدّر ${exported} كرت غير مستخدم${skippedUsed && skippedUsed !== '0' ? `، واستُبعد ${skippedUsed} كرت مستخدم` : ''}.` : 'اكتمل تجهيز الملف وبدأ تنزيله.', 'success');
         } catch (error) { operationSwal.uncertain('تعذر التصدير', error.message, 'error'); }
         finally { batchDownloadPending = false; }
     }

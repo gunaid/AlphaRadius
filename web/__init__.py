@@ -473,6 +473,11 @@ def create_app(config=None):
         from services.session_control_service import start_worker as start_session_control
         start_session_control()
     try:
+        from services.sale_point_service import ensure_table as ensure_sale_points_table
+        ensure_sale_points_table()
+    except Exception:
+        logger.exception('Unable to prepare sale points table')
+    try:
         # Optional authenticator second factor for managers (new devices only).
         from services.two_factor_service import ensure_tables as ensure_two_factor_tables
         ensure_two_factor_tables()

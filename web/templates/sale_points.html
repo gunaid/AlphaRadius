@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}نقاط البيع{% endblock %}
+{% block page_title %}نقاط البيع والمحافظ ومزودو الكروت{% endblock %}
+
+{% block content %}
+<div class="space-y-6" dir="rtl">
+  <div class="bg-[#0b0f19] border border-[#1c2840] rounded-2xl p-6 space-y-3 text-xs text-slate-300 leading-6">
+    <h3 class="font-bold text-white text-base flex items-center gap-2.5">
+      <span class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center text-sm"><i class="fa-solid fa-store"></i></span>
+      نقاط البيع
+    </h3>
+    <p>تظهر هذه الأسماء كاختيارات في «نقطة البيع» عند إنشاء الحزمة أو تعديلها، وتُجمع المبيعات حسبها في التقارير.
+       المحافظ الإلكترونية ومزودو الكروت (مثل <bdi dir="ltr">kurootalshabakah.tabweeb.com.ye</bdi>) نقاط بيع أيضًا.</p>
+    <p>لتسليم حزمة لمزود الكروت: من قائمة إجراءات الحزمة اختر «للمزود: PDF مربعات الكروت» أو «للمزود: Excel كرت في كل صف».
+       الملف يحتوي الكروت غير المستخدمة فقط، دون أي معلومات أخرى.</p>
+  </div>
+
+  {% if can_manage %}
+  <form method="POST" action="{{ url_for('sale_point_save') }}" class="bg-[#0b0f19] border border-[#1c2840] rounded-2xl p-5 grid grid-cols-1 md:grid-cols-4 gap-3 text-xs text-slate-300 items-end">
+    <input type="hidden" name="id" id="sp_id" value="">
+    <label>الاسم<input type="text" name="name" id="sp_name" maxlength="100" required class="block mt-1 w-full bg-[#070b14] border border-slate-700 rounded-lg px-2 py-1.5 text-white"></label>
+    <label>النوع<select name="kind" id="sp_kind" class="block mt-1 w-full bg-[#070b14] border border-slate-700 rounded-lg px-2 py-1.5 text-white">
+      {% for key, label in kinds %}<option value="{{ key }}">{{ label }}</option>{% endfor %}</select></label>
+    <label>ملاحظة<input type="text" name="note" id="sp_note" maxlength="250" class="block mt-1 w-full bg-[#070b14] border border-slate-700 rounded-lg px-2 py-1.5 text-white"></label>
+    <div class="flex gap-2">
+      <button type="submit" class="flex-1 px-4 py-2 rounded-xl font-bold bg-blue-600 text-white" id="sp_submit">إضافة</button>
+      <button type="button" onclick="resetSalePoint()" class="px-3 py-2 rounded-xl bg-slate-700 text-white">جديد</button>
+    </div>
+  </form>
+  {% endif %}
+
+  <div class="bg-[#0b0f19] border border-[#1c2840] rounded-2xl p-5 overflow-x-auto">
+    <table class="w-full text-xs text-right">
+      <thead class="text-slate-400"><tr><th class="py-2">الاسم</th><th>النوع</th><th>الحزم</th><th>الكروت</th><th>غير مستخدمة</th><th>ملاحظة</th><th>الحالة</th><th></th></tr></thead>
+      <tbody class="divide-y divide-[#1c2840] text-slate-200">
+        {% for p in points %}{% set c = counts.get(p.name, {}) %}
+        <tr class="{{ '' if p.is_active else 'opacity-50' }}">
+          <td class="py-2 font-bold">{{ p.name }}</td><td>{{ p.kind_name }}</td>
+          <td>{{ c.batches or 0 }}</td><td>{{ c.cards or 0 }}</td><td>{{ c.unused or 0 }}</td>
+          <td class="text-slate-400">{{ p.note }}</td><td>{{ 'نشطة' if p.is_active else 'موقوفة' }}</td>
+          <td class="whitespace-nowrap">{% if can_manage %}
+            <button type="button" class="text-blue-400 hover:text-blue-300 ml-3" onclick='editSalePoint({{ p.id|tojson }}, {{ p.name|tojson }}, {{ p.kind|tojson }}, {{ p.note|tojson }})'>تعديل</button>
+            <form method="POST" action="{{ url_for('sale_point_toggle', point_id=p.id) }}" class="inline"><button type="submit" class="text-amber-400 hover:text-amber-300">{{ 'إيقاف' if p.is_active else 'تفعيل' }}</button></form>
+          {% endif %}</td>
+        </tr>
+        {% else %}<tr><td colspan="8" class="py-4 text-center text-slate-500">لا توجد نقاط بيع.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+    <p class="text-[11px] text-slate-500 mt-3">تعديل الاسم يحدّث الحزم التي تحمل الاسم القديم. الإيقاف يخفي الاسم من الاختيارات فقط.</p>
+  </div>
+</div>
+<script>
+  function editSalePoint(id, name, kind, note) {
+    document.getElementById('sp_id').value = id; document.getElementById('sp_name').value = name;
+    document.getElementById('sp_kind').value = kind; document.getElementById('sp_note').value = note || '';
+    document.getElementById('sp_submit').textContent = 'حفظ التعديل'; window.scrollTo({top: 0, behavior: 'smooth'});
+  }
+  function resetSalePoint() {
+    ['sp_id', 'sp_name', 'sp_note'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('sp_kind').value = 'shop'; document.getElementById('sp_submit').textContent = 'إضافة';
+  }
+</script>
+{% endblock %}

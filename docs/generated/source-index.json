@@ -6814,6 +6814,47 @@
       ]
     },
     {
+      "file": "services/provider_export_service.py",
+      "sha256": "6fbe7e51f575fd306447d44e34300b90412951dbbbe9ff3efc7476967ac4dc6b",
+      "imports": [
+        "database.db",
+        "openpyxl",
+        "services.batch_export_service"
+      ],
+      "definitions": [
+        {
+          "name": "card_values",
+          "line": 20,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "provider_cards",
+          "line": 30,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "rows",
+          "line": 40,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "workbook",
+          "line": 58,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "pdf_pages",
+          "line": 78,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "download_name",
+          "line": 102,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
       "file": "services/quick_action_service.py",
       "sha256": "ba79d2695f68a79495a847941891fc73968aedab086c9ed9caeac1f276b4c884",
       "imports": [
@@ -7501,6 +7542,45 @@
         {
           "name": "router_rows",
           "line": 35,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "file": "services/sale_point_service.py",
+      "sha256": "cf4de13efbf21f35d86714888960a9c8bf805b39c7b9fbaadc4d4b75ba7c73f1",
+      "imports": [
+        "database.db"
+      ],
+      "definitions": [
+        {
+          "name": "ensure_table",
+          "line": 28,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "clean",
+          "line": 44,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "list_points",
+          "line": 53,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "save_point",
+          "line": 65,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "toggle_point",
+          "line": 84,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "batch_counts",
+          "line": 89,
           "kind": "FunctionDef"
         }
       ]
@@ -10331,7 +10411,7 @@
     },
     {
       "file": "web/__init__.py",
-      "sha256": "499f4db08e37ea728b79c5d29ca46dc7d7921337d7a64f439bd552b8f20c4c9a",
+      "sha256": "7886058b145cca627e0ca59c53819789d717566b00a04434d780dbf5a25ce577",
       "imports": [
         "core.config",
         "core.license_feature_policy",
@@ -10349,6 +10429,7 @@
         "services.heavy_operation_service",
         "services.license_guard_service",
         "services.roaming_service",
+        "services.sale_point_service",
         "services.sales_source_service",
         "services.session_control_service",
         "services.traffic_sample_service",
@@ -10418,7 +10499,7 @@
         },
         {
           "name": "operation_busy",
-          "line": 487,
+          "line": 492,
           "kind": "FunctionDef"
         }
       ]
@@ -10567,12 +10648,12 @@
     },
     {
       "file": "web/endpoint_permissions.py",
-      "sha256": "8462fdda2ba1092bf854e3033183a978e1f4d7cb862344f7c16373fae42890c2",
+      "sha256": "54f5cdbca2f60ed31cc3dcc1ee54609836a261d0bc21839b395604e537a899ef",
       "imports": [],
       "definitions": [
         {
           "name": "endpoint_permissions",
-          "line": 280,
+          "line": 285,
           "kind": "FunctionDef"
         }
       ]
@@ -12369,7 +12450,7 @@
     },
     {
       "file": "web/routes/vouchers.py",
-      "sha256": "203d00443d01e10ff8121735e2b33089eed91af8a943a6942a7e6a956950e48f",
+      "sha256": "b02a3e853a8537b55a05faafa0053c7534c4fdc64050ed90e8ce352382087f9b",
       "imports": [
         "core.config",
         "core.mikrotik_api",
@@ -12394,11 +12475,13 @@
         "services.manager_service",
         "services.nas_service",
         "services.pdf_export_service",
+        "services.provider_export_service",
         "services.quick_action_service",
         "services.quick_card_service",
         "services.quota_service",
         "services.renewal_settlement_service",
         "services.reseller_service",
+        "services.sale_point_service",
         "services.session_display_service",
         "services.session_history_service",
         "services.stats_service",
@@ -12421,162 +12504,192 @@
         },
         {
           "name": "api_voucher_mac_policy",
-          "line": 93,
+          "line": 94,
           "kind": "FunctionDef"
         },
         {
           "name": "vouchers",
-          "line": 100,
+          "line": 101,
           "kind": "FunctionDef"
         },
         {
           "name": "generate_vouchers_action",
-          "line": 167,
+          "line": 174,
           "kind": "FunctionDef"
         },
         {
           "name": "view_batch_details",
-          "line": 222,
+          "line": 229,
           "kind": "FunctionDef"
         },
         {
           "name": "edit_batch_action",
-          "line": 252,
+          "line": 259,
           "kind": "FunctionDef"
         },
         {
           "name": "batches_bulk_action",
-          "line": 267,
+          "line": 274,
           "kind": "FunctionDef"
         },
         {
           "name": "edit_card_action",
-          "line": 389,
+          "line": 396,
           "kind": "FunctionDef"
         },
         {
           "name": "active_card_users",
-          "line": 406,
+          "line": 413,
           "kind": "FunctionDef"
         },
         {
           "name": "active_card_user_details",
-          "line": 767,
+          "line": 774,
           "kind": "FunctionDef"
         },
         {
           "name": "edit_active_card_action",
-          "line": 923,
+          "line": 930,
           "kind": "FunctionDef"
         },
         {
           "name": "edit_active_card_package",
-          "line": 942,
+          "line": 949,
           "kind": "FunctionDef"
         },
         {
           "name": "update_card_action",
-          "line": 976,
+          "line": 983,
           "kind": "FunctionDef"
         },
         {
           "name": "card_inspect",
-          "line": 997,
+          "line": 1004,
           "kind": "FunctionDef"
         },
         {
           "name": "api_reset_voucher_mac",
-          "line": 1139,
+          "line": 1146,
           "kind": "FunctionDef"
         },
         {
           "name": "api_extend_voucher",
-          "line": 1157,
+          "line": 1164,
           "kind": "FunctionDef"
         },
         {
           "name": "api_disconnect_voucher",
-          "line": 1171,
+          "line": 1178,
           "kind": "FunctionDef"
         },
         {
           "name": "api_activate_voucher",
-          "line": 1181,
+          "line": 1188,
           "kind": "FunctionDef"
         },
         {
           "name": "voucher_designs_list",
-          "line": 1197,
+          "line": 1204,
           "kind": "FunctionDef"
         },
         {
           "name": "new_voucher_design",
-          "line": 1207,
+          "line": 1214,
           "kind": "FunctionDef"
         },
         {
           "name": "edit_voucher_design",
-          "line": 1232,
+          "line": 1239,
           "kind": "FunctionDef"
         },
         {
           "name": "save_card_design_api",
-          "line": 1267,
+          "line": 1274,
           "kind": "FunctionDef"
         },
         {
           "name": "upload_card_bg_api",
-          "line": 1285,
+          "line": 1292,
           "kind": "FunctionDef"
         },
         {
           "name": "delete_card_design_api",
-          "line": 1321,
+          "line": 1328,
           "kind": "FunctionDef"
         },
         {
           "name": "set_default_card_design_api",
-          "line": 1341,
+          "line": 1348,
           "kind": "FunctionDef"
         },
         {
           "name": "duplicate_card_design_api",
-          "line": 1361,
+          "line": 1368,
           "kind": "FunctionDef"
         },
         {
           "name": "print_cards",
-          "line": 1379,
+          "line": 1386,
           "kind": "FunctionDef"
         },
         {
           "name": "parts",
-          "line": 1464,
+          "line": 1471,
           "kind": "FunctionDef"
         },
         {
           "name": "parts",
-          "line": 1470,
+          "line": 1477,
           "kind": "FunctionDef"
         },
         {
           "name": "export_batch_excel",
-          "line": 1494,
+          "line": 1501,
           "kind": "FunctionDef"
         },
         {
           "name": "export_batch_text",
-          "line": 1513,
+          "line": 1520,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_provider_response",
+          "line": 1549,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "export_batch_provider_pdf",
+          "line": 1582,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "export_batch_provider_excel",
+          "line": 1592,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "sale_points_page",
+          "line": 1602,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "sale_point_save",
+          "line": 1609,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "sale_point_toggle",
+          "line": 1625,
           "kind": "FunctionDef"
         },
         {
           "name": "delete_batch_action",
-          "line": 1544,
+          "line": 1636,
           "kind": "FunctionDef"
         },
         {
           "name": "voucher_sessions_pdf",
-          "line": 1556,
+          "line": 1648,
           "kind": "FunctionDef"
         }
       ]
@@ -15826,7 +15939,7 @@
       "endpoint": "api_voucher_mac_policy",
       "handler": "api_voucher_mac_policy",
       "file": "web/routes/vouchers.py",
-      "line": 93
+      "line": 94
     },
     {
       "rule": "/vouchers",
@@ -15837,7 +15950,7 @@
       "endpoint": "vouchers",
       "handler": "vouchers",
       "file": "web/routes/vouchers.py",
-      "line": 100
+      "line": 101
     },
     {
       "rule": "/vouchers/generate",
@@ -15848,7 +15961,7 @@
       "endpoint": "generate_vouchers_action",
       "handler": "generate_vouchers_action",
       "file": "web/routes/vouchers.py",
-      "line": 167
+      "line": 174
     },
     {
       "rule": "/vouchers/batch/<int:batch_id>",
@@ -15859,7 +15972,7 @@
       "endpoint": "view_batch_details",
       "handler": "view_batch_details",
       "file": "web/routes/vouchers.py",
-      "line": 222
+      "line": 229
     },
     {
       "rule": "/vouchers/batch/edit/<int:batch_id>",
@@ -15870,7 +15983,7 @@
       "endpoint": "edit_batch_action",
       "handler": "edit_batch_action",
       "file": "web/routes/vouchers.py",
-      "line": 252
+      "line": 259
     },
     {
       "rule": "/vouchers/batches/bulk-action",
@@ -15881,7 +15994,7 @@
       "endpoint": "batches_bulk_action",
       "handler": "batches_bulk_action",
       "file": "web/routes/vouchers.py",
-      "line": 267
+      "line": 274
     },
     {
       "rule": "/vouchers/card/edit/<int:card_id>",
@@ -15892,7 +16005,7 @@
       "endpoint": "edit_card_action",
       "handler": "edit_card_action",
       "file": "web/routes/vouchers.py",
-      "line": 389
+      "line": 396
     },
     {
       "rule": "/vouchers/active-users",
@@ -15903,7 +16016,7 @@
       "endpoint": "active_card_users",
       "handler": "active_card_users",
       "file": "web/routes/vouchers.py",
-      "line": 406
+      "line": 413
     },
     {
       "rule": "/vouchers/active-users/<int:card_id>",
@@ -15914,7 +16027,7 @@
       "endpoint": "active_card_user_details",
       "handler": "active_card_user_details",
       "file": "web/routes/vouchers.py",
-      "line": 767
+      "line": 774
     },
     {
       "rule": "/vouchers/active-users/edit/<int:card_id>",
@@ -15925,7 +16038,7 @@
       "endpoint": "edit_active_card_action",
       "handler": "edit_active_card_action",
       "file": "web/routes/vouchers.py",
-      "line": 923
+      "line": 930
     },
     {
       "rule": "/vouchers/active-users/<int:card_id>/edit-package",
@@ -15936,7 +16049,7 @@
       "endpoint": "edit_active_card_package",
       "handler": "edit_active_card_package",
       "file": "web/routes/vouchers.py",
-      "line": 942
+      "line": 949
     },
     {
       "rule": "/vouchers/update-card",
@@ -15947,7 +16060,7 @@
       "endpoint": "update_card_action",
       "handler": "update_card_action",
       "file": "web/routes/vouchers.py",
-      "line": 976
+      "line": 983
     },
     {
       "rule": "/vouchers/inspect",
@@ -15958,7 +16071,7 @@
       "endpoint": "card_inspect",
       "handler": "card_inspect",
       "file": "web/routes/vouchers.py",
-      "line": 997
+      "line": 1004
     },
     {
       "rule": "/card-inspect",
@@ -15969,7 +16082,7 @@
       "endpoint": "card_inspect",
       "handler": "card_inspect",
       "file": "web/routes/vouchers.py",
-      "line": 997
+      "line": 1004
     },
     {
       "rule": "/card/inspect",
@@ -15980,7 +16093,7 @@
       "endpoint": "card_inspect",
       "handler": "card_inspect",
       "file": "web/routes/vouchers.py",
-      "line": 997
+      "line": 1004
     },
     {
       "rule": "/api/vouchers/reset-mac",
@@ -15991,7 +16104,7 @@
       "endpoint": "api_reset_voucher_mac",
       "handler": "api_reset_voucher_mac",
       "file": "web/routes/vouchers.py",
-      "line": 1139
+      "line": 1146
     },
     {
       "rule": "/api/vouchers/extend-quota-time",
@@ -16002,7 +16115,7 @@
       "endpoint": "api_extend_voucher",
       "handler": "api_extend_voucher",
       "file": "web/routes/vouchers.py",
-      "line": 1157
+      "line": 1164
     },
     {
       "rule": "/api/vouchers/disconnect",
@@ -16013,7 +16126,7 @@
       "endpoint": "api_disconnect_voucher",
       "handler": "api_disconnect_voucher",
       "file": "web/routes/vouchers.py",
-      "line": 1171
+      "line": 1178
     },
     {
       "rule": "/api/vouchers/activate",
@@ -16024,7 +16137,7 @@
       "endpoint": "api_activate_voucher",
       "handler": "api_activate_voucher",
       "file": "web/routes/vouchers.py",
-      "line": 1181
+      "line": 1188
     },
     {
       "rule": "/vouchers/designs",
@@ -16035,7 +16148,7 @@
       "endpoint": "voucher_designs_list",
       "handler": "voucher_designs_list",
       "file": "web/routes/vouchers.py",
-      "line": 1197
+      "line": 1204
     },
     {
       "rule": "/vouchers/designer",
@@ -16046,7 +16159,7 @@
       "endpoint": "card_designer",
       "handler": "voucher_designs_list",
       "file": "web/routes/vouchers.py",
-      "line": 1197
+      "line": 1204
     },
     {
       "rule": "/card-designer",
@@ -16057,7 +16170,7 @@
       "endpoint": "card_designer_short",
       "handler": "voucher_designs_list",
       "file": "web/routes/vouchers.py",
-      "line": 1197
+      "line": 1204
     },
     {
       "rule": "/vouchers/designs/new",
@@ -16068,7 +16181,7 @@
       "endpoint": "new_voucher_design",
       "handler": "new_voucher_design",
       "file": "web/routes/vouchers.py",
-      "line": 1207
+      "line": 1214
     },
     {
       "rule": "/vouchers/designs/<int:design_id>",
@@ -16079,7 +16192,7 @@
       "endpoint": "edit_voucher_design_direct",
       "handler": "edit_voucher_design",
       "file": "web/routes/vouchers.py",
-      "line": 1232
+      "line": 1239
     },
     {
       "rule": "/vouchers/designs/edit/<int:design_id>",
@@ -16090,7 +16203,7 @@
       "endpoint": "edit_voucher_design",
       "handler": "edit_voucher_design",
       "file": "web/routes/vouchers.py",
-      "line": 1232
+      "line": 1239
     },
     {
       "rule": "/api/vouchers/designs/save",
@@ -16101,7 +16214,7 @@
       "endpoint": "save_card_design_api",
       "handler": "save_card_design_api",
       "file": "web/routes/vouchers.py",
-      "line": 1267
+      "line": 1274
     },
     {
       "rule": "/api/vouchers/designer/save",
@@ -16112,7 +16225,7 @@
       "endpoint": "save_card_design_api",
       "handler": "save_card_design_api",
       "file": "web/routes/vouchers.py",
-      "line": 1267
+      "line": 1274
     },
     {
       "rule": "/vouchers/designer/save",
@@ -16123,7 +16236,7 @@
       "endpoint": "save_card_designer_action",
       "handler": "save_card_design_api",
       "file": "web/routes/vouchers.py",
-      "line": 1267
+      "line": 1274
     },
     {
       "rule": "/vouchers/designer/save",
@@ -16134,7 +16247,7 @@
       "endpoint": "save_card_design_api",
       "handler": "save_card_design_api",
       "file": "web/routes/vouchers.py",
-      "line": 1267
+      "line": 1274
     },
     {
       "rule": "/api/vouchers/designs/upload-bg",
@@ -16145,7 +16258,7 @@
       "endpoint": "upload_card_bg_api",
       "handler": "upload_card_bg_api",
       "file": "web/routes/vouchers.py",
-      "line": 1285
+      "line": 1292
     },
     {
       "rule": "/api/vouchers/designs/upload-image",
@@ -16156,7 +16269,7 @@
       "endpoint": "upload_card_bg_api",
       "handler": "upload_card_bg_api",
       "file": "web/routes/vouchers.py",
-      "line": 1285
+      "line": 1292
     },
     {
       "rule": "/api/vouchers/designs/delete/<int:design_id>",
@@ -16167,7 +16280,7 @@
       "endpoint": "delete_card_design_api",
       "handler": "delete_card_design_api",
       "file": "web/routes/vouchers.py",
-      "line": 1321
+      "line": 1328
     },
     {
       "rule": "/vouchers/designs/delete/<int:design_id>",
@@ -16178,7 +16291,7 @@
       "endpoint": "delete_card_design_api",
       "handler": "delete_card_design_api",
       "file": "web/routes/vouchers.py",
-      "line": 1321
+      "line": 1328
     },
     {
       "rule": "/api/vouchers/designs/set-default/<int:design_id>",
@@ -16189,7 +16302,7 @@
       "endpoint": "set_default_card_design_api",
       "handler": "set_default_card_design_api",
       "file": "web/routes/vouchers.py",
-      "line": 1341
+      "line": 1348
     },
     {
       "rule": "/vouchers/designs/set-default/<int:design_id>",
@@ -16200,7 +16313,7 @@
       "endpoint": "set_default_card_design_api",
       "handler": "set_default_card_design_api",
       "file": "web/routes/vouchers.py",
-      "line": 1341
+      "line": 1348
     },
     {
       "rule": "/api/vouchers/designs/duplicate/<int:design_id>",
@@ -16211,7 +16324,7 @@
       "endpoint": "duplicate_card_design_api",
       "handler": "duplicate_card_design_api",
       "file": "web/routes/vouchers.py",
-      "line": 1361
+      "line": 1368
     },
     {
       "rule": "/vouchers/designs/duplicate/<int:design_id>",
@@ -16222,7 +16335,7 @@
       "endpoint": "duplicate_card_design_api",
       "handler": "duplicate_card_design_api",
       "file": "web/routes/vouchers.py",
-      "line": 1361
+      "line": 1368
     },
     {
       "rule": "/vouchers/print/<int:batch_id>",
@@ -16233,7 +16346,7 @@
       "endpoint": "print_cards",
       "handler": "print_cards",
       "file": "web/routes/vouchers.py",
-      "line": 1379
+      "line": 1386
     },
     {
       "rule": "/vouchers/batch/<int:batch_id>/excel",
@@ -16244,7 +16357,7 @@
       "endpoint": "export_batch_excel",
       "handler": "export_batch_excel",
       "file": "web/routes/vouchers.py",
-      "line": 1494
+      "line": 1501
     },
     {
       "rule": "/vouchers/batch/<int:batch_id>/text",
@@ -16255,7 +16368,62 @@
       "endpoint": "export_batch_text",
       "handler": "export_batch_text",
       "file": "web/routes/vouchers.py",
-      "line": 1513
+      "line": 1520
+    },
+    {
+      "rule": "/vouchers/batch/<int:batch_id>/provider.pdf",
+      "blueprint": "vouchers_bp",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "export_batch_provider_pdf",
+      "handler": "export_batch_provider_pdf",
+      "file": "web/routes/vouchers.py",
+      "line": 1582
+    },
+    {
+      "rule": "/vouchers/batch/<int:batch_id>/provider.xlsx",
+      "blueprint": "vouchers_bp",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "export_batch_provider_excel",
+      "handler": "export_batch_provider_excel",
+      "file": "web/routes/vouchers.py",
+      "line": 1592
+    },
+    {
+      "rule": "/vouchers/sale-points",
+      "blueprint": "vouchers_bp",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "sale_points_page",
+      "handler": "sale_points_page",
+      "file": "web/routes/vouchers.py",
+      "line": 1602
+    },
+    {
+      "rule": "/vouchers/sale-points/save",
+      "blueprint": "vouchers_bp",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "sale_point_save",
+      "handler": "sale_point_save",
+      "file": "web/routes/vouchers.py",
+      "line": 1609
+    },
+    {
+      "rule": "/vouchers/sale-points/<int:point_id>/toggle",
+      "blueprint": "vouchers_bp",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "sale_point_toggle",
+      "handler": "sale_point_toggle",
+      "file": "web/routes/vouchers.py",
+      "line": 1625
     },
     {
       "rule": "/vouchers/delete-batch/<int:batch_id>",
@@ -16266,7 +16434,7 @@
       "endpoint": "delete_batch_action",
       "handler": "delete_batch_action",
       "file": "web/routes/vouchers.py",
-      "line": 1544
+      "line": 1636
     },
     {
       "rule": "/vouchers/active-users/<int:card_id>/sessions.pdf",
@@ -16277,7 +16445,7 @@
       "endpoint": "voucher_sessions_pdf",
       "handler": "voucher_sessions_pdf",
       "file": "web/routes/vouchers.py",
-      "line": 1556
+      "line": 1648
     },
     {
       "rule": "/whatsapp/dashboard",

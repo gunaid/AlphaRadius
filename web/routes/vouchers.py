@@ -66,7 +66,8 @@ vouchers_bp = Blueprint('vouchers_bp', __name__)
 @vouchers_bp.before_request
 def guard_voucher_permissions():
     endpoint = (request.endpoint or '').split('.')[-1]
-    if 'design' in endpoint or endpoint in ('print_cards','export_batch_excel','export_batch_text','upload_card_bg_api'):
+    if 'design' in endpoint or endpoint in ('print_cards','export_batch_excel','export_batch_text','upload_card_bg_api',
+                                            'export_batch_provider_pdf','export_batch_provider_excel'):
         permission = 'vouchers.print'
     elif endpoint=='generate_vouchers_action':
         permission = 'vouchers.generate'
@@ -141,8 +142,14 @@ def vouchers():
     from services.batch_form_defaults import load as load_batch_form_defaults
     manager = get_current_manager() or {}
     auto_pdf_batch = request.args.get('auto_pdf', '').strip()
+    try:
+        from services.sale_point_service import list_points
+        sale_point_names = [p['name'] for p in list_points(active_only=True)]
+    except Exception:
+        sale_point_names = []
     return render_template('vouchers.html',
                            batch_form_defaults=load_batch_form_defaults(manager.get('id')),
+                           sale_point_names=sale_point_names,
                            auto_pdf_batch=int(auto_pdf_batch) if auto_pdf_batch.isdigit() else None,
                            list_sort=list_sort,
                            batches=batches,
@@ -1537,6 +1544,91 @@ def export_batch_text(batch_id):
             payload.close()
         logger.exception('Batch text export failed')
         return jsonify(success=False, message='تعذر تجهيز الملف النصي. أعد المحاولة بعد قليل.'), 503
+
+
+def _provider_response(batch_id, kind):
+    from services.provider_export_service import provider_cards, workbook, pdf_pages, download_name
+    try:
+        batch, values, skipped = provider_cards(batch_id, owner_id())
+    except LookupError:
+        return jsonify(success=False, message='الحزمة غير موجودة.'), 404
+    except ValueError as exc:
+        return jsonify(success=False, message=str(exc)), 409
+    if not values:
+        return jsonify(success=False, message='لا توجد كروت غير مستخدمة في هذه الحزمة للتصدير للمزود.'), 409
+    if kind == 'xlsx':
+        payload = workbook(values)
+        mimetype = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    else:
+        from services.pdf_export_service import render_parts
+        payload = render_parts(pdf_pages(values), current_app.static_folder, timeout=900)
+        mimetype = 'application/pdf'
+    response = send_file(payload, mimetype=mimetype, as_attachment=True,
+                         download_name=download_name(batch_id, kind, batch['name']), max_age=0)
+    if hasattr(payload, 'close'):
+        response.call_on_close(payload.close)
+    response.headers['Cache-Control'] = 'no-store, private'
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Cards-Exported'] = str(len(values))
+    response.headers['X-Cards-Skipped-Used'] = str(skipped)
+    manager = get_current_manager() or {}
+    log_audit(manager.get('id'), manager.get('username', 'admin'), 'PROVIDER_EXPORT', 'vouchers',
+              f'batch={batch_id} format={kind} cards={len(values)} skipped_used={skipped}')
+    return response
+
+
+@vouchers_bp.route('/vouchers/batch/<int:batch_id>/provider.pdf', endpoint='export_batch_provider_pdf')
+@heavy_operation
+def export_batch_provider_pdf(batch_id):
+    """Card provider PDF: boxes with the card code only (unused cards)."""
+    try:
+        return _provider_response(batch_id, 'pdf')
+    except Exception:
+        logger.exception('Provider PDF export failed')
+        return jsonify(success=False, message='تعذر تجهيز PDF للمزود. أعد المحاولة بعد قليل.'), 503
+
+
+@vouchers_bp.route('/vouchers/batch/<int:batch_id>/provider.xlsx', endpoint='export_batch_provider_excel')
+def export_batch_provider_excel(batch_id):
+    """Card provider Excel: one unused card per row, no header."""
+    try:
+        return _provider_response(batch_id, 'xlsx')
+    except Exception:
+        logger.exception('Provider Excel export failed')
+        return jsonify(success=False, message='تعذر تجهيز ملف Excel للمزود.'), 503
+
+
+@vouchers_bp.route('/vouchers/sale-points', endpoint='sale_points_page')
+def sale_points_page():
+    from services.sale_point_service import list_points, batch_counts, KINDS
+    return render_template('sale_points.html', points=list_points(), counts=batch_counts(), kinds=KINDS,
+                           can_manage=owner_id() is None and has_permission('vouchers.actions'))
+
+
+@vouchers_bp.route('/vouchers/sale-points/save', methods=['POST'], endpoint='sale_point_save')
+def sale_point_save():
+    from services.sale_point_service import save_point
+    if owner_id() is not None:
+        return jsonify(success=False, message='نقاط البيع يديرها مدير الشبكة.'), 403
+    try:
+        point_id = request.form.get('id', '').strip()
+        name = save_point(request.form, int(point_id) if point_id.isdigit() else None)
+        manager = get_current_manager() or {}
+        log_audit(manager.get('id'), manager.get('username', 'admin'), 'SALE_POINT_SAVE', 'vouchers', name)
+        flash('حُفظت نقطة البيع.', 'success')
+    except ValueError as exc:
+        flash(str(exc), 'danger')
+    return redirect(url_for('sale_points_page'))
+
+
+@vouchers_bp.route('/vouchers/sale-points/<int:point_id>/toggle', methods=['POST'], endpoint='sale_point_toggle')
+def sale_point_toggle(point_id):
+    from services.sale_point_service import toggle_point
+    if owner_id() is not None:
+        return jsonify(success=False, message='نقاط البيع يديرها مدير الشبكة.'), 403
+    toggle_point(point_id)
+    flash('تم تغيير حالة نقطة البيع.', 'info')
+    return redirect(url_for('sale_points_page'))
 
 
 @vouchers_bp.route('/vouchers/delete-batch/<int:batch_id>', methods=['POST'], endpoint="delete_batch_action")
