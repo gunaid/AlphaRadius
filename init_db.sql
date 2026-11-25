@@ -576,7 +576,7 @@ INSERT INTO `wisp_system_settings` (`key`, `value`, `description`) VALUES
 ('currency', 'YER', 'رمز كود العملة'),
 ('currency_symbol', 'ر.ي', 'رمز العملة المعروض'),
 ('timezone', 'Asia/Aden', 'المنطقة الزمنية للنظام'),
-('support_phone', '777366226', 'رقم هاتف الدعم الفني'),
+('support_phone', '770555622', 'رقم هاتف الدعم الفني'),
 ('support_email', 'support@alpha-radius.net', 'البريد الإلكتروني للدعم الفني'),
 ('address', 'المركز الرئيسي لخدمات الإنترنت', 'العنوان والمقر'),
 ('hotspot_domain', 'wifi.alpharadius.net', 'نطاق صفحة تسجيل الدخول'),

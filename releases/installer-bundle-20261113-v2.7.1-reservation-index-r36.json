@@ -3,7 +3,7 @@
   "archive_sha256": "80606a194eb0bb761abd1e3c2df91aa1604f421fef30003a7ce7343f12181644",
   "members_lf_sha256": {
     "docker-compose.production.yml": "0d4bf475f9cb44ade6d305bfdddaed8b3dfe27c9e429fe23b15f655e708a8f64",
-    "database/schema_mysql.sql": "90311185880ce30103b1951d7d49778a4d945048c2891cc5c8cd0dddae8c2450",
+    "database/schema_mysql.sql": "a7f17510596347544acbab66c058b8f73f072420b93ee0e1114cf06c1b7a04aa",
     "docker/l2tp/options.xl2tpd": "b52c69d2254f7648efd426958dd72de0704c96ba1f33d327f31a657e80922995",
     "storage/keys/master_public_key.pem": "a8b67f0e653ea0e00ebc12b96bcec62981b514890a4d325b83014b8afac28a06",
     "host/clock-guard/clock_ready.py": "fb26a7fa8877a505f3d70f67cf3c6fcdf941bd8c641eb2f6ab83b32d89dcd377",

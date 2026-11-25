@@ -29,7 +29,7 @@ embedding = load('template_embedding_fixture', 'packaging/embed_templates.py')
 class ProductProtectionTests(unittest.TestCase):
     def test_identity_has_one_approved_destination(self):
         value = identity.get_product_identity()
-        self.assertEqual(value['phone'], '967777366226')
+        self.assertEqual(value['phone'], '967770555622')
         self.assertEqual(value['whatsapp_url'], 'https://wa.me/' + value['phone'])
         self.assertEqual(value['telephone_url'], 'tel:+' + value['phone'])
 
@@ -83,16 +83,16 @@ class ProductProtectionTests(unittest.TestCase):
 
     def test_license_view_displays_contact_without_automatic_send(self):
         html = self.render_license()
-        self.assertIn('https://wa.me/967777366226', html)
-        self.assertIn('tel:+967777366226', html)
+        self.assertIn('https://wa.me/967770555622', html)
+        self.assertIn('tel:+967770555622', html)
         self.assertNotIn('wa.me/967777123456', html)
         self.assertNotIn('wa.me/967777000000', html)
-        self.assertNotIn('wa.me/967777366226?text=', html)
+        self.assertNotIn('wa.me/967770555622?text=', html)
 
     def test_integrity_warning_is_not_license_enforcement(self):
         html = self.render_license('modified')
         self.assertIn('لا يوقف المصادقة أو المحاسبة', html)
-        self.assertIn('https://wa.me/967777366226', html)
+        self.assertIn('https://wa.me/967770555622', html)
 
     def test_owner_support_stays_separate(self):
         for relative in ('web/templates/user_portal/login.html', 'web/templates/user_portal/dashboard.html'):

@@ -612,7 +612,7 @@
     },
     {
       "file": "core/product_identity.py",
-      "sha256": "3b479798a9c2dd2446334f0a7d65e67df4a02a68146f77c32357b4ce7355019f",
+      "sha256": "036709315834b807aa8a242d8443fc6d60e62e6e14aa0589a48cd1bca10c3b37",
       "imports": [
         "types"
       ],

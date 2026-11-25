@@ -17,7 +17,7 @@
     "core/mikrotik_api.py": "b6657c1a289b4089e5ddf3b306aac4423207ca174cfa83d9c9b7ef1f15749c26",
     "core/ownership.py": "7e7d016a00a8284a847ce363d35561c875d1066d20c08bbe505bbcc6a79b23e2",
     "core/permission_catalog.py": "5362dbab4d9cf717ca579fd83fa8a86f60e2b55c02290569e9904e5003d0f7af",
-    "core/product_identity.py": "3b479798a9c2dd2446334f0a7d65e67df4a02a68146f77c32357b4ce7355019f",
+    "core/product_identity.py": "036709315834b807aa8a242d8443fc6d60e62e6e14aa0589a48cd1bca10c3b37",
     "core/radius_sync.py": "1c72b4d7ccb8fc77a07560f28c5680602d653faa292fa6b32ae3536ce02774c2",
     "core/rate_limit.py": "31148936c6174e3155d7a811d11848828ffaf9c81c4ccdfcfe15ac62fea16c6f",
     "core/rbac.py": "96f54008727f0973d06800f6c04cb152c24d02b507256c89ead34d1473e6139b",

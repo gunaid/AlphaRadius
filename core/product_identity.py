@@ -8,9 +8,9 @@ from types import MappingProxyType
 PRODUCT_IDENTITY = MappingProxyType({
     'name': 'ALPHA RADIUS',
     'owner': 'ALPHA RADIUS',
-    'phone': '967777366226',
-    'whatsapp_url': 'https://wa.me/967777366226',
-    'telephone_url': 'tel:+967777366226',
+    'phone': '967770555622',
+    'whatsapp_url': 'https://wa.me/967770555622',
+    'telephone_url': 'tel:+967770555622',
     'website': 'https://alpha.amtik.online',
 })
 

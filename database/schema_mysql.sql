@@ -1138,7 +1138,7 @@ INSERT INTO `wisp_system_settings` VALUES
 ('sms_gateway_url','','إعداد نظام'),
 ('sms_sender_id','ALPHA-RADIUS','اسم مرسل الرسائل'),
 ('support_email','support@alpha-radius.net','البريد الإلكتروني للدعم الفني'),
-('support_phone','777366226','رقم هاتف الدعم الفني'),
+('support_phone','770555622','رقم هاتف الدعم الفني'),
 ('system_title','ALPHA RADIUS - نظام إدارة الشبكات والفوترة و FreeRADIUS','عنوان النظام'),
 ('timezone','Asia/Aden','المنطقة الزمنية للنظام');
 
