@@ -69,7 +69,7 @@
     "deploy/hosted-max/update_controller.py": "ae09065c8e864e2721507b74fa77b74bf3aadfe36dd4a19226d7b4a7be5066c6",
     "docker/freeradius/detail": "a46b7841ef0730000a1c9ea49506e58cb18159c66921ce24f0e48fcef616e678",
     "docker/freeradius/entrypoint.sh": "a539229b72e74d8b332f6f5496a1f4b08fd8335d1335a4a1d86f073908d16c32",
-    "docker/freeradius/license-capacity-postauth.conf": "1bad3778a190cca09fdacd328e77de38f5eaddff066eee94817462a2028795b8",
+    "docker/freeradius/license-capacity-postauth.conf": "bf3d135a6e6060d883fbde18febf2f37f97fc956dfad07a23c49e4037ef15f17",
     "docker/freeradius/alpha-accounting-identity.conf": "5dc23ea8f7a3f3b2b4245520c8dea9a1d2d41ccadcb219f428a8c1edf35fe07d",
     "docker/freeradius/queries.conf": "120b1dbd3b16e01fb5be5e57c178c2d11d4ed8918c151d59081d340625d2bde7",
     "entrypoint.sh": "9bf1be0b1c6165d3493b830762710a7c2dd0f63888cf5c39a949bb8fbccbf150",

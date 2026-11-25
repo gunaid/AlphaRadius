@@ -721,3 +721,108 @@ def api_nas_single_status_compat(nas_id):
     from core.mikrotik_api import fetch_single_nas_status
     status_data = fetch_single_nas_status(device)
     return jsonify({'success': True, 'data': filter_nas_credentials(status_data), 'status': filter_nas_credentials(status_data)})
+
+
+# ------------------------------------------------------------------
+# Cloned MACs: one MAC on many phones. Listed MACs log in without the
+# hotspot MAC cookie (profile copy "<profile>-nocookie" on each router).
+# ------------------------------------------------------------------
+@nas_bp.route('/nas/cloned-macs', endpoint="cloned_macs_page")
+@login_required
+def cloned_macs_page():
+    from services import cloned_mac_service as cloned
+    params = cloned.detection_params(request.args)
+    try:
+        detected = cloned.detect(params)
+        detect_error = ''
+    except Exception as exc:
+        detected, detect_error = [], f'تعذر إنشاء تقرير الكشف ({type(exc).__name__}).'
+    profiles = query_all('''SELECT n.name, n.ip_address, COUNT(p.profile) AS profiles, MAX(p.synced_at) AS synced_at
+                            FROM wisp_nas_devices n LEFT JOIN wisp_cloned_mac_profiles p ON p.nasipaddress=n.ip_address
+                            GROUP BY n.id, n.name, n.ip_address ORDER BY n.id''')
+    return render_template('cloned_macs.html', macs=cloned.list_macs(), detected=detected, params=params,
+                           detect_error=detect_error, enabled=cloned.enabled(), routers=profiles,
+                           suffix=cloned.PROFILE_SUFFIX)
+
+
+def _cloned_admin():
+    manager = get_current_manager()
+    return manager or {}
+
+
+@nas_bp.route('/nas/cloned-macs/add', methods=['POST'], endpoint="cloned_macs_add")
+@login_required
+def cloned_macs_add():
+    from services import cloned_mac_service as cloned
+    manager = _cloned_admin()
+    added, errors = [], []
+    raw = request.form.get('macs') or request.form.get('mac') or ''
+    for value in [v for v in raw.replace(',', '\n').split() if v.strip()][:500]:
+        try:
+            mac, new = cloned.add_mac(value, request.form.get('note', ''), manager.get('username', ''),
+                                      request.form.get('source', 'manual'))
+            if new:
+                added.append(mac)
+        except ValueError:
+            errors.append(value)
+    if added:
+        log_audit(manager.get('id'), manager.get('username', 'admin'), 'cloned_mac_add', 'nas', ', '.join(added)[:900])
+        flash(f'أضيف {len(added)} ماك إلى قائمة الماكات المستنسخة. اضغط «مزامنة الراوترات» لحذف الكوكيز القديمة فورًا.', 'success')
+    if errors:
+        flash('عناوين غير صالحة: ' + ', '.join(errors[:10]), 'danger')
+    if not added and not errors:
+        flash('لم يُضف شيء: الماك موجود بالفعل أو الحقل فارغ.', 'info')
+    return redirect(url_for('cloned_macs_page'))
+
+
+@nas_bp.route('/nas/cloned-macs/delete', methods=['POST'], endpoint="cloned_macs_delete")
+@login_required
+def cloned_macs_delete():
+    from services import cloned_mac_service as cloned
+    manager = _cloned_admin()
+    try:
+        if cloned.remove_mac(request.form.get('mac', '')):
+            log_audit(manager.get('id'), manager.get('username', 'admin'), 'cloned_mac_delete', 'nas',
+                      request.form.get('mac', '')[:32])
+            flash('حُذف الماك من القائمة؛ سيعود له الدخول التلقائي عند دخوله التالي.', 'warning')
+        else:
+            flash('الماك غير موجود في القائمة.', 'info')
+    except ValueError as exc:
+        flash(str(exc), 'danger')
+    return redirect(url_for('cloned_macs_page'))
+
+
+@nas_bp.route('/nas/cloned-macs/settings', methods=['POST'], endpoint="cloned_macs_settings")
+@login_required
+def cloned_macs_settings():
+    from services import cloned_mac_service as cloned
+    manager = _cloned_admin()
+    state = cloned.set_enabled(request.form.get('enabled') in ('1', 'on', 'true'))
+    log_audit(manager.get('id'), manager.get('username', 'admin'), 'cloned_mac_settings', 'nas',
+              'enabled' if state else 'disabled')
+    if state:
+        results = cloned.sync_all()
+        failed = [r for r in results if not r['ok']]
+        flash('فُعّل الدخول بلا كوكي للماكات المستنسخة وتمت مزامنة الراوترات'
+              + (f'؛ تعذرت {len(failed)} راوترات وتبقى على البروفايل الأصلي.' if failed else '.'),
+              'warning' if failed else 'success')
+    else:
+        flash('أوقفت الميزة؛ ترجع الماكات المستنسخة إلى البروفايل الأصلي بكوكي الماك.', 'info')
+    return redirect(url_for('cloned_macs_page'))
+
+
+@nas_bp.route('/nas/cloned-macs/sync', methods=['POST'], endpoint="cloned_macs_sync")
+@login_required
+def cloned_macs_sync():
+    from services import cloned_mac_service as cloned
+    results = cloned.sync_all()
+    ok = [r for r in results if r['ok']]
+    failed = [r for r in results if not r['ok']]
+    cookies = sum(r['cookies'] for r in ok)
+    flash(f'تمت مزامنة {len(ok)} راوتر وحذف {cookies} كوكي ماك قديم.', 'success' if ok else 'warning')
+    for result in failed[:10]:
+        flash(f"{result['nas']}: {result['error']}", 'danger')
+    for result in ok:
+        if result['failed']:
+            flash(f"{result['nas']}: تعذر إنشاء {', '.join(result['failed'][:5])}؛ يبقى البروفايل الأصلي لها.", 'warning')
+    return redirect(url_for('cloned_macs_page'))

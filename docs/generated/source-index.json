@@ -559,27 +559,27 @@
     },
     {
       "file": "core/permission_catalog.py",
-      "sha256": "e254e10d4c9004173e90e1fd3ac9387fd6b36fa6f0bcaf7f33cd260f6de39465",
+      "sha256": "1a933a706bb8999e510ebf9648c36867eba2452b28b54a21d9c03263ca3a442d",
       "imports": [],
       "definitions": [
         {
           "name": "permission_rows",
-          "line": 150,
+          "line": 152,
           "kind": "FunctionDef"
         },
         {
           "name": "base_permission_rows",
-          "line": 204,
+          "line": 206,
           "kind": "FunctionDef"
         },
         {
           "name": "standard_role_permissions",
-          "line": 209,
+          "line": 211,
           "kind": "FunctionDef"
         },
         {
           "name": "required_detail",
-          "line": 253,
+          "line": 255,
           "kind": "FunctionDef"
         }
       ]
@@ -983,6 +983,20 @@
       ]
     },
     {
+      "file": "database/cloned_mac_schema.py",
+      "sha256": "54fa8b0268f0281f55c2a3a64a70a555ea4dbaa93b1d3e2b2cc27fbd8f0c48b7",
+      "imports": [
+        "database.schema_objects"
+      ],
+      "definitions": [
+        {
+          "name": "install_cloned_mac_schema",
+          "line": 49,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
       "file": "database/cycle_safety.py",
       "sha256": "abee37e13e14b73c97f8f2bb36718c16bd306cb9c67ecd20189929d2e72c70f8",
       "imports": [
@@ -1157,8 +1171,9 @@
     },
     {
       "file": "database/license_capacity.py",
-      "sha256": "3918cf0870a89856a18bdb221aff3a7797f2f983909e291561b734a120992770",
+      "sha256": "9f7e4502888c2165d56fc7fd806871e1bc32c92bac4d19bb2a0ee90dc4da1b31",
       "imports": [
+        "database.cloned_mac_schema",
         "database.cycle_safety",
         "database.reservation_indexes",
         "database.roaming_schema",
@@ -1167,12 +1182,12 @@
       "definitions": [
         {
           "name": "resource_limit_trigger",
-          "line": 141,
+          "line": 143,
           "kind": "FunctionDef"
         },
         {
           "name": "install_capacity_schema",
-          "line": 163,
+          "line": 165,
           "kind": "FunctionDef"
         }
       ]
@@ -4237,6 +4252,108 @@
       ]
     },
     {
+      "file": "services/cloned_mac_service.py",
+      "sha256": "cf93275cf2ef43d2bc2d3132fb8b699c24def793c3c72ab7d04b790def74ecbe",
+      "imports": [
+        "core.mac_policy",
+        "core.mikrotik_api",
+        "database.cloned_mac_schema",
+        "database.db"
+      ],
+      "definitions": [
+        {
+          "name": "normalize",
+          "line": 41,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "list_macs",
+          "line": 48,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "add_mac",
+          "line": 53,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "remove_mac",
+          "line": 64,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "enabled",
+          "line": 69,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "set_enabled",
+          "line": 75,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "detection_params",
+          "line": 88,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "number",
+          "line": 89,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "detect",
+          "line": 100,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "profile_words",
+          "line": 136,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_ok",
+          "line": 146,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_print",
+          "line": 151,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "sync_profiles",
+          "line": 158,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "remove_cookies",
+          "line": 189,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_store_profiles",
+          "line": 201,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "sync_router",
+          "line": 209,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "sync_all",
+          "line": 232,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "maybe_sync",
+          "line": 243,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
       "file": "services/coa_queue_service.py",
       "sha256": "ff37f159119bcb54b0bb19d20b49a63d059fbc2cd9ead30fe340c62794a05768",
       "imports": [
@@ -7070,10 +7187,11 @@
     },
     {
       "file": "services/roaming_service.py",
-      "sha256": "f262b0c3c21df6122756e08d8b40726c4a446ea2bcb50f33f4fce468c0dbc5bb",
+      "sha256": "7d57c170711a49046b09dad3fa4161cce973b9e13b418ab2db250244c24fe8ed",
       "imports": [
         "core.mikrotik_api",
         "database.db",
+        "services.cloned_mac_service",
         "services.coa_queue_service"
       ],
       "definitions": [
@@ -7144,7 +7262,7 @@
         },
         {
           "name": "start_worker",
-          "line": 264,
+          "line": 270,
           "kind": "FunctionDef"
         }
       ]
@@ -10129,12 +10247,12 @@
     },
     {
       "file": "web/endpoint_permissions.py",
-      "sha256": "a7d31d1997b0dcf01cbe03a60850c8557f4e65d0a4a5956d3c21af7df78f405a",
+      "sha256": "9167418a1c51f094289f4cfb09a3585478a20525fde3164e5248bcce0cd77ff6",
       "imports": [],
       "definitions": [
         {
           "name": "endpoint_permissions",
-          "line": 269,
+          "line": 274,
           "kind": "FunctionDef"
         }
       ]
@@ -10454,7 +10572,7 @@
     },
     {
       "file": "web/routes/nas.py",
-      "sha256": "9cb2a1473988737d81a998e8ac4e7c11b71ae3f68b0abe182424b7b863d915ee",
+      "sha256": "1d249d32df746b13a2025837ee3b4ce298c282dfcae3cf79cc430f9a14f63ad3",
       "imports": [
         "core.config",
         "core.mikrotik_api",
@@ -10687,6 +10805,36 @@
         {
           "name": "api_nas_single_status_compat",
           "line": 717,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "cloned_macs_page",
+          "line": 732,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_cloned_admin",
+          "line": 748,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "cloned_macs_add",
+          "line": 755,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "cloned_macs_delete",
+          "line": 780,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "cloned_macs_settings",
+          "line": 797,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "cloned_macs_sync",
+          "line": 816,
           "kind": "FunctionDef"
         }
       ]
@@ -13074,6 +13222,61 @@
       "handler": "api_nas_single_status_compat",
       "file": "web/routes/nas.py",
       "line": 717
+    },
+    {
+      "rule": "/nas/cloned-macs",
+      "blueprint": "nas_bp",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "cloned_macs_page",
+      "handler": "cloned_macs_page",
+      "file": "web/routes/nas.py",
+      "line": 732
+    },
+    {
+      "rule": "/nas/cloned-macs/add",
+      "blueprint": "nas_bp",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "cloned_macs_add",
+      "handler": "cloned_macs_add",
+      "file": "web/routes/nas.py",
+      "line": 755
+    },
+    {
+      "rule": "/nas/cloned-macs/delete",
+      "blueprint": "nas_bp",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "cloned_macs_delete",
+      "handler": "cloned_macs_delete",
+      "file": "web/routes/nas.py",
+      "line": 780
+    },
+    {
+      "rule": "/nas/cloned-macs/settings",
+      "blueprint": "nas_bp",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "cloned_macs_settings",
+      "handler": "cloned_macs_settings",
+      "file": "web/routes/nas.py",
+      "line": 797
+    },
+    {
+      "rule": "/nas/cloned-macs/sync",
+      "blueprint": "nas_bp",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "cloned_macs_sync",
+      "handler": "cloned_macs_sync",
+      "file": "web/routes/nas.py",
+      "line": 816
     },
     {
       "rule": "/packages",

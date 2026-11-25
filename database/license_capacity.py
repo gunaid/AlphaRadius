@@ -75,10 +75,12 @@ BEGIN
   -- Random-MAC roaming: admit a new MAC on one temporary extra seat while
   -- services.roaming_service checks the old session on the router. It then
   -- disconnects the old session if idle, or this new one if the old is live.
-  -- A MAC refused that way stays refused for 5 minutes.
+  -- A MAC refused that way stays refused for 5 minutes. A listed cloned MAC
+  -- proves nothing about the device, so it keeps the plain limit.
   IF p_station IS NULL OR p_station='' OR account_slots>account_cap
      OR COALESCE((SELECT s.`value` FROM wisp_system_settings s
         WHERE s.`key`='roaming_enabled' LIMIT 1),'1')<>'1'
+     OR EXISTS(SELECT 1 FROM wisp_cloned_macs c WHERE c.mac=UPPER(REPLACE(p_station,'-',':')))
      OR EXISTS(SELECT 1 FROM wisp_roaming_events e WHERE e.username=p_username
         AND e.created_at>NOW()-INTERVAL 5 MINUTE AND e.new_mac=p_station
         AND e.outcome='denied') THEN
@@ -170,6 +172,9 @@ def install_capacity_schema(conn):
         # fn_reserve_license_slot writes roaming requests; create the table first.
         from database.roaming_schema import install_roaming_schema
         install_roaming_schema(cur)
+        # Listed cloned MACs are excluded from roaming and served without MAC cookie.
+        from database.cloned_mac_schema import install_cloned_mac_schema
+        install_cloned_mac_schema(cur)
         cur.execute("INSERT IGNORE INTO wisp_license_runtime_state(id) VALUES(1)")
         cur.execute("SHOW COLUMNS FROM wisp_session_reservations")
         columns={r['Field'] for r in cur.fetchall()}

@@ -258,6 +258,12 @@ def _loop():
             process_pending()
         except Exception:
             logger.exception('Roaming worker cycle failed')
+        try:
+            # Same thread keeps the cloned-MAC router profiles current (every 15 min).
+            from services.cloned_mac_service import maybe_sync
+            maybe_sync()
+        except Exception:
+            logger.exception('Cloned MAC sync cycle failed')
         time.sleep(POLL_SECONDS)
 
 

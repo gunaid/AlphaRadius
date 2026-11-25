@@ -97,6 +97,7 @@ tests/*
 !tests/sqlite_contract_fixture.py
 !tests/test_roaming.py
 !tests/run_roaming_mariadb_lab.py
+!tests/test_cloned_macs.py
 !tests/test_package_page.py
 !tests/test_subscriber_admin_safety.py
 !tests/test_subscriber_list_safety.py

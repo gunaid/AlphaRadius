@@ -1,6 +1,7 @@
 """Explicit synthetic MariaDB lab for random-MAC roaming; no application, NAS or FreeRADIUS.
 
-Runs the real fn_reserve_license_slot and the roaming worker's own SQL against
+Runs the real fn_reserve_license_slot, fn_cloned_mac_profile, the roaming
+worker's SQL and the cloned-MAC detection query against
 a dedicated, disposable database:
 
     DB_HOST=... DB_USER=... DB_PASSWORD=... DB_NAME=roaming_fixture \\
@@ -23,7 +24,8 @@ ROOT = Path(__file__).resolve().parents[1]
 FIXTURE_DB = 'roaming_fixture'
 TABLES = ('wisp_license_runtime_state', 'wisp_license_info', 'wisp_revoked_licenses', 'wisp_renewal_guards',
           'radcheck', 'radgroupcheck', 'radusergroup', 'radacct', 'wisp_session_reservations',
-          'wisp_system_settings', 'wisp_roaming_requests', 'wisp_roaming_events')
+          'wisp_system_settings', 'wisp_roaming_requests', 'wisp_roaming_events',
+          'wisp_cloned_macs', 'wisp_cloned_mac_profiles')
 
 
 def connect():
@@ -54,12 +56,15 @@ def build(cur):
     cur.execute('CREATE TABLE radusergroup(username VARCHAR(64), groupname VARCHAR(64))')
     cur.execute("""CREATE TABLE radacct(radacctid BIGINT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(64), nasipaddress VARCHAR(45),
         callingstationid VARCHAR(50), framedipaddress VARCHAR(45), acctsessionid VARCHAR(64), framedprotocol VARCHAR(32),
-        nasportid VARCHAR(50), acctstarttime DATETIME, acctupdatetime DATETIME, acctstoptime DATETIME)""")
+        nasportid VARCHAR(50), acctstarttime DATETIME, acctupdatetime DATETIME, acctstoptime DATETIME,
+        acctsessiontime INT)""")
     cur.execute("""CREATE TABLE wisp_session_reservations(id INT AUTO_INCREMENT PRIMARY KEY, session_key CHAR(32) UNIQUE,
         username VARCHAR(64), nasipaddress VARCHAR(45), callingstationid VARCHAR(50), nasportid VARCHAR(50),
         reserved_at DATETIME, expires_at DATETIME, radacctid BIGINT NULL)""")
     cur.execute('CREATE TABLE wisp_system_settings(`key` VARCHAR(100) PRIMARY KEY, `value` TEXT, description TEXT)')
     install_roaming_schema(cur)
+    from database.cloned_mac_schema import install_cloned_mac_schema
+    install_cloned_mac_schema(cur)
     cur.execute("CREATE OR REPLACE FUNCTION fn_account_mac_allowed(u VARCHAR(64), s VARCHAR(50)) RETURNS INT DETERMINISTIC RETURN 1")
     cur.execute(CHECK_SQL)
     cur.execute(RESERVE_SQL)
@@ -97,7 +102,7 @@ class RoamingLab(unittest.TestCase):
 
     def setUp(self):
         for table in ('radcheck', 'radacct', 'wisp_session_reservations', 'wisp_roaming_requests',
-                      'wisp_roaming_events', 'wisp_system_settings'):
+                      'wisp_roaming_events', 'wisp_system_settings', 'wisp_cloned_macs', 'wisp_cloned_mac_profiles'):
             self.cur.execute('DELETE FROM ' + table)
         self.cur.execute("INSERT INTO radcheck(username,attribute,value) VALUES ('card','Simultaneous-Use','1')")
         self.key = 0
@@ -216,6 +221,67 @@ class RoamingLab(unittest.TestCase):
         self.cur.execute("UPDATE wisp_roaming_requests SET status='checking', processed_at=NOW()-INTERVAL 2 MINUTE")
         self.assertEqual(self.run_worker('5m')[0], 1)
         self.assertEqual(self.request()['status'], 'kicked')
+
+
+class ClonedMacLab(RoamingLab):
+    """Reuses the fixture; only its own cases run here."""
+    def profile(self, station, nas='10.0.0.1', group='pkg-2M'):
+        self.cur.execute('SELECT fn_cloned_mac_profile(%s,%s,%s) AS p', (station, nas, group))
+        return self.cur.fetchone()['p']
+
+    def setUp(self):
+        super().setUp()
+        self.cur.execute("INSERT INTO wisp_cloned_macs(mac,created_at) VALUES ('AA:AA:AA:AA:AA:01',NOW())")
+        self.cur.execute("""INSERT INTO wisp_cloned_mac_profiles VALUES ('10.0.0.1','pkg-2M-nocookie',NOW()),
+                            ('10.0.0.1','default-nocookie',NOW())""")
+
+    def test_profile_needs_the_feature_the_list_and_a_confirmed_copy(self):
+        self.assertEqual(self.profile('AA:AA:AA:AA:AA:01'), '', 'feature off by default')
+        self.cur.execute("INSERT INTO wisp_system_settings(`key`,`value`) VALUES ('cloned_mac_enabled','1')")
+        self.assertEqual(self.profile('AA:AA:AA:AA:AA:01'), 'pkg-2M-nocookie')
+        self.assertEqual(self.profile('aa-aa-aa-aa-aa-01'), 'pkg-2M-nocookie')
+        self.assertEqual(self.profile('AA:AA:AA:AA:AA:01', group=''), 'default-nocookie')
+        self.assertEqual(self.profile('AA:AA:AA:AA:AA:01', group='pkg-9M'), '', 'copy not on this router')
+        self.assertEqual(self.profile('AA:AA:AA:AA:AA:01', nas='10.0.0.2'), '', 'other router not synced')
+        self.assertEqual(self.profile('BB:BB:BB:BB:BB:02'), '', 'unlisted MAC unchanged')
+        self.assertEqual(self.profile(''), '')
+
+    def test_listed_mac_keeps_the_plain_limit(self):
+        self.open_session('CC:CC:CC:CC:CC:03')
+        self.assertEqual(self.reserve('AA:AA:AA:AA:AA:01'), 2)
+        self.assertIsNone(self.request())
+        self.assertEqual(self.reserve('BB:BB:BB:BB:BB:02'), 1, 'other MACs still roam')
+
+    def test_detection_query(self):
+        from services import cloned_mac_service as cloned
+        rows = [  # (user, mac, port, open, seconds)
+            ('c1', 'DD:DD:DD:DD:DD:04', 'vlan10', False, 600), ('c2', 'DD:DD:DD:DD:DD:04', 'vlan10', False, 600),
+            ('c3', 'dd-dd-dd-dd-dd-04', 'vlan20', False, 600),
+            ('c4', 'EE:EE:EE:EE:EE:05', 'vlan10', True, None), ('c4', 'EE:EE:EE:EE:EE:05', 'vlan10', True, None),
+            ('c5', 'FF:FF:FF:FF:FF:06', 'vlan10', False, 900)]
+        for user, mac, port, is_open, seconds in rows:
+            self.cur.execute("""INSERT INTO radacct(username,nasipaddress,callingstationid,nasportid,acctstarttime,
+                acctstoptime,acctsessiontime) VALUES (%s,'10.0.0.1',%s,%s,NOW()-INTERVAL 1 HOUR,%s,%s)""",
+                             (user, mac, port, None if is_open else datetime.datetime.now(), seconds))
+        self.cur.execute("""INSERT INTO radacct(username,nasipaddress,callingstationid,nasportid,acctstarttime,acctstoptime)
+            VALUES ('old','10.0.0.1','99:99:99:99:99:99','vlan1',NOW()-INTERVAL 30 DAY,NOW()-INTERVAL 30 DAY)""")
+        self.cur.execute("INSERT INTO wisp_cloned_macs(mac,created_at) VALUES ('DD:DD:DD:DD:DD:04',NOW())")
+        with patch.dict(sys.modules, {'database.db': stub_database_module(self.conn)}):
+            found = {r['mac']: r for r in cloned.detect(dict(days=7, min_cards=3, min_ports=2, min_short=20))}
+        self.assertEqual(sorted(found), ['DD:DD:DD:DD:DD:04', 'EE:EE:EE:EE:EE:05'])
+        self.assertEqual((found['DD:DD:DD:DD:DD:04']['cards'], found['DD:DD:DD:DD:DD:04']['ports']), (3, 2))
+        self.assertTrue(found['DD:DD:DD:DD:DD:04']['listed'])
+        self.assertEqual(int(found['EE:EE:EE:EE:EE:05']['open_now']), 2)
+        self.assertIn('جلسات مفتوحة معًا', found['EE:EE:EE:EE:EE:05']['reasons'])
+
+
+def _only_own_cases():
+    # ClonedMacLab inherits RoamingLab's cases; drop them so each runs once.
+    for name in [n for n in vars(RoamingLab) if n.startswith('test_')]:
+        setattr(ClonedMacLab, name, None)
+
+
+_only_own_cases()
 
 
 def main():

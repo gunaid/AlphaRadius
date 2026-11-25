@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}الماكات المستنسخة{% endblock %}
+{% block page_title %}الماكات المستنسخة (MAC Cookie){% endblock %}
+
+{% block content %}
+{% set can_manage = can_access_endpoint('cloned_macs_add') %}
+<div class="space-y-6" dir="rtl">
+
+  <div class="bg-[#0b0f19] border border-[#1c2840] rounded-2xl p-6 space-y-3">
+    <h3 class="font-bold text-white text-base flex items-center gap-2.5">
+      <span class="w-8 h-8 rounded-lg bg-sky-500/10 text-sky-400 border border-sky-500/20 flex items-center justify-center text-sm"><i class="fa-solid fa-clone"></i></span>
+      الدخول بلا كوكي ماك للماكات المستنسخة
+    </h3>
+    <p class="text-xs text-slate-400 leading-6">
+      بعض الهواتف تحمل الماك نفسه، فيُدخل كوكي الماك جهازًا آخر بكرت غيره أو يتكرر الدخول والخروج.
+      الماكات في هذه القائمة تدخل بكرتها عاديًا لكن بنسخة من بروفايل الباقة نفسه اسمها
+      <code dir="ltr" class="text-sky-300">&lt;profile&gt;{{ suffix }}</code> مضبوطة على <code dir="ltr" class="text-sky-300">add-mac-cookie=no</code>،
+      فتبقى إعدادات البروفايل وسكربتاته كما هي. ينشئ النظام هذه النسخ على كل راوتر عبر API (RouterOS 6 و7) ويحدثها كل 15 دقيقة،
+      ولا يرسلها الراديوس إلا لراوتر تأكد وجودها عليه. هذه الماكات لا يشملها «الدخول المباشر عند تغيّر الماك».
+    </p>
+    {% if can_manage %}
+    <div class="flex flex-wrap items-center gap-3">
+      <form method="POST" action="{{ url_for('cloned_macs_settings') }}" class="flex items-center gap-3">
+        <input type="hidden" name="enabled" value="{{ '0' if enabled else '1' }}">
+        <span class="text-xs font-bold {{ 'text-emerald-400' if enabled else 'text-slate-400' }}">الحالة: {{ 'مفعّلة' if enabled else 'متوقفة' }}</span>
+        <button type="submit" class="px-4 py-2 rounded-xl text-xs font-bold {{ 'bg-rose-500/15 text-rose-300 border border-rose-500/30' if enabled else 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30' }}">
+          {{ 'إيقاف' if enabled else 'تفعيل ومزامنة الراوترات' }}
+        </button>
+      </form>
+      <form method="POST" action="{{ url_for('cloned_macs_sync') }}">
+        <button type="submit" class="px-4 py-2 rounded-xl text-xs font-bold bg-sky-500/15 text-sky-300 border border-sky-500/30"><i class="fa-solid fa-rotate ml-1"></i>مزامنة الراوترات الآن</button>
+      </form>
+    </div>
+    {% endif %}
+    <div class="overflow-x-auto">
+      <table class="w-full text-xs text-right">
+        <thead class="text-slate-400"><tr><th class="py-2">الراوتر</th><th>IP</th><th>نسخ البروفايلات المؤكدة</th><th>آخر مزامنة</th></tr></thead>
+        <tbody class="divide-y divide-[#1c2840] text-slate-200">
+          {% for r in routers %}
+          <tr><td class="py-2">{{ r.name }}</td><td dir="ltr" class="font-mono">{{ r.ip_address }}</td>
+              <td>{% if r.profiles %}<span class="text-emerald-400">{{ r.profiles }}</span>{% else %}<span class="text-amber-400">لا شيء — يبقى البروفايل الأصلي</span>{% endif %}</td>
+              <td dir="ltr" class="font-mono text-slate-400">{{ r.synced_at or '—' }}</td></tr>
+          {% else %}<tr><td colspan="4" class="py-4 text-center text-slate-400">لا توجد راوترات.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="bg-[#0b0f19] border border-[#1c2840] rounded-2xl p-6 space-y-4">
+    <h3 class="font-bold text-white text-base">القائمة ({{ macs|length }})</h3>
+    {% if can_manage %}
+    <form method="POST" action="{{ url_for('cloned_macs_add') }}" class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+      <textarea name="macs" rows="2" dir="ltr" placeholder="AA:BB:CC:DD:EE:FF (ماك أو أكثر، كل سطر ماك)" class="sm:col-span-2 bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-mono"></textarea>
+      <div class="space-y-2">
+        <input type="text" name="note" maxlength="250" placeholder="ملاحظة (اختياري)" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white">
+        <button type="submit" class="w-full px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 text-white">إضافة</button>
+      </div>
+    </form>
+    {% endif %}
+    <div class="overflow-x-auto">
+      <table class="w-full text-xs text-right">
+        <thead class="text-slate-400"><tr><th class="py-2">الماك</th><th>ملاحظة</th><th>المصدر</th><th>أضافه</th><th>التاريخ</th><th></th></tr></thead>
+        <tbody class="divide-y divide-[#1c2840] text-slate-200">
+          {% for m in macs %}
+          <tr><td class="py-2 font-mono" dir="ltr">{{ m.mac }}</td><td>{{ m.note }}</td>
+              <td>{{ 'من تقرير الكشف' if m.source == 'detected' else 'يدوي' }}</td><td>{{ m.created_by }}</td>
+              <td dir="ltr" class="font-mono text-slate-400">{{ m.created_at }}</td>
+              <td>{% if can_manage %}<form method="POST" action="{{ url_for('cloned_macs_delete') }}"><input type="hidden" name="mac" value="{{ m.mac }}"><button type="submit" class="text-rose-400 hover:text-rose-300">حذف</button></form>{% endif %}</td></tr>
+          {% else %}<tr><td colspan="6" class="py-4 text-center text-slate-400">القائمة فارغة.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="bg-[#0b0f19] border border-[#1c2840] rounded-2xl p-6 space-y-4">
+    <h3 class="font-bold text-white text-base">تقرير الكشف: ماكات مشبوهة بالاستنساخ</h3>
+    <form method="GET" action="{{ url_for('cloned_macs_page') }}" class="flex flex-wrap items-end gap-3 text-xs text-slate-300">
+      <label>آخر (يوم)<input type="number" name="days" min="1" max="90" value="{{ params.days }}" class="block w-24 mt-1 bg-[#070b14] border border-slate-700 rounded-lg px-2 py-1.5 text-white"></label>
+      <label>كروت مختلفة ≥<input type="number" name="min_cards" min="2" value="{{ params.min_cards }}" class="block w-24 mt-1 bg-[#070b14] border border-slate-700 rounded-lg px-2 py-1.5 text-white"></label>
+      <label>منافذ/VLAN ≥<input type="number" name="min_ports" min="2" value="{{ params.min_ports }}" class="block w-24 mt-1 bg-[#070b14] border border-slate-700 rounded-lg px-2 py-1.5 text-white"></label>
+      <label>جلسات أقل من دقيقة ≥<input type="number" name="min_short" min="5" value="{{ params.min_short }}" class="block w-28 mt-1 bg-[#070b14] border border-slate-700 rounded-lg px-2 py-1.5 text-white"></label>
+      <button type="submit" class="px-4 py-2 rounded-xl font-bold bg-slate-700 text-white">تحديث</button>
+    </form>
+    <p class="text-xs text-slate-500">يظهر الماك إذا حقق أي شرط، أو كانت له جلستان مفتوحتان أو أكثر الآن. راجع قبل الإضافة: جهاز واحد بعدة كروت متتالية قد يظهر أيضًا.</p>
+    {% if detect_error %}<div class="text-rose-400 text-xs">{{ detect_error }}</div>{% endif %}
+    <div class="overflow-x-auto">
+      <table class="w-full text-xs text-right">
+        <thead class="text-slate-400"><tr><th class="py-2">الماك</th><th>كروت</th><th>منافذ/VLAN</th><th>جلسات</th><th>قصيرة</th><th>مفتوحة الآن</th><th>آخر ظهور</th><th>السبب</th><th></th></tr></thead>
+        <tbody class="divide-y divide-[#1c2840] text-slate-200">
+          {% for d in detected %}
+          <tr><td class="py-2 font-mono" dir="ltr">{{ d.mac }}</td><td>{{ d.cards }}</td><td>{{ d.ports }}</td><td>{{ d.sessions }}</td>
+              <td>{{ d.short_sessions }}</td><td>{{ d.open_now }}</td><td dir="ltr" class="font-mono text-slate-400">{{ d.last_seen }}</td>
+              <td class="text-amber-300">{{ d.reasons }}</td>
+              <td>{% if d.listed %}<span class="text-emerald-400">في القائمة</span>{% elif can_manage %}
+                <form method="POST" action="{{ url_for('cloned_macs_add') }}"><input type="hidden" name="mac" value="{{ d.mac }}"><input type="hidden" name="source" value="detected"><input type="hidden" name="note" value="{{ d.reasons }}">
+                <button type="submit" class="text-sky-400 hover:text-sky-300">إضافة للقائمة</button></form>{% endif %}</td></tr>
+          {% else %}<tr><td colspan="9" class="py-4 text-center text-slate-400">لا توجد ماكات مشبوهة بهذه الشروط.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
