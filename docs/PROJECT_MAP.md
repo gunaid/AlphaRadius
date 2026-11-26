@@ -1230,3 +1230,7 @@ Implementation and local measurements are complete; see [implementation report](
 ## 25 نوفمبر 2026 — منفذ مستقل للوحة المدير
 
 [السلوك والتفعيل والفحوص](ADMIN_PORT_SEPARATION_20261125.md): اختياري بـ`ALPHA_ADMIN_PORT` (مثل 43333): اللوحة على ذلك المنفذ، والرابط المباشر (80/5090) يفتح بوابة المشتركين فقط وصفحات المدير فيه 404؛ التصنيف بمقبس الاستماع لا بالترويسات (`web/panel_surface.py`).
+
+## 26 نوفمبر 2026 — تطابق سر فحص RADIUS بين Web وCore
+
+[الخلل والإصلاح والتطبيق وملاحظات التحديث](RADIUS_HEALTH_SECRET_20261126.md): السر العشوائي `RADIUS_HEALTH_SECRET` من `build_and_start.sh` يُمرر الآن إلى Core كـ`RADIUS_WEB_CLIENT_SECRET` لعميل `web_container` فقط، فيزول تنبيه `RADIUS_UNRESPONSIVE` الكاذب. يلزم إعادة إنشاء Core؛ Web لا تتغير.

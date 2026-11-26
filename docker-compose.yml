@@ -55,6 +55,8 @@ services:
       DB_PASSWORD: radpass
       DB_NAME: radius_wisp
       RADIUS_SECRET_DEFAULT: "max123"
+      # Must equal the Web service's RADIUS_HEALTH_SECRET (its health probe).
+      RADIUS_WEB_CLIENT_SECRET: ${RADIUS_HEALTH_SECRET:-max123}
       TZ: ${SYSTEM_TIMEZONE:-Asia/Riyadh}
     ports:
       - "1812:1812/udp"

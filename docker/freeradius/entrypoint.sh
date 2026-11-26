@@ -50,6 +50,10 @@ EOSQL
 
 DEFAULT_SECRET="${RADIUS_SECRET_DEFAULT:-${RADIUS_SECRET:-max123}}"
 WEB_CLIENT_IP="${RADIUS_WEB_CLIENT_IP:-172.18.0.4}"
+# Web probes RADIUS with RADIUS_HEALTH_SECRET (random per install from
+# deploy/local/build_and_start.sh); compose passes it here so the Web client
+# matches. localhost keeps DEFAULT_SECRET for the container's own radtest check.
+WEB_CLIENT_SECRET="${RADIUS_WEB_CLIENT_SECRET:-${DEFAULT_SECRET}}"
 
 # 1. Write the clean SQL module configuration
 cat << EOF > ${CONF_DIR}/mods-available/sql
@@ -123,7 +127,7 @@ client localhost_ipv6 {
 
 client web_container {
     ipaddr = ${WEB_CLIENT_IP}
-    secret = ${DEFAULT_SECRET}
+    secret = ${WEB_CLIENT_SECRET}
     require_message_authenticator = no
     nas_type = other
 }
