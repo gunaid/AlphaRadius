@@ -6316,7 +6316,7 @@
     },
     {
       "file": "services/mikrotik_userman_importer.py",
-      "sha256": "eff70dfce79ae3ccf078bf53577aba098f237e3ccb3be24f55134cd1d4178067",
+      "sha256": "a9190d5f83bd3488cae6baee36600c443d7790825f527a19eaa5d33bfa1867cb",
       "imports": [
         "core.license_feature_policy",
         "core.mikrotik_api",
@@ -6385,47 +6385,47 @@
         },
         {
           "name": "BufferedRouterOSApiProtocol",
-          "line": 403,
+          "line": 404,
           "kind": "ClassDef"
         },
         {
           "name": "connect",
-          "line": 409,
+          "line": 410,
           "kind": "FunctionDef"
         },
         {
           "name": "_read_raw",
-          "line": 414,
+          "line": 415,
           "kind": "FunctionDef"
         },
         {
           "name": "_read_len",
-          "line": 437,
+          "line": 438,
           "kind": "FunctionDef"
         },
         {
           "name": "read_sentence",
-          "line": 457,
+          "line": 458,
           "kind": "FunctionDef"
         },
         {
           "name": "fetch_userman_via_api",
-          "line": 468,
+          "line": 469,
           "kind": "FunctionDef"
         },
         {
           "name": "read_rows",
-          "line": 489,
+          "line": 490,
           "kind": "FunctionDef"
         },
         {
           "name": "_clean_limit",
-          "line": 541,
+          "line": 542,
           "kind": "FunctionDef"
         },
         {
           "name": "execute_userman_import",
-          "line": 650,
+          "line": 652,
           "kind": "FunctionDef"
         }
       ]
