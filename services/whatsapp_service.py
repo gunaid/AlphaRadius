@@ -30,6 +30,18 @@ from core.time_service import get_system_now, get_system_now_str
 
 logger = logging.getLogger('whatsapp_service')
 
+# wisp_whatsapp_templates stores template_key / message_body / is_active
+# (database/schema_mysql.sql, schema_healer.py). Callers and the templates page
+# use event_key / template_text / is_enabled, so reads alias the real columns.
+_TEMPLATE_SELECT = ("SELECT id, template_key AS event_key, title, category, message_body AS template_text, "
+                    "is_active AS is_enabled, variables_hint, updated_at FROM wisp_whatsapp_templates")
+
+# Defaults are seeded once per process; a failed attempt is retried at most
+# every _SEED_RETRY_SECONDS instead of on every message.
+_SEED_RETRY_SECONDS = 300
+_seed_state = {'done': False, 'last_failure': 0.0}
+_seed_lock = threading.Lock()
+
 DEFAULT_TEMPLATES = [
     {
         'event_key': 'welcome_menu',
@@ -98,27 +110,38 @@ DEFAULT_TEMPLATES = [
 
 
 def seed_default_whatsapp_data():
-    """Ensures default settings and templates exist in the database."""
-    try:
-        settings = query_one("SELECT id FROM wisp_whatsapp_settings LIMIT 1")
-        if not settings:
-            execute_write(
-                """INSERT INTO wisp_whatsapp_settings 
-                (gateway_provider, api_endpoint, instance_name, is_bot_enabled, is_notifications_enabled, status)
-                VALUES ('simulator', 'http://localhost:8080', 'alpha_radius_bot', 1, 1, 'connected')"""
-            )
-            logger.info("Default WhatsApp settings initialized.")
+    """Ensures default settings and templates exist in the database (once per process)."""
+    if _seed_state['done'] or time.monotonic() - _seed_state['last_failure'] < _SEED_RETRY_SECONDS:
+        return
+    with _seed_lock:
+        if _seed_state['done']:
+            return
+        try:
+            _seed_default_whatsapp_rows()
+            _seed_state['done'] = True
+        except Exception as e:
+            _seed_state['last_failure'] = time.monotonic()
+            logger.warning(f"Error seeding WhatsApp default data: {e}")
 
-        for tmpl in DEFAULT_TEMPLATES:
-            exists = query_one("SELECT id FROM wisp_whatsapp_templates WHERE event_key = ?", (tmpl['event_key'],))
-            if not exists:
-                execute_write(
-                    """INSERT INTO wisp_whatsapp_templates (event_key, title, template_text, is_enabled)
-                    VALUES (?, ?, ?, 1)""",
-                    (tmpl['event_key'], tmpl['title'], tmpl['template_text'])
-                )
-    except Exception as e:
-        logger.warning(f"Error seeding WhatsApp default data: {e}")
+
+def _seed_default_whatsapp_rows():
+    settings = query_one("SELECT id FROM wisp_whatsapp_settings LIMIT 1")
+    if not settings:
+        execute_write(
+            """INSERT INTO wisp_whatsapp_settings
+            (gateway_provider, api_endpoint, instance_name, is_bot_enabled, is_notifications_enabled, status)
+            VALUES ('simulator', 'http://localhost:8080', 'alpha_radius_bot', 1, 1, 'connected')"""
+        )
+        logger.info("Default WhatsApp settings initialized.")
+
+    for tmpl in DEFAULT_TEMPLATES:
+        exists = query_one("SELECT id FROM wisp_whatsapp_templates WHERE template_key = ?", (tmpl['event_key'],))
+        if not exists:
+            execute_write(
+                """INSERT INTO wisp_whatsapp_templates (template_key, title, message_body, is_active)
+                VALUES (?, ?, ?, 1)""",
+                (tmpl['event_key'], tmpl['title'], tmpl['template_text'])
+            )
 
 
 def get_whatsapp_settings():
@@ -271,13 +294,14 @@ def restart_evolution_instance():
 def get_all_templates():
     """Fetches all customizable message templates."""
     seed_default_whatsapp_data()
-    rows = query_all("SELECT * FROM wisp_whatsapp_templates ORDER BY id ASC")
+    rows = query_all(_TEMPLATE_SELECT + " ORDER BY id ASC")
     return [dict(r) for r in rows] if rows else []
 
 
 def get_template_by_key(event_key):
-    """Fetches a specific template by event key."""
-    row = query_one("SELECT * FROM wisp_whatsapp_templates WHERE event_key = ?", (event_key,))
+    """Fetches a specific template by event key (stored as template_key)."""
+    seed_default_whatsapp_data()
+    row = query_one(_TEMPLATE_SELECT + " WHERE template_key = ?", (event_key,))
     return dict(row) if row else None
 
 
@@ -285,7 +309,7 @@ def get_template_by_key(event_key):
 def save_template(template_id, title, template_text, is_enabled=1):
     """Updates a message template."""
     execute_update(
-        "UPDATE wisp_whatsapp_templates SET title = ?, template_text = ?, is_enabled = ? WHERE id = ?",
+        "UPDATE wisp_whatsapp_templates SET title = ?, message_body = ?, is_active = ? WHERE id = ?",
         (title, template_text, is_enabled, template_id)
     )
     return True, "تم تحديث القالب بنجاح."

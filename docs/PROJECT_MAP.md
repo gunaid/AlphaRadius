@@ -1234,3 +1234,7 @@ Implementation and local measurements are complete; see [implementation report](
 ## 26 نوفمبر 2026 — تطابق سر فحص RADIUS بين Web وCore
 
 [الخلل والإصلاح والتطبيق وملاحظات التحديث](RADIUS_HEALTH_SECRET_20261126.md): السر العشوائي `RADIUS_HEALTH_SECRET` من `build_and_start.sh` يُمرر الآن إلى Core كـ`RADIUS_WEB_CLIENT_SECRET` لعميل `web_container` فقط، فيزول تنبيه `RADIUS_UNRESPONSIVE` الكاذب. يلزم إعادة إنشاء Core؛ Web لا تتغير.
+
+## 26 نوفمبر 2026 — قوالب واتساب بأسماء الأعمدة الفعلية
+
+[الخلل والأثر والإصلاح والفحوص](WHATSAPP_TEMPLATES_COLUMNS_20261126.md): `whatsapp_service` كان يستعلم بـ`event_key/template_text/is_enabled` والجدول `template_key/message_body/is_active`، فيفشل رد البوت الافتراضي ويُشغَّل مُصلح المخطط مع كل رسالة. الإصلاح في الكود فقط مع بذر مرة واحدة؛ لا ترحيل للقاعدة.

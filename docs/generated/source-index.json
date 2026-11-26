@@ -10272,7 +10272,7 @@
     },
     {
       "file": "services/whatsapp_service.py",
-      "sha256": "49e12226d7d2c3f0017f7035d6cbd10d7a179319759fad7ce98068a6ca4784b7",
+      "sha256": "3b7a71323c10b38824d6939b7521f7738f12f00bfdc7694f81872efaa8d8f8b4",
       "imports": [
         "core.config",
         "core.license_feature_policy",
@@ -10282,127 +10282,132 @@
       "definitions": [
         {
           "name": "seed_default_whatsapp_data",
-          "line": 100,
+          "line": 112,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_seed_default_whatsapp_rows",
+          "line": 127,
           "kind": "FunctionDef"
         },
         {
           "name": "get_whatsapp_settings",
-          "line": 124,
+          "line": 147,
           "kind": "FunctionDef"
         },
         {
           "name": "update_whatsapp_settings",
-          "line": 149,
+          "line": 172,
           "kind": "FunctionDef"
         },
         {
           "name": "get_evolution_qr_code",
-          "line": 182,
+          "line": 205,
           "kind": "FunctionDef"
         },
         {
           "name": "get_evolution_connection_state",
-          "line": 220,
+          "line": 243,
           "kind": "FunctionDef"
         },
         {
           "name": "restart_evolution_instance",
-          "line": 250,
+          "line": 273,
           "kind": "FunctionDef"
         },
         {
           "name": "get_all_templates",
-          "line": 271,
-          "kind": "FunctionDef"
-        },
-        {
-          "name": "get_template_by_key",
-          "line": 278,
-          "kind": "FunctionDef"
-        },
-        {
-          "name": "save_template",
-          "line": 285,
-          "kind": "FunctionDef"
-        },
-        {
-          "name": "format_bytes_display",
           "line": 294,
           "kind": "FunctionDef"
         },
         {
+          "name": "get_template_by_key",
+          "line": 301,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "save_template",
+          "line": 309,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "format_bytes_display",
+          "line": 318,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "clean_phone_number",
-          "line": 307,
+          "line": 331,
           "kind": "FunctionDef"
         },
         {
           "name": "log_whatsapp_message",
-          "line": 319,
+          "line": 343,
           "kind": "FunctionDef"
         },
         {
           "name": "get_whatsapp_logs",
-          "line": 332,
+          "line": 356,
           "kind": "FunctionDef"
         },
         {
           "name": "clear_whatsapp_logs",
-          "line": 348,
+          "line": 372,
           "kind": "FunctionDef"
         },
         {
           "name": "send_whatsapp_message",
-          "line": 354,
+          "line": 378,
           "kind": "FunctionDef"
         },
         {
           "name": "get_or_create_session",
-          "line": 460,
+          "line": 484,
           "kind": "FunctionDef"
         },
         {
           "name": "update_session_state",
-          "line": 478,
+          "line": 502,
           "kind": "FunctionDef"
         },
         {
           "name": "query_voucher_status",
-          "line": 486,
+          "line": 510,
           "kind": "FunctionDef"
         },
         {
           "name": "query_subscriber_status",
-          "line": 538,
+          "line": 562,
           "kind": "FunctionDef"
         },
         {
           "name": "process_incoming_whatsapp_message",
-          "line": 586,
+          "line": 610,
           "kind": "FunctionDef"
         },
         {
           "name": "notify_voucher_issued",
-          "line": 772,
+          "line": 796,
           "kind": "FunctionDef"
         },
         {
           "name": "notify_quota_warning",
-          "line": 795,
+          "line": 819,
           "kind": "FunctionDef"
         },
         {
           "name": "notify_wallet_recharge",
-          "line": 814,
+          "line": 838,
           "kind": "FunctionDef"
         },
         {
           "name": "send_broadcast_campaign",
-          "line": 835,
+          "line": 859,
           "kind": "FunctionDef"
         },
         {
           "name": "_broadcast_worker",
-          "line": 868,
+          "line": 892,
           "kind": "FunctionDef"
         }
       ]
