@@ -44,11 +44,13 @@ class Database:
         self.statements.append(sql)
         return self.conn.execute(sql, params)
 
+    # database.db returns dict rows (callers use .get); match that.
     def query_one(self, sql, params=()):
-        return self._run(sql, params).fetchone()
+        row = self._run(sql, params).fetchone()
+        return dict(row) if row is not None else None
 
     def query_all(self, sql, params=()):
-        return self._run(sql, params).fetchall()
+        return [dict(row) for row in self._run(sql, params).fetchall()]
 
     def execute_write(self, sql, params=()):
         self._run(sql, params)

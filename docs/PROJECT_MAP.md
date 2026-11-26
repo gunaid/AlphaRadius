@@ -1237,7 +1237,7 @@ Implementation and local measurements are complete; see [implementation report](
 
 ## 26 نوفمبر 2026 — قوالب واتساب بأسماء الأعمدة الفعلية
 
-[الخلل والأثر والإصلاح والفحوص](WHATSAPP_TEMPLATES_COLUMNS_20261126.md): `whatsapp_service` كان يستعلم بـ`event_key/template_text/is_enabled` والجدول `template_key/message_body/is_active`، فيفشل رد البوت الافتراضي ويُشغَّل مُصلح المخطط مع كل رسالة. الإصلاح في الكود فقط مع بذر مرة واحدة؛ لا ترحيل للقاعدة.
+[الخلل والأثر والإصلاح والفحوص](WHATSAPP_TEMPLATES_COLUMNS_20261126.md): `whatsapp_service` كان يستعلم بـ`event_key/template_text/is_enabled` والجدول `template_key/message_body/is_active`، فيفشل رد البوت الافتراضي ويُشغَّل مُصلح المخطط مع كل رسالة. الإصلاح في الكود فقط مع بذر مرة واحدة؛ لا ترحيل للقاعدة. المرحلة الثانية في الوثيقة نفسها: أعمدة سجل الرسائل وقيم enum، وجلسات البوت في الذاكرة لأن جدولها غير موجود، و`status` للمشتركين، ومحفظة الوكيل من `wisp_managers`.
 
 ## 26 نوفمبر 2026 — معاينة استيراد User Manager بلا سرعة مخترعة
 
