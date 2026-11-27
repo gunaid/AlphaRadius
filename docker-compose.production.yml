@@ -11,10 +11,11 @@ services:
     restart: unless-stopped
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --innodb-buffer-pool-size=512M --innodb-flush-log-at-trx-commit=2 --innodb-log-file-size=64M
     environment:
-      MYSQL_ROOT_PASSWORD: rootpass
+      # Defaults keep existing installs unchanged; the Proxmox template first boot sets random values.
+      MYSQL_ROOT_PASSWORD: ${ALPHA_DB_ROOT_PASSWORD:-rootpass}
       MYSQL_DATABASE: radius_wisp
       MYSQL_USER: radius
-      MYSQL_PASSWORD: radpass
+      MYSQL_PASSWORD: ${ALPHA_DB_PASSWORD:-radpass}
       TZ: ${SYSTEM_TIMEZONE:-Asia/Riyadh}
     ports:
       - "3307:3306"
@@ -49,7 +50,7 @@ services:
       DB_HOST: mariadb
       DB_PORT: 3306
       DB_USER: radius
-      DB_PASSWORD: radpass
+      DB_PASSWORD: ${ALPHA_DB_PASSWORD:-radpass}
       DB_NAME: radius_wisp
       RADIUS_SECRET_DEFAULT: "max123"
       TZ: ${SYSTEM_TIMEZONE:-Asia/Riyadh}
@@ -91,7 +92,7 @@ services:
       - DB_HOST=mariadb
       - DB_PORT=3306
       - DB_USER=radius
-      - DB_PASSWORD=radpass
+      - DB_PASSWORD=${ALPHA_DB_PASSWORD:-radpass}
       - DB_NAME=radius_wisp
       - PORT=5090
       # Separate admin panel port (opt-in): set ALPHA_ADMIN_PORT in .env, e.g. 43333.

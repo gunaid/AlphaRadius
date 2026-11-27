@@ -1230,3 +1230,7 @@ Implementation and local measurements are complete; see [implementation report](
 ## 25 نوفمبر 2026 — منفذ مستقل للوحة المدير
 
 [السلوك والتفعيل والفحوص](ADMIN_PORT_SEPARATION_20261125.md): اختياري بـ`ALPHA_ADMIN_PORT` (مثل 43333): اللوحة على ذلك المنفذ، والرابط المباشر (80/5090) يفتح بوابة المشتركين فقط وصفحات المدير فيه 404؛ التصنيف بمقبس الاستماع لا بالترويسات (`web/panel_surface.py`).
+
+## 27 نوفمبر 2026 — قالب Proxmox للتثبيت دون إنترنت
+
+[الخطوات في Proxmox والحماية والفحوص](PROXMOX_TEMPLATE_20261127.md): `deploy/proxmox/prepare_template.sh build|seal` يجهز VM بصور مبنية دون تشغيل، و`/opt/alpha-radius/first-boot.sh` يشغّل النظام عند العميل بأسرار عشوائية ودون تنزيل؛ الطرق القديمة كما هي. كلمات مرور قاعدة البيانات في compose أصبحت `ALPHA_DB_PASSWORD`/`ALPHA_DB_ROOT_PASSWORD` بالقيم الافتراضية نفسها.
