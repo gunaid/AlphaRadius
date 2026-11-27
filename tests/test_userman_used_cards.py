@@ -128,5 +128,15 @@ class WiringTests(unittest.TestCase):
             env.parse((ROOT / 'web/templates' / page).read_text(encoding='utf-8'))
 
 
+class BatchExportMessageTests(unittest.TestCase):
+    def test_server_reason_is_shown_not_hidden_as_connection_loss(self):
+        html = (ROOT / 'web/templates/vouchers.html').read_text(encoding='utf-8')
+        body = html[html.index('async function downloadBatchFile'):html.index('function handlePrintBtnClick')]
+        self.assertIn('failure.fromServer = true;', body)
+        self.assertIn("if (error && error.fromServer) operationSwal.fire('تعذر التصدير', error.message, 'error');", body)
+        self.assertIn('else operationSwal.uncertain();', body)
+        self.assertNotIn("operationSwal.uncertain('تعذر التصدير', error.message", body)
+
+
 if __name__ == '__main__':
     unittest.main()

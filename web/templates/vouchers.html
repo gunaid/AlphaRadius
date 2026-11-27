@@ -842,7 +842,9 @@ document.addEventListener('DOMContentLoaded',()=> {
             const expectedTypes = filename.endsWith('.txt') ? ['text/plain'] : ['application/pdf','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
             if (!response.ok || !expectedTypes.some(type => (response.headers.get('content-type') || '').includes(type))) {
                 const result = await response.json().catch(() => ({}));
-                throw new Error(result.message || 'تعذر تجهيز الملف. أعد المحاولة.');
+                const failure = new Error(result.message || `تعذر تجهيز الملف (رمز ${response.status}). أعد المحاولة.`);
+                failure.fromServer = true;   // the server answered: show its reason, not "connection lost"
+                throw failure;
             }
             const blob = await response.blob();
             const disposition = response.headers.get('content-disposition') || '';
@@ -857,7 +859,10 @@ document.addEventListener('DOMContentLoaded',()=> {
             setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
             const exported = response.headers.get('X-Cards-Exported'), skippedUsed = response.headers.get('X-Cards-Skipped-Used');
             operationSwal.fire('الملف جاهز', exported ? `صُدّر ${exported} كرت غير مستخدم${skippedUsed && skippedUsed !== '0' ? `، واستُبعد ${skippedUsed} كرت مستخدم` : ''}.` : 'اكتمل تجهيز الملف وبدأ تنزيله.', 'success');
-        } catch (error) { operationSwal.uncertain('تعذر التصدير', error.message, 'error'); }
+        } catch (error) {
+            if (error && error.fromServer) operationSwal.fire('تعذر التصدير', error.message, 'error');
+            else operationSwal.uncertain();   // no answer: the result is genuinely unknown
+        }
         finally { batchDownloadPending = false; }
     }
 
