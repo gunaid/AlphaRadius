@@ -1929,6 +1929,7 @@ function executeMikrotikImportAction() {
                                     (st.ignored_expired_users > 0 ? '<p>🚫 تم استبعاد وتخطي: <b>' + st.ignored_expired_users + '</b> كرت منتهي</p>' : '') +
                                     (st.imported_consumption_users > 0 ? '<p>📊 تم ترحيل استهلاك: <b>' + st.imported_consumption_users + '</b> كرت إلى RADIUS</p>' : '') +
                                     (st.restarted_used_users > 0 ? '<p>♻️ كروت مستخدمة بالرصيد المتبقي وصلاحية من تاريخ الاستيراد: <b>' + st.restarted_used_users + '</b></p>' : '') +
+                                    (st.masked_passwords > 0 ? '<p>🔒 كلمات مرور أخفاها الراوتر (*****) واعتُبرت فارغة، فكلمة المرور = رقم الكرت: <b>' + st.masked_passwords + '</b></p>' : '') +
                                     (st.review_required_users > 0 ? '<p>🔎 يحتاج مراجعة (لم يُستورد): <b>' + st.review_required_users + '</b></p>' : '') +
                                     '<p>⏭️ تم تخطي: <b>' + (st.skipped_users || 0) + '</b> كرت موجود مسبقاً</p>' +
                                     batchesHtml +

@@ -74,6 +74,23 @@ class GroupNameTests(unittest.TestCase):
             self.assertEqual(clean(bad), '', bad)
 
 
+class MaskedPasswordTests(unittest.TestCase):
+    def test_routeros_masked_password_is_not_a_password(self):
+        ns = {'re': re}
+        path = ROOT / 'services/mikrotik_userman_importer.py'
+        node = next(n for n in ast.parse(path.read_text(encoding='utf-8')).body
+                    if isinstance(n, ast.FunctionDef) and n.name == 'source_password')
+        exec(compile(ast.Module(body=[node], type_ignores=[]), str(path), 'exec'), ns)
+        source_password = ns['source_password']
+        self.assertEqual(source_password('*****', '35528211572'), ('35528211572', True))
+        self.assertEqual(source_password('*', 'c1'), ('c1', True))
+        self.assertEqual(source_password('', 'c1'), ('c1', False))
+        self.assertEqual(source_password(None, 'c1'), ('c1', False))
+        self.assertEqual(source_password('  ', 'c1'), ('c1', False))
+        self.assertEqual(source_password('pa*ss', 'c1'), ('pa*ss', False), 'real passwords are kept')
+        self.assertEqual(source_password('1234', 'c1'), ('1234', False))
+
+
 class WiringTests(unittest.TestCase):
     def test_importer(self):
         text = (ROOT / 'services/mikrotik_userman_importer.py').read_text(encoding='utf-8')
@@ -86,6 +103,8 @@ class WiringTests(unittest.TestCase):
         self.assertNotIn("?, 'ALL-SPEED'", text, 'card group follows its package')
         self.assertNotIn("'User Manager - '+package_names[pid]", text, 'one batch naming')
         self.assertIn('INSERT INTO wisp_session_baselines', text)
+        self.assertIn("upass, masked = source_password(u.get('password'), uname)", text)
+        self.assertNotIn("u.get('password', uname).strip() or uname", text)
         journal = (ROOT / 'services/userman_import_journal.py').read_text(encoding='utf-8')
         self.assertIn("DELETE FROM wisp_session_baselines WHERE radacctid=%s AND renewed_at=%s", journal)
 
@@ -100,6 +119,7 @@ class WiringTests(unittest.TestCase):
             self.assertIn('<option value="restart">', html, page)
             self.assertRegex(html, r"used_cards_mode: ?usedCardsMode", page)
             self.assertIn('st.restarted_used_users', html, page)
+            self.assertIn('st.masked_passwords', html, page)
         progress = (ROOT / 'web/static/userman-progress.js').read_text(encoding='utf-8')
         self.assertEqual(progress.count("restarted_used_users"), 2)
         from jinja2 import Environment, FileSystemLoader

@@ -201,7 +201,25 @@ def main():
             state = rows("SELECT state FROM wisp_userman_import_journal WHERE job_id=%s AND kind='account' AND identity_key=%s", (Cases.job, used))
             self.assertEqual(state[0]['state'], 'review_required')
 
-    result = unittest.TextTestRunner(verbosity=2).run(unittest.defaultTestLoader.loadTestsFromTestCase(Cases))
+    class MaskedCases(unittest.TestCase):
+        def test_masked_router_password_becomes_card_number(self):
+            data = payload({'unused': f'm_new_{tag}', 'used': f'm_used_{tag}'})
+            for user in data['users']:
+                user['password'] = '*****'          # API user without the 'sensitive' policy
+            result = execute_userman_import(data, used_cards_mode='restart', operation_id=uuid.uuid4().hex)
+            self.assertTrue(result['success'], result)
+            self.assertEqual(result['stats']['masked_passwords'], 2)
+            for name in (f'm_new_{tag}', f'm_used_{tag}'):
+                value = rows("SELECT value FROM radcheck WHERE username=%s AND attribute='Cleartext-Password'", (name,))
+                self.assertEqual(value[0]['value'], name)
+                card = rows('SELECT password, pin_code FROM wisp_vouchers WHERE username=%s', (name,))[0]
+                self.assertEqual((card['password'], card['pin_code']), (name, name))
+                self.assertEqual(rejects(name), [])
+
+    suite = unittest.TestSuite()
+    suite.addTests(unittest.defaultTestLoader.loadTestsFromTestCase(Cases))
+    suite.addTests(unittest.defaultTestLoader.loadTestsFromTestCase(MaskedCases))
+    result = unittest.TextTestRunner(verbosity=2).run(suite)
     raise SystemExit(0 if result.wasSuccessful() else 1)
 
 

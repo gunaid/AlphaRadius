@@ -6326,7 +6326,7 @@
     },
     {
       "file": "services/mikrotik_userman_importer.py",
-      "sha256": "f2b356710140ecedcba374afd73b5d23cfebb4fcfb598bc401266902d5e8ebb5",
+      "sha256": "d2f2500fcbe7750e5815419ad113366e1375b2c95c2aa34717f2419506ffc3c6",
       "imports": [
         "core.license_feature_policy",
         "core.mikrotik_api",
@@ -6354,93 +6354,98 @@
           "kind": "FunctionDef"
         },
         {
-          "name": "clean_group_name",
+          "name": "source_password",
           "line": 84,
           "kind": "FunctionDef"
         },
         {
+          "name": "clean_group_name",
+          "line": 93,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "parse_shared_users",
-          "line": 92,
+          "line": 101,
           "kind": "FunctionDef"
         },
         {
           "name": "parse_mikrotik_bytes_to_mb",
-          "line": 104,
+          "line": 113,
           "kind": "FunctionDef"
         },
         {
           "name": "extract_quota_from_name",
-          "line": 133,
+          "line": 142,
           "kind": "FunctionDef"
         },
         {
           "name": "parse_mikrotik_uptime_to_mins",
-          "line": 159,
+          "line": 168,
           "kind": "FunctionDef"
         },
         {
           "name": "parse_mikrotik_uptime_seconds",
-          "line": 192,
+          "line": 201,
           "kind": "FunctionDef"
         },
         {
           "name": "parse_rsc_content",
-          "line": 214,
+          "line": 223,
           "kind": "FunctionDef"
         },
         {
           "name": "parse_attributes",
-          "line": 245,
+          "line": 254,
           "kind": "FunctionDef"
         },
         {
           "name": "_clean_limit",
-          "line": 311,
+          "line": 320,
           "kind": "FunctionDef"
         },
         {
           "name": "BufferedRouterOSApiProtocol",
-          "line": 417,
+          "line": 426,
           "kind": "ClassDef"
         },
         {
           "name": "connect",
-          "line": 423,
+          "line": 432,
           "kind": "FunctionDef"
         },
         {
           "name": "_read_raw",
-          "line": 428,
+          "line": 437,
           "kind": "FunctionDef"
         },
         {
           "name": "_read_len",
-          "line": 451,
+          "line": 460,
           "kind": "FunctionDef"
         },
         {
           "name": "read_sentence",
-          "line": 471,
+          "line": 480,
           "kind": "FunctionDef"
         },
         {
           "name": "fetch_userman_via_api",
-          "line": 482,
+          "line": 491,
           "kind": "FunctionDef"
         },
         {
           "name": "read_rows",
-          "line": 503,
+          "line": 512,
           "kind": "FunctionDef"
         },
         {
           "name": "_clean_limit",
-          "line": 555,
+          "line": 564,
           "kind": "FunctionDef"
         },
         {
           "name": "execute_userman_import",
-          "line": 667,
+          "line": 676,
           "kind": "FunctionDef"
         }
       ]

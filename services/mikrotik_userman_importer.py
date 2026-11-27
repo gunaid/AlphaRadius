@@ -81,6 +81,15 @@ def parse_mikrotik_validity(val_str):
     return 30, 'days'
 
 # Helper: parse shared users / override-shared-users
+def source_password(value, username):
+    """(password, masked). RouterOS hides passwords as '*****' when the API
+    user lacks the 'sensitive' policy; that is not a password. Such cards, like
+    empty ones, get password = username (code-only cards)."""
+    password = str(value if value is not None else '').strip()
+    masked = bool(re.fullmatch(r'\*+', password))
+    return (username if masked or not password else password), masked
+
+
 def clean_group_name(value):
     """MikroTik group/profile name from User Manager; '' when unset or unsafe."""
     name = str(value or '').strip().strip('"')
@@ -719,6 +728,7 @@ def execute_userman_import(parsed_data, target_type='vouchers', fallback_package
             'ignored_expired_users': 0,
             'imported_consumption_users': 0,
             'restarted_used_users': 0,
+            'masked_passwords': 0,
             'batch_details': [],
             'review_required_users': 0,
             'review_reasons': {},
@@ -899,7 +909,9 @@ def execute_userman_import(parsed_data, target_type='vouchers', fallback_package
             if check_cancel: check_cancel()
             uname = u['username'].strip()
             uname_lower = uname.lower()
-            upass = u.get('password', uname).strip() or uname
+            upass, masked = source_password(u.get('password'), uname)
+            if masked:
+                stats['masked_passwords'] = stats.get('masked_passwords', 0) + 1
             uprofile = u.get('actual_profile', '').strip()
             has_prof = bool(uprofile and uprofile.lower() != 'none')
 
