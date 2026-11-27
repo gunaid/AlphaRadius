@@ -30,7 +30,7 @@
                 '<div class="um-meter-heading"><span>تقدم العملية</span><strong id="um-percent">جارٍ التجهيز</strong></div>'+
                 '<progress id="um-progress" max="100" aria-label="تقدم العملية"></progress>' +
                 '<p id="um-count"></p><div id="um-stats" class="um-stats"'+(kind==='fetch'?' hidden':'')+'>'+[
-                    ['created_users','أُنشئ'],['updated_users','حُدّث'],['skipped_users','تُخطي'],['ignored_expired_users','استُبعد منتهي'],['review_required_users','يحتاج مراجعة']
+                    ['created_users','أُنشئ'],['updated_users','حُدّث'],['skipped_users','تُخطي'],['ignored_expired_users','استُبعد منتهي'],['restarted_used_users','مستخدم بصلاحية جديدة'],['review_required_users','يحتاج مراجعة']
                 ].map(([key,label])=>'<div class="um-stat"><span>'+label+'</span><strong id="um-stat-'+key+'">0</strong></div>').join('')+'</div>'+
                 '<div class="um-notice"><span class="um-info" aria-hidden="true">i</span><span id="um-note">'+(kind === 'fetch' ? 'السحب للمعاينة فقط؛ لا تُزرع الكروت في هذه المرحلة.' : 'الإلغاء يعكس أثر الاستيراد الآمن؛ الحالات ذات الاستخدام أو التغييرات الأحدث تُحفظ للمراجعة.')+'</span></div></div>',
             showConfirmButton:false, showCancelButton:true, cancelButtonText:'إلغاء العملية',
@@ -61,7 +61,7 @@
                 document.getElementById('um-count').textContent = job.total == null ? 'بانتظار عدد سجلات المصدر' :
                     numeric(job.processed)+' من '+numeric(job.total)+(job.percent == null ? '' : ' — '+numeric(job.percent)+'٪');
                 const stats = job.stats || {};
-                if (kind === 'import') for (const key of ['created_users','updated_users','skipped_users','ignored_expired_users','review_required_users']) {
+                if (kind === 'import') for (const key of ['created_users','updated_users','skipped_users','ignored_expired_users','restarted_used_users','review_required_users']) {
                     document.getElementById('um-stat-'+key).textContent = numeric(stats[key]);
                 }
                 if (job.state === 'completed') {

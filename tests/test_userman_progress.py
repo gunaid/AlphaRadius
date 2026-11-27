@@ -126,7 +126,7 @@ class StreamTests(unittest.TestCase):
         tree=ast.parse((ROOT/'services/mikrotik_userman_importer.py').read_text(encoding='utf-8'))
         self.ns={'datetime':datetime,'re':re,'time':time,'present_value':lambda p,k,d=None:p[k] if p.get(k) is not None else d,
                  '_license_guarded':lambda *keys:lambda fn:fn}
-        wanted={'fetch_userman_via_api','parse_mikrotik_rate_limit','parse_mikrotik_bytes_to_mb','parse_mikrotik_uptime_to_mins','parse_mikrotik_uptime_seconds','parse_mikrotik_validity','parse_shared_users','extract_quota_from_name'}
+        wanted={'fetch_userman_via_api','parse_mikrotik_rate_limit','parse_mikrotik_bytes_to_mb','parse_mikrotik_uptime_to_mins','parse_mikrotik_uptime_seconds','parse_mikrotik_validity','parse_shared_users','extract_quota_from_name','clean_group_name'}
         module=ast.Module(body=[n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name in wanted],type_ignores=[])
         exec(compile(module,'stream','exec'),self.ns)
         class Client:

@@ -92,6 +92,14 @@ def restore_rows(conn, before, after):
     order = ('radcheck', 'radreply', 'radusergroup', 'radacct', 'wisp_vouchers', 'wisp_subscribers',
              'radgroupcheck', 'radgroupreply', 'wisp_voucher_batches', 'wisp_packages')
     with conn.cursor() as cur:
+        # Baselines an import added for sessions still open at its cycle start
+        # (used cards restarted at import). Keyed by (radacctid, renewed_at); the
+        # import only ever inserts new keys, so only those are removed.
+        kept = {(str(r['radacctid']), str(r['renewed_at'])) for r in before.get('wisp_session_baselines', [])}
+        for row in after.get('wisp_session_baselines', []):
+            if (str(row['radacctid']), str(row['renewed_at'])) not in kept:
+                cur.execute('DELETE FROM wisp_session_baselines WHERE radacctid=%s AND renewed_at=%s',
+                            (row['radacctid'], row['renewed_at']))
         for table in order:
             if table not in allowed or table not in after:
                 continue

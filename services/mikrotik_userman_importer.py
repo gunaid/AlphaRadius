@@ -17,7 +17,8 @@ import uuid
 from database.db import get_connection, is_mysql_conn, adapt_query, query_all, query_one, execute_write, log_audit
 from core.mikrotik_api import RouterOSApiProtocol
 from services.import_state_service import (present_value, import_now, imported_state,
-    historical_accounting_values, imported_radius_checks, ensure_import_package_radius, imported_profile_plan, imported_policy_rate)
+    historical_accounting_values, imported_radius_checks, ensure_import_package_radius, imported_profile_plan, imported_policy_rate,
+    restarted_used_state)
 
 # Helper: parse human-readable bandwidth (e.g. '1M', '512k', '10M/10M', '1048576') -> (rx_kbps, tx_kbps)
 def parse_mikrotik_rate_limit(rate_str):
@@ -80,6 +81,14 @@ def parse_mikrotik_validity(val_str):
     return 30, 'days'
 
 # Helper: parse shared users / override-shared-users
+def clean_group_name(value):
+    """MikroTik group/profile name from User Manager; '' when unset or unsafe."""
+    name = str(value or '').strip().strip('"')
+    if not name or name.lower() == 'none' or len(name) > 100 or any(c in name for c in '\r\n\x00;"\''):
+        return ''
+    return name
+
+
 def parse_shared_users(val):
     if not val:
         return 1
@@ -325,7 +334,9 @@ def parse_rsc_content(raw_text):
                         'rate_down': f"{rx_k}k" if rx_k else "",
                         'rate_up': f"{tx_k}k" if tx_k else "",
                         'quota_mb': download_mb,
-                        'uptime_mins': uptime_mins
+                        'uptime_mins': uptime_mins,
+                        # MikroTik group (hotspot user profile) given to users of this limitation.
+                        'group_name': clean_group_name(attrs.get('group-name'))
                     }
                     
             elif current_section == 'profile_limits':
@@ -372,6 +383,8 @@ def parse_rsc_content(raw_text):
             profiles[p_name]['rate_up'] = lim['rate_up']
             profiles[p_name]['quota_mb'] = lim['quota_mb']
             profiles[p_name]['uptime_mins'] = lim['uptime_mins']
+            if lim.get('group_name') and not profiles[p_name].get('group_name'):
+                profiles[p_name]['group_name'] = lim['group_name']
 
     # Profiles without limitations have no speed (never an invented default).
     for p_name, p in profiles.items():
@@ -565,7 +578,8 @@ def fetch_userman_via_api(host, username, password, port=8728, use_ssl=False, ti
                 'rate_down': f"{rx_k}k" if rx_k else "",
                 'rate_up': f"{tx_k}k" if tx_k else "",
                 'quota_mb': quota_mb,
-                'uptime_mins': uptime_mins
+                'uptime_mins': uptime_mins,
+                'group_name': clean_group_name(lim.get('group-name'))
             }
 
     # Map profile to limits
@@ -597,7 +611,8 @@ def fetch_userman_via_api(host, username, password, port=8728, use_ssl=False, ti
             'rate_up': lim_info.get('rate_up', ''),
             'quota_mb': p_quota,
             'uptime_mins': lim_info.get('uptime_mins', 0),
-            'override_shared_users': parse_shared_users(p.get('override-shared-users', 1))
+            'override_shared_users': parse_shared_users(p.get('override-shared-users', 1)),
+            'group_name': lim_info.get('group_name', '')
         })
 
     users_list = []
@@ -649,7 +664,7 @@ def fetch_userman_via_api(host, username, password, port=8728, use_ssl=False, ti
 # 3. Execution Engine: Insert into ALPHA RADIUS
 # -------------------------------------------------------------
 @_license_guarded('userman_import')
-def execute_userman_import(parsed_data, target_type='vouchers', fallback_package=None, duplicate_action='skip', ignore_expired=True, import_consumption=False, admin_user='admin', profile_costs=None, chunk_index=None, total_chunks=None, state_cache=None, check_cancel=None, operation_id=None):
+def execute_userman_import(parsed_data, target_type='vouchers', fallback_package=None, duplicate_action='skip', ignore_expired=True, import_consumption=False, admin_user='admin', profile_costs=None, chunk_index=None, total_chunks=None, state_cache=None, check_cancel=None, operation_id=None, used_cards_mode='review'):
     """
     Executes the isolated database insertion:
     - Creates/matches packages in wisp_packages
@@ -657,6 +672,10 @@ def execute_userman_import(parsed_data, target_type='vouchers', fallback_package
     - Supports client-side chunking/batching to prevent Cloudflare 100s timeouts
     - Filters expired / no-profile cards if ignore_expired is True
     - Imports past bandwidth and uptime consumption to radacct if import_consumption is True
+    - used_cards_mode='restart': a card with usage in User Manager is imported
+      with its remaining data/time from the source counters and a validity that
+      starts at the import moment (User Manager 6 gives no first-use/expiry
+      dates). 'review' (default) keeps such cards out for review as before.
     - Inserts users into wisp_subscribers or wisp_vouchers
     - Creates FreeRADIUS radcheck, radreply, radusergroup entries
     """
@@ -682,6 +701,8 @@ def execute_userman_import(parsed_data, target_type='vouchers', fallback_package
         profile_costs = {}
     package_costs_map = {}
 
+    if used_cards_mode not in ('review', 'restart'):
+        raise ValueError('Invalid used cards mode')
     is_chunked = (chunk_index is not None and total_chunks is not None)
     is_first_chunk = (not is_chunked) or (chunk_index == 0)
     is_last_chunk = (not is_chunked) or (chunk_index >= total_chunks - 1)
@@ -697,6 +718,7 @@ def execute_userman_import(parsed_data, target_type='vouchers', fallback_package
             'skipped_users': 0,
             'ignored_expired_users': 0,
             'imported_consumption_users': 0,
+            'restarted_used_users': 0,
             'batch_details': [],
             'review_required_users': 0,
             'review_reasons': {},
@@ -745,6 +767,7 @@ def execute_userman_import(parsed_data, target_type='vouchers', fallback_package
                 p_val = int(present_value(prof, 'validity_value', 30))
                 p_unit = prof.get('validity_unit', 'days') or 'days'
                 p_simul = int(prof.get('override_shared_users', 1) or 1)
+                p_group = clean_group_name(prof.get('group_name'))
 
                 if p_name not in package_map:
                     # Insert new package
@@ -752,10 +775,10 @@ def execute_userman_import(parsed_data, target_type='vouchers', fallback_package
                         INSERT INTO wisp_packages (
                             name, price, cost, validity_value, validity_unit,
                             volume_quota_mb, uptime_limit_mins, rate_download, rate_upload,
-                            simultaneous_sessions, is_active, created_at
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
+                            simultaneous_sessions, mikrotik_group, is_active, created_at
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
                     """.replace('?', '%s' if is_mysql_conn(db) else '?'), (
-                        p_name, p_price, p_cost, p_val, p_unit, p_quota, p_uptime, p_down, p_up, p_simul
+                        p_name, p_price, p_cost, p_val, p_unit, p_quota, p_uptime, p_down, p_up, p_simul, p_group
                     ))
                     pkg_id = cur.lastrowid
                     resources.append(('package', str(pkg_id), {'wisp_packages': []}))
@@ -765,6 +788,14 @@ def execute_userman_import(parsed_data, target_type='vouchers', fallback_package
                 else:
                     pkg_id = package_map[p_name]
                     # Existing package policies/contracts are never rewritten by import.
+                    # Only an EMPTY MikroTik group is filled from User Manager (journaled).
+                    if p_group:
+                        before = journal.resource_image(db, 'package', str(pkg_id))
+                        current = (before['wisp_packages'][0].get('mikrotik_group') or '').strip() if before['wisp_packages'] else 'x'
+                        if not current:
+                            resources.append(('package', str(pkg_id), before))
+                            cur.execute('UPDATE wisp_packages SET mikrotik_group=%s WHERE id=%s', (p_group, pkg_id))
+                            stats['grouped_packages'] = stats.get('grouped_packages', 0) + 1
 
             # Fallback default package
             if fallback_package and fallback_package.strip() in package_map:
@@ -821,7 +852,7 @@ def execute_userman_import(parsed_data, target_type='vouchers', fallback_package
                 else:
                     cur.execute('''INSERT INTO wisp_voucher_batches(batch_number,name,package_id,card_count,created_at)
                         VALUES(%s,%s,%s,0,CURRENT_TIMESTAMP)''',
-                        (f'UM-{pid}-{uuid.uuid4().hex[:16]}', 'User Manager - '+package_names[pid], pid))
+                        (f'UM-{pid}-{uuid.uuid4().hex[:16]}', 'استيراد يوزرمانجر - '+package_names[pid], pid))
                     batch_map[pid] = cur.lastrowid
                     resources.append(('batch', str(cur.lastrowid), {'wisp_voucher_batches': []}))
                     stats['created_batches'] += 1
@@ -829,6 +860,14 @@ def execute_userman_import(parsed_data, target_type='vouchers', fallback_package
             name = plans_by_id[pid]['name']
             resources.append(('group', name, journal.resource_image(db, 'group', name)))
         ensure_import_package_radius(db, [pid for pid in used_package_ids if pid is not None])
+        for pid in sorted(p for p in used_package_ids if p is not None):
+            group = (plans_by_id[pid].get('mikrotik_group') or '').strip()
+            if group:
+                # Hotspot user profile for the package; an existing value is never replaced.
+                cur.execute('''INSERT INTO radgroupreply(groupname,attribute,op,value)
+                    SELECT %s,'Mikrotik-Group','=',%s FROM DUAL WHERE NOT EXISTS
+                    (SELECT 1 FROM radgroupreply WHERE groupname=%s AND attribute='Mikrotik-Group')''',
+                    (plans_by_id[pid]['name'], group, plans_by_id[pid]['name']))
         now_str = now_dt.strftime('%Y-%m-%d %H:%M:%S')
 
         # Include model rows even when expired credentials were removed.
@@ -846,6 +885,7 @@ def execute_userman_import(parsed_data, target_type='vouchers', fallback_package
                     existing_targets.update(found)
 
         # Bulk Buffers
+        baselines_bulk = []
         vouchers_bulk = []
         subscribers_bulk = []
         radcheck_bulk = []
@@ -904,10 +944,13 @@ def execute_userman_import(parsed_data, target_type='vouchers', fallback_package
             prof_info = profiles_dict.get(uprofile, {})
             plan = imported_profile_plan(plans_by_id[pkg_id], prof_info)
             actual = cycle_accounting(u, account_before[uname]['radacct'])
-            evidence = historical_evidence(u, actual, parsed_data.get('nas_aliases')) if import_consumption else {'review': None}
-            if not import_consumption and actual:
+            # Operator-chosen mode for used cards without source dates (see docstring).
+            restart_used = used_cards_mode == 'restart' and has_usage
+            evidence = (historical_evidence(u, actual, parsed_data.get('nas_aliases'))
+                        if import_consumption and not restart_used else {'review': None})
+            if not import_consumption and actual and not restart_used:
                 evidence = {'review': 'target_accounting_requires_history'}
-            if import_consumption and (u.get('first_used_at') or u.get('expires_at') or u.get('till_time')
+            if import_consumption and not restart_used and (u.get('first_used_at') or u.get('expires_at') or u.get('till_time')
                     or any(evidence.get('residual', ()))) and not (u.get('expires_at') or u.get('till_time')) and int(present_value(plan, 'validity_value', present_value(plan, 'validity_days', 0))):
                 evidence = {'review': 'missing_original_expiry'}
             if evidence['review']:
@@ -916,8 +959,20 @@ def execute_userman_import(parsed_data, target_type='vouchers', fallback_package
                 reasons = stats.setdefault('review_reasons', {})
                 reasons[reason] = reasons.get(reason, 0) + 1
                 continue
-            state = imported_state(u, plan, now_dt, import_consumption)
-            if import_consumption and state['history']:
+            if restart_used:
+                state = restarted_used_state(u, plan, now_dt)
+                stats['restarted_used_users'] = stats.get('restarted_used_users', 0) + 1
+                # A session still open here (e.g. accounting sent while User Manager
+                # authenticated it) counts from the new cycle on, not from its start,
+                # and does not trigger the reconciliation reject.
+                for row in account_before[uname]['radacct']:
+                    if not row.get('acctstoptime'):
+                        i, o = int(row.get('acctinputoctets') or 0), int(row.get('acctoutputoctets') or 0)
+                        baselines_bulk.append((row['radacctid'], uname, i, o, i + o,
+                                               int(row.get('acctsessiontime') or 0), state['last_renewed_at']))
+            else:
+                state = imported_state(u, plan, now_dt, import_consumption)
+            if import_consumption and state['history'] and not restart_used:
                 # Dates are original evidence, never reconstructed from aggregate uptime.
                 from services.import_state_service import parse_import_datetime
                 state['first_used_at'] = parse_import_datetime(u['first_used_at'])
@@ -953,7 +1008,8 @@ def execute_userman_import(parsed_data, target_type='vouchers', fallback_package
                     float(plan.get('price') or 0), float(package_costs_map.get(uprofile, plan.get('cost') or 0)),
                     int(plan.get('volume_quota_mb') or 0), int(plan.get('uptime_limit_mins') or 0),
                     snap_v_val, snap_v_unit, snap_v_days, snap_rd, snap_ru, imported_policy_rate(plan),
-                    int(plan.get('simultaneous_sessions') or 1)
+                    int(plan.get('simultaneous_sessions') or 1),
+                    (plans_by_id[pkg_id].get('mikrotik_group') or '').strip()
                 ))
             else:
                 subscribers_bulk.append((
@@ -1002,7 +1058,7 @@ def execute_userman_import(parsed_data, target_type='vouchers', fallback_package
                     ?, ?, ?, ?,
                     ?, ?, ?,
                     ?, ?, ?,
-                    ?, 'ALL-SPEED'
+                    ?, ?
                 )
             """.replace('?', '%s' if is_mysql_conn(db) else '?')
             cur.executemany(v_sql, vouchers_bulk)
@@ -1036,6 +1092,10 @@ def execute_userman_import(parsed_data, target_type='vouchers', fallback_package
                 )
             """.replace('?', '%s' if is_mysql_conn(db) else '?')
             cur.executemany(acct_sql, radacct_bulk)
+        if baselines_bulk:
+            cur.executemany('''INSERT INTO wisp_session_baselines
+                (radacctid, username, baseline_input_bytes, baseline_output_bytes, baseline_bytes, baseline_seconds, renewed_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)''', baselines_bulk)
 
         # Update batch card_count and remove empty batches (only on final chunk or non-chunked import)
         if is_last_chunk and target_type == 'vouchers' and batch_map:

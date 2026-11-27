@@ -624,6 +624,9 @@ def api_mikrotik_userman_execute():
     duplicate_action = req_data.get('duplicate_action', 'skip')
     ignore_expired = bool(req_data.get('ignore_expired', True))
     import_consumption = bool(req_data.get('import_consumption', False))
+    used_cards_mode = req_data.get('used_cards_mode') or 'review'
+    if used_cards_mode not in ('review', 'restart'):
+        return jsonify(success=False, message='خيار الكروت المستخدمة غير صالح.'), 400
     profile_costs = req_data.get('profile_costs') or {}
     admin_user = session.get('username', 'admin')
 
@@ -654,7 +657,8 @@ def api_mikrotik_userman_execute():
         profile_costs=profile_costs,
         chunk_index=chunk_index,
         total_chunks=total_chunks,
-        state_cache=state_cache
+        state_cache=state_cache,
+        used_cards_mode=used_cards_mode
     )
     return jsonify(res)
 

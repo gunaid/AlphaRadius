@@ -203,9 +203,9 @@ def start_import(owner,request,admin_user):
         if not re.fullmatch('[a-f0-9]{32}',key): raise ValueError('مرجع الاستيراد غير صالح.')
         binding=root()/('import-'+str(int(owner))+'-'+key+'.json')
     if not isinstance(data.get('users'),list) or not data['users']: raise ValueError('لا توجد كروت للاستيراد.')
-    options={key:request.get(key,default) for key,default in [('target_type','vouchers'),('fallback_package',None),('duplicate_action','skip'),('ignore_expired',True),('import_consumption',False),('profile_costs',{})]}
+    options={key:request.get(key,default) for key,default in [('target_type','vouchers'),('fallback_package',None),('duplicate_action','skip'),('ignore_expired',True),('import_consumption',False),('profile_costs',{}),('used_cards_mode','review')]}
     if options['target_type'] not in ('vouchers','subscribers') or options['duplicate_action'] not in ('skip','overwrite'): raise ValueError('خيارات الاستيراد غير صالحة.')
-    if any(not isinstance(options[k],bool) for k in ('ignore_expired','import_consumption')): raise ValueError('خيارات الاستيراد غير صالحة.')
+    if any(not isinstance(options[k],bool) for k in ('ignore_expired','import_consumption')) or options['used_cards_mode'] not in ('review','restart'): raise ValueError('خيارات الاستيراد غير صالحة.')
     fingerprint=hashlib.sha256(json.dumps({'source':source_id or data,'options':options},sort_keys=True,ensure_ascii=False).encode()).hexdigest()
     if binding.exists():
         old=json.loads(binding.read_text());old_path,_=folder(old['job_id'],owner)

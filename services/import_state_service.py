@@ -86,6 +86,42 @@ def imported_state(row, plan, now, preserve_history):
                 upload_bytes=up_bytes, download_bytes=down_bytes, uptime_seconds=seconds)
 
 
+def source_usage(row):
+    """(upload, download, seconds) from a User Manager row; never negative."""
+    up = int(row.get('upload_used_bytes') or float(row.get('upload_used_mb') or 0) * 1048576)
+    down = int(row.get('download_used_bytes') or float(row.get('download_used_mb') or 0) * 1048576)
+    seconds = row.get('uptime_used_seconds')
+    seconds = int(seconds if seconds is not None else int(row.get('uptime_used_mins') or 0) * 60)
+    if min(up, down, seconds) < 0:
+        raise ValueError('Imported consumption must not be negative')
+    return up, down, seconds
+
+
+def restarted_used_state(row, plan, now):
+    """A used card whose source has no dates (User Manager 6).
+
+    Operator decision: the remaining data and time come from the source
+    counters, and the validity starts again at the import moment. The cycle
+    starts at `now` (whole seconds, so DATETIME columns compare equal); the
+    counters become one consolidated accounting row at that instant. Data, time
+    and days are checked separately: a card is expired only when its own data
+    or time limit is already used up.
+    """
+    now = now.replace(microsecond=0)
+    up, down, seconds = source_usage(row)
+    duration = validity_duration(plan)
+    quota = int(plan.get('volume_quota_mb') or 0)
+    uptime_limit = int(plan.get('uptime_limit_mins') or 0)
+    status = 'active'
+    if (quota > 0 and up + down >= quota * 1048576) or (uptime_limit > 0 and seconds >= uptime_limit * 60):
+        status = 'expired'
+    if row.get('disabled'):
+        status = 'disabled'
+    return dict(status=status, first_used_at=now, expires_at=(now + duration) if duration else None,
+                last_renewed_at=now, history=True,
+                upload_bytes=up, download_bytes=down, uptime_seconds=seconds)
+
+
 def imported_policy_rate(plan):
     """Encode the complete imported package policy using the shared contract."""
     from services.rate_policy_service import package_rate_limit

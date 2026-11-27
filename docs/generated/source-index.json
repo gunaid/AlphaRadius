@@ -5473,7 +5473,7 @@
     },
     {
       "file": "services/import_state_service.py",
-      "sha256": "72cb0a1397fd4c8c061eb1547197e09d101160b38af5837b27bc98d84cb7ec2a",
+      "sha256": "cc25c704f2cdc4e5d9902c4a1c6942bc5961ee59cc6800b490d7f426791258fe",
       "imports": [
         "core.radius_sync",
         "database.db",
@@ -5506,28 +5506,38 @@
           "kind": "FunctionDef"
         },
         {
-          "name": "imported_policy_rate",
+          "name": "source_usage",
           "line": 89,
           "kind": "FunctionDef"
         },
         {
+          "name": "restarted_used_state",
+          "line": 100,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "imported_policy_rate",
+          "line": 125,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "imported_profile_plan",
-          "line": 95,
+          "line": 131,
           "kind": "FunctionDef"
         },
         {
           "name": "historical_accounting_values",
-          "line": 107,
+          "line": 143,
           "kind": "FunctionDef"
         },
         {
           "name": "imported_radius_checks",
-          "line": 117,
+          "line": 153,
           "kind": "FunctionDef"
         },
         {
           "name": "ensure_import_package_radius",
-          "line": 126,
+          "line": 162,
           "kind": "FunctionDef"
         }
       ]
@@ -6316,7 +6326,7 @@
     },
     {
       "file": "services/mikrotik_userman_importer.py",
-      "sha256": "a9190d5f83bd3488cae6baee36600c443d7790825f527a19eaa5d33bfa1867cb",
+      "sha256": "f2b356710140ecedcba374afd73b5d23cfebb4fcfb598bc401266902d5e8ebb5",
       "imports": [
         "core.license_feature_policy",
         "core.mikrotik_api",
@@ -6330,102 +6340,107 @@
       "definitions": [
         {
           "name": "parse_mikrotik_rate_limit",
-          "line": 23,
+          "line": 24,
           "kind": "FunctionDef"
         },
         {
           "name": "to_kbps",
-          "line": 30,
+          "line": 31,
           "kind": "FunctionDef"
         },
         {
           "name": "parse_mikrotik_validity",
-          "line": 58,
+          "line": 59,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "clean_group_name",
+          "line": 84,
           "kind": "FunctionDef"
         },
         {
           "name": "parse_shared_users",
-          "line": 83,
+          "line": 92,
           "kind": "FunctionDef"
         },
         {
           "name": "parse_mikrotik_bytes_to_mb",
-          "line": 95,
+          "line": 104,
           "kind": "FunctionDef"
         },
         {
           "name": "extract_quota_from_name",
-          "line": 124,
+          "line": 133,
           "kind": "FunctionDef"
         },
         {
           "name": "parse_mikrotik_uptime_to_mins",
-          "line": 150,
+          "line": 159,
           "kind": "FunctionDef"
         },
         {
           "name": "parse_mikrotik_uptime_seconds",
-          "line": 183,
+          "line": 192,
           "kind": "FunctionDef"
         },
         {
           "name": "parse_rsc_content",
-          "line": 205,
+          "line": 214,
           "kind": "FunctionDef"
         },
         {
           "name": "parse_attributes",
-          "line": 236,
+          "line": 245,
           "kind": "FunctionDef"
         },
         {
           "name": "_clean_limit",
-          "line": 302,
+          "line": 311,
           "kind": "FunctionDef"
         },
         {
           "name": "BufferedRouterOSApiProtocol",
-          "line": 404,
+          "line": 417,
           "kind": "ClassDef"
         },
         {
           "name": "connect",
-          "line": 410,
+          "line": 423,
           "kind": "FunctionDef"
         },
         {
           "name": "_read_raw",
-          "line": 415,
+          "line": 428,
           "kind": "FunctionDef"
         },
         {
           "name": "_read_len",
-          "line": 438,
+          "line": 451,
           "kind": "FunctionDef"
         },
         {
           "name": "read_sentence",
-          "line": 458,
+          "line": 471,
           "kind": "FunctionDef"
         },
         {
           "name": "fetch_userman_via_api",
-          "line": 469,
+          "line": 482,
           "kind": "FunctionDef"
         },
         {
           "name": "read_rows",
-          "line": 490,
+          "line": 503,
           "kind": "FunctionDef"
         },
         {
           "name": "_clean_limit",
-          "line": 542,
+          "line": 555,
           "kind": "FunctionDef"
         },
         {
           "name": "execute_userman_import",
-          "line": 652,
+          "line": 667,
           "kind": "FunctionDef"
         }
       ]
@@ -9848,7 +9863,7 @@
     },
     {
       "file": "services/userman_import_journal.py",
-      "sha256": "a537d1869d44d6ce823d8423ec8b60de7ca68496c0e12d4f96cd52ef7ebcdc83",
+      "sha256": "9a7f8a581664b9792f8c6126310e383dc4ed90dcf341417144e5c850571df569",
       "imports": [
         "database.db"
       ],
@@ -9900,14 +9915,14 @@
         },
         {
           "name": "rollback_import",
-          "line": 117,
+          "line": 125,
           "kind": "FunctionDef"
         }
       ]
     },
     {
       "file": "services/userman_job_service.py",
-      "sha256": "db866add263afcf0361ecbcd18c2fd2242ae2590591bcf4006d43734b3f8584e",
+      "sha256": "1b2d3534cbad25dbe5e3ad13aa9f0bd2f5a20de18a011ea4b3ac5326710bd0ba",
       "imports": [
         "contextlib",
         "core.config",
@@ -11132,7 +11147,7 @@
     },
     {
       "file": "web/routes/nas.py",
-      "sha256": "530e2bee7fddb5fd273c4fbafcdc4ea13f2ec4448b6925c1dc411a3ee74c1d11",
+      "sha256": "e7c2abf474706b157037d2e69ec7a9672e029608f074e381e658ea3aa1228bbe",
       "imports": [
         "core.config",
         "core.mikrotik_api",
@@ -11349,62 +11364,62 @@
         },
         {
           "name": "hotspot_generator_page",
-          "line": 668,
+          "line": 672,
           "kind": "FunctionDef"
         },
         {
           "name": "api_hotspot_generator_save",
-          "line": 683,
+          "line": 687,
           "kind": "FunctionDef"
         },
         {
           "name": "api_nas_status_compat",
-          "line": 700,
+          "line": 704,
           "kind": "FunctionDef"
         },
         {
           "name": "api_nas_single_status_compat",
-          "line": 717,
+          "line": 721,
           "kind": "FunctionDef"
         },
         {
           "name": "cloned_macs_page",
-          "line": 732,
+          "line": 736,
           "kind": "FunctionDef"
         },
         {
           "name": "_cloned_admin",
-          "line": 748,
+          "line": 752,
           "kind": "FunctionDef"
         },
         {
           "name": "cloned_macs_add",
-          "line": 755,
+          "line": 759,
           "kind": "FunctionDef"
         },
         {
           "name": "cloned_macs_delete",
-          "line": 780,
+          "line": 784,
           "kind": "FunctionDef"
         },
         {
           "name": "cloned_macs_settings",
-          "line": 797,
+          "line": 801,
           "kind": "FunctionDef"
         },
         {
           "name": "cloned_macs_sync",
-          "line": 816,
+          "line": 820,
           "kind": "FunctionDef"
         },
         {
           "name": "realm_speed_page",
-          "line": 836,
+          "line": 840,
           "kind": "FunctionDef"
         },
         {
           "name": "realm_speed_settings",
-          "line": 849,
+          "line": 853,
           "kind": "FunctionDef"
         }
       ]
@@ -13831,7 +13846,7 @@
       "endpoint": "hotspot_generator_page",
       "handler": "hotspot_generator_page",
       "file": "web/routes/nas.py",
-      "line": 668
+      "line": 672
     },
     {
       "rule": "/tools/subscriber-portal",
@@ -13842,7 +13857,7 @@
       "endpoint": "subscriber_portal_page",
       "handler": "hotspot_generator_page",
       "file": "web/routes/nas.py",
-      "line": 668
+      "line": 672
     },
     {
       "rule": "/api/tools/hotspot-generator/save",
@@ -13853,7 +13868,7 @@
       "endpoint": "api_hotspot_generator_save",
       "handler": "api_hotspot_generator_save",
       "file": "web/routes/nas.py",
-      "line": 683
+      "line": 687
     },
     {
       "rule": "/api/tools/subscriber-portal/save",
@@ -13864,7 +13879,7 @@
       "endpoint": "api_subscriber_portal_save",
       "handler": "api_hotspot_generator_save",
       "file": "web/routes/nas.py",
-      "line": 683
+      "line": 687
     },
     {
       "rule": "/api/nas-status",
@@ -13875,7 +13890,7 @@
       "endpoint": "api_nas_status_compat",
       "handler": "api_nas_status_compat",
       "file": "web/routes/nas.py",
-      "line": 700
+      "line": 704
     },
     {
       "rule": "/api/nas/<int:nas_id>/status",
@@ -13886,7 +13901,7 @@
       "endpoint": "api_nas_single_status_compat",
       "handler": "api_nas_single_status_compat",
       "file": "web/routes/nas.py",
-      "line": 717
+      "line": 721
     },
     {
       "rule": "/nas/cloned-macs",
@@ -13897,7 +13912,7 @@
       "endpoint": "cloned_macs_page",
       "handler": "cloned_macs_page",
       "file": "web/routes/nas.py",
-      "line": 732
+      "line": 736
     },
     {
       "rule": "/nas/cloned-macs/add",
@@ -13908,7 +13923,7 @@
       "endpoint": "cloned_macs_add",
       "handler": "cloned_macs_add",
       "file": "web/routes/nas.py",
-      "line": 755
+      "line": 759
     },
     {
       "rule": "/nas/cloned-macs/delete",
@@ -13919,7 +13934,7 @@
       "endpoint": "cloned_macs_delete",
       "handler": "cloned_macs_delete",
       "file": "web/routes/nas.py",
-      "line": 780
+      "line": 784
     },
     {
       "rule": "/nas/cloned-macs/settings",
@@ -13930,7 +13945,7 @@
       "endpoint": "cloned_macs_settings",
       "handler": "cloned_macs_settings",
       "file": "web/routes/nas.py",
-      "line": 797
+      "line": 801
     },
     {
       "rule": "/nas/cloned-macs/sync",
@@ -13941,7 +13956,7 @@
       "endpoint": "cloned_macs_sync",
       "handler": "cloned_macs_sync",
       "file": "web/routes/nas.py",
-      "line": 816
+      "line": 820
     },
     {
       "rule": "/nas/domain-speed",
@@ -13952,7 +13967,7 @@
       "endpoint": "realm_speed_page",
       "handler": "realm_speed_page",
       "file": "web/routes/nas.py",
-      "line": 836
+      "line": 840
     },
     {
       "rule": "/nas/domain-speed/settings",
@@ -13963,7 +13978,7 @@
       "endpoint": "realm_speed_settings",
       "handler": "realm_speed_settings",
       "file": "web/routes/nas.py",
-      "line": 849
+      "line": 853
     },
     {
       "rule": "/packages",

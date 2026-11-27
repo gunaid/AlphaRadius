@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 IMPORTER = ROOT / 'services/mikrotik_userman_importer.py'
 WANTED = {'fetch_userman_via_api', 'parse_rsc_content', 'parse_mikrotik_rate_limit', 'parse_mikrotik_bytes_to_mb',
           'parse_mikrotik_uptime_to_mins', 'parse_mikrotik_uptime_seconds', 'parse_mikrotik_validity',
-          'parse_shared_users', 'extract_quota_from_name'}
+          'parse_shared_users', 'extract_quota_from_name', 'clean_group_name'}
 
 
 def load_parsers():

@@ -425,6 +425,7 @@
                         <select id="importConsumption" class="mikrotik-select w-full bg-[#070b14] border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500 font-bold">
                             <option value="no" selected>كروت جديدة برصيد كامل (Unused)</option>
                             <option value="yes">ترحيل وسحب رصيد الاستهلاك والوقت السابق</option>
+                            <option value="restart">الكروت المستخدمة: الرصيد المتبقي، والصلاحية من تاريخ الاستيراد</option>
                         </select>
                     </div>
 
@@ -773,6 +774,8 @@ function executeImportAction() {
     const dupAction = document.getElementById('importDuplicateAction').value;
     const ignoreExpired = (document.getElementById('importIgnoreExpired').value === 'yes');
     const importConsumption = (document.getElementById('importConsumption').value === 'yes');
+    // 'restart': used cards keep their remaining data/time; validity starts at import (User Manager 6 has no dates).
+    const usedCardsMode = (document.getElementById('importConsumption').value === 'restart') ? 'restart' : 'review';
     const totalUsers = parsedDataStore.users.length;
     const activeUsers = parsedDataStore.active_users || totalUsers;
     const totalProfiles = (parsedDataStore.profiles || []).length;
@@ -785,7 +788,7 @@ function executeImportAction() {
             '<div class="text-right text-xs space-y-2 text-slate-300">' +
                 '<p>هل تريد استيراد <b>' + countToImport.toLocaleString() + '</b> كرت/مشترك مقسمة عبر <b>' + totalProfiles + '</b> باقة/حزمة؟</p>' +
                 (ignoreExpired ? '<p class="text-amber-400">⚠️ سيتم استبعاد الكروت المنتهية تلقائياً.</p>' : '<p class="text-cyan-400">ℹ️ سيتم استيراد كافة الكروت بما فيها المنتهية.</p>') +
-                (importConsumption ? '<p class="text-emerald-400">📊 سيتم سحب وترحيل سجلات الاستهلاك السابقة إلى RADIUS.</p>' : '<p class="text-slate-400">🌱 سيتم استيرادها ككروت جديدة برصيد كامل.</p>') +
+                (usedCardsMode === 'restart' ? '<p class="text-emerald-400">♻️ الكروت المستخدمة: يُرحّل الرصيد المتبقي من User Manager، وتبدأ الصلاحية من الآن. غير المستخدمة تبقى جديدة.</p>' : importConsumption ? '<p class="text-emerald-400">📊 سيتم سحب وترحيل سجلات الاستهلاك السابقة إلى RADIUS.</p>' : '<p class="text-slate-400">🌱 سيتم استيرادها ككروت جديدة برصيد كامل.</p>') +
             '</div>',
         icon: 'question',
         showCancelButton: true,
@@ -806,7 +809,8 @@ function executeImportAction() {
                     fallback_package: fallbackPkg,
                     duplicate_action: dupAction,
                     ignore_expired: ignoreExpired,
-                    import_consumption: importConsumption
+                    import_consumption: importConsumption,
+                    used_cards_mode: usedCardsMode
                 })
             })
             .then(async r => {
@@ -841,6 +845,8 @@ function executeImportAction() {
                                     '<p>📦 تم إنشاء/تحديث: <b>' + (st.created_packages || 0) + '</b> باقة</p>' +
                                     (st.ignored_expired_users > 0 ? '<p>🚫 تم استبعاد وتخطي: <b>' + st.ignored_expired_users + '</b> كرت منتهي</p>' : '') +
                                     (st.imported_consumption_users > 0 ? '<p>📊 تم ترحيل استهلاك: <b>' + st.imported_consumption_users + '</b> كرت إلى RADIUS</p>' : '') +
+                                    (st.restarted_used_users > 0 ? '<p>♻️ كروت مستخدمة بالرصيد المتبقي وصلاحية من تاريخ الاستيراد: <b>' + st.restarted_used_users + '</b></p>' : '') +
+                                    (st.review_required_users > 0 ? '<p>🔎 يحتاج مراجعة (لم يُستورد): <b>' + st.review_required_users + '</b></p>' : '') +
                                     '<p>⏭️ تم تخطي: <b>' + (st.skipped_users || 0) + '</b> كرت موجود مسبقاً</p>' +
                                     batchesHtml +
                                 '</div>' +
