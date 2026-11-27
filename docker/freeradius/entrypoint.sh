@@ -143,6 +143,27 @@ if [ -f "${CONF_DIR}/sites-available/default" ]; then
         sed -i '/filter_username/a 	# HOTSPOT_SINGLE_FIELD_CARD_FALLBACK\n	if (!User-Name && User-Password) {\n		update request {\n			User-Name := "%{User-Password}"\n		}\n	}\n	if (User-Name && (!User-Password || "%{User-Password}" == "") && !CHAP-Password) {\n		update request {\n			User-Password := "%{User-Name}"\n		}\n	}' ${CONF_DIR}/sites-available/default
     fi
 
+    # Same rule for CHAP. A card whose password equals its username (code-only
+    # cards, User Manager cards imported with an empty password) is also accepted
+    # when the login page sends an empty password: the router then sends a CHAP
+    # digest of "" that cannot match the stored username. Hotspot only (not PPP);
+    # the normal CHAP check runs first and any other account is unaffected.
+    if ! grep -q "HOTSPOT_SINGLE_FIELD_CHAP_FALLBACK" ${CONF_DIR}/sites-available/default; then
+        sed -i '/^[[:space:]]*Auth-Type CHAP {/,/^[[:space:]]*}/{
+/^[[:space:]]*chap[[:space:]]*$/c\
+		# HOTSPOT_SINGLE_FIELD_CHAP_FALLBACK\
+		chap {\
+			reject = 1\
+		}\
+		if (reject && (!&Framed-Protocol || (&Framed-Protocol != "PPP")) && (&control:Cleartext-Password == &User-Name)) {\
+			update control {\
+				&Cleartext-Password := ""\
+			}\
+			chap\
+		}
+}' ${CONF_DIR}/sites-available/default
+    fi
+
     # Inject Reply-Message forwarding in Post-Auth-Type REJECT
     if ! grep -q "REPLY_MESSAGE_REJECT_FORWARDING" ${CONF_DIR}/sites-available/default; then
         sed -i '/Post-Auth-Type REJECT {/a \	# REPLY_MESSAGE_REJECT_FORWARDING\n	if (&control:Reply-Message) {\n		update reply {\n			&Reply-Message := &control:Reply-Message\n		}\n	}\n	elsif (&reply:Reply-Message) {\n		update reply {\n			&Reply-Message := &reply:Reply-Message\n		}\n	}' ${CONF_DIR}/sites-available/default

@@ -108,6 +108,7 @@ tests/*
 !tests/test_panel_surface.py
 !tests/run_panel_surface_lab.py
 !tests/test_proxmox_template.py
+!tests/test_hotspot_chap_empty_password.py
 !tests/test_package_page.py
 !tests/test_subscriber_admin_safety.py
 !tests/test_subscriber_list_safety.py

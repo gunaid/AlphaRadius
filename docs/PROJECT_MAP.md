@@ -1246,3 +1246,7 @@ Implementation and local measurements are complete; see [implementation report](
 ## 27 نوفمبر 2026 — قالب Proxmox للتثبيت دون إنترنت
 
 [الخطوات في Proxmox والحماية والفحوص](PROXMOX_TEMPLATE_20261127.md): `deploy/proxmox/prepare_template.sh build|seal` يجهز VM بصور مبنية دون تشغيل، و`/opt/alpha-radius/first-boot.sh` يشغّل النظام عند العميل بأسرار عشوائية ودون تنزيل؛ الطرق القديمة كما هي. كلمات مرور قاعدة البيانات في compose أصبحت `ALPHA_DB_PASSWORD`/`ALPHA_DB_ROOT_PASSWORD` بالقيم الافتراضية نفسها.
+
+## 27 نوفمبر 2026 — كروت الرمز الواحد مع CHAP وكلمة فارغة
+
+[المشكلة والإصلاح والفحوص](HOTSPOT_EMPTY_PASSWORD_CHAP_20261127.md): كروت User Manager المستوردة بلا كلمة مرور (وكروت الرمز) كانت تُرفض حين يرسل الراوتر CHAP لكلمة فارغة؛ Core يعيد فحص CHAP بكلمة فارغة لكرت كلمته = اسمه فقط، هوتسبوت فقط.

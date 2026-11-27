@@ -91,7 +91,7 @@
     "docker/freeradius/Dockerfile": "985a5649370ce9288b62a06507e70e9834f52559b3410554a5401db59006476b",
     "docker/freeradius/default_site": "5daf191ebcc73e81ebf05610c221bb132070ba86f1a9359b98ff63acc5822712",
     "docker/freeradius/detail": "a46b7841ef0730000a1c9ea49506e58cb18159c66921ce24f0e48fcef616e678",
-    "docker/freeradius/entrypoint.sh": "d58ad031338c04a8206fd5d518ca1b1d03ac36d49bf18abd929885562eece6bd",
+    "docker/freeradius/entrypoint.sh": "0f3049ce43a962474ea1b5b855a4a8c4c2ea246f98cf381f88c443fa5d665fef",
     "docker/freeradius/license-capacity-postauth.conf": "27b284ca16ae35996f73b50b57ccff4635cd8f4a125f54c4778020a7a34f5bf6",
     "docker/freeradius/alpha-accounting-identity.conf": "5dc23ea8f7a3f3b2b4245520c8dea9a1d2d41ccadcb219f428a8c1edf35fe07d",
     "docker/freeradius/mods-available/sql": "c2852d302608f8337fd269d34a89d114a98c957dcfb3fbd303644b5e352ce0ca",
