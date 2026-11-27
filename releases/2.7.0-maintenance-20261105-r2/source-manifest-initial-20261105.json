@@ -321,7 +321,7 @@
     "docker/freeradius/alpha-accounting-identity.conf": "5dc23ea8f7a3f3b2b4245520c8dea9a1d2d41ccadcb219f428a8c1edf35fe07d",
     "docker/freeradius/queries.conf": "86d111f503ab0d2f71ecd4dfa2aa0d989b531a6cadd093d8c3d778a435545bab",
     "docker/freeradius/detail": "f95e5ca86897ee9221fd16b0667e81c64b6e7bdae97d231a0d34d3b5ce12d6d0",
-    "packaging/compile_runtime.py": "9d291ff7651947dd631e98da8cf843322125192de1acf83a8f46b9a55c4db5e6",
+    "packaging/compile_runtime.py": "dafe17fab27ac4470bbe4688bebaa9626357097f008255757e2a03f968f6ec3a",
     "packaging/embed_templates.py": "41ed245feb7e91eda40a3f3929e25816e0520e3c5b26df74ed9c90a75f54cc16",
     "packaging/minify_assets.py": "46f0a54a242eb8ec42f278036871c11b187a4360d2afd1ecca591bd66811102e",
     "services/deletion_history_policy.py": "79f4b1c76d7e3824f85131f2951fefd27bb774776a762ab284e7d3345d3f0fe8"

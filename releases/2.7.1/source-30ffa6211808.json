@@ -88,7 +88,7 @@
     "docker/freeradius/alpha-accounting-identity.conf": "5dc23ea8f7a3f3b2b4245520c8dea9a1d2d41ccadcb219f428a8c1edf35fe07d",
     "docker/freeradius/queries.conf": "120b1dbd3b16e01fb5be5e57c178c2d11d4ed8918c151d59081d340625d2bde7",
     "entrypoint.sh": "9bf1be0b1c6165d3493b830762710a7c2dd0f63888cf5c39a949bb8fbccbf150",
-    "packaging/compile_runtime.py": "9d291ff7651947dd631e98da8cf843322125192de1acf83a8f46b9a55c4db5e6",
+    "packaging/compile_runtime.py": "dafe17fab27ac4470bbe4688bebaa9626357097f008255757e2a03f968f6ec3a",
     "packaging/embed_templates.py": "41ed245feb7e91eda40a3f3929e25816e0520e3c5b26df74ed9c90a75f54cc16",
     "packaging/minify_assets.py": "46f0a54a242eb8ec42f278036871c11b187a4360d2afd1ecca591bd66811102e",
     "run.py": "9f54646d12f8062d9445d4cf1814e8319208d144922b5f542c4d981ec901a40f",
@@ -374,7 +374,7 @@
   },
   "build_files_lf_sha256": {
     "Dockerfile": "986fb8834b78279806a54bc2429cf235ef87a62d5b85893799a3f7fd1ab0c1d9",
-    "packaging/compile_runtime.py": "9d291ff7651947dd631e98da8cf843322125192de1acf83a8f46b9a55c4db5e6",
+    "packaging/compile_runtime.py": "dafe17fab27ac4470bbe4688bebaa9626357097f008255757e2a03f968f6ec3a",
     "packaging/seal_runtime.py": "1908d052fa2b64296e1193d595cab1fd5fa4bccea7706e0e26f7788ae3460da1"
   },
   "weekly_enhancements_included": true,

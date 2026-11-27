@@ -32,6 +32,8 @@ COPY packaging/ /opt/alpha-build/
 RUN python -c "from setuptools import setup, Extension; from Cython.Build import cythonize; names=['services.license_guard_service','core.licensing','core.hardware_fingerprint','core.license_protocol','core.license_security','database.license_capacity']; setup(name='SecurityCore', ext_modules=cythonize([Extension(n, [n.replace('.','/')+'.py']) for n in names], compiler_directives={'language_level':'3'}), script_args=['build_ext','--inplace'])" && \
     rm -f services/license_guard_service.py core/licensing.py core/hardware_fingerprint.py core/license_protocol.py core/license_security.py database/license_capacity.py services/*.c core/*.c database/*.c && \
     rm -rf build
+# Parallel compile; empty = one job per CPU (memory-capped). Override: --build-arg ALPHA_COMPILE_JOBS=2
+ARG ALPHA_COMPILE_JOBS=
 RUN pip install --no-cache-dir rjsmin==1.2.4 rcssmin==1.2.2 && \
     python /opt/alpha-build/minify_assets.py && \
     python /opt/alpha-build/embed_templates.py && \

@@ -1,11 +1,37 @@
 """Build proprietary modules without changing Python annotation semantics."""
 from pathlib import Path
+import os
 import sysconfig
 
 from Cython.Build import cythonize
 from setuptools import Extension, setup
 
 root = Path('/app')
+
+
+def compile_jobs():
+    """Parallel compiler processes: ALPHA_COMPILE_JOBS, else one per CPU,
+    capped at 8 and at about 1 GiB of available memory per process."""
+    requested = os.environ.get('ALPHA_COMPILE_JOBS', '').strip()
+    if requested.isdigit() and int(requested) > 0:
+        return int(requested)
+    try:
+        cpus = len(os.sched_getaffinity(0))
+    except (AttributeError, OSError):
+        cpus = os.cpu_count() or 1
+    by_memory = cpus
+    try:
+        for line in Path('/proc/meminfo').read_text().splitlines():
+            if line.startswith('MemAvailable:'):
+                by_memory = max(1, int(line.split()[1]) // (1024 * 1024))
+                break
+    except (OSError, ValueError, IndexError):
+        pass
+    return max(1, min(cpus, by_memory, 8))
+
+
+jobs = compile_jobs()
+print(f'Compiling with {jobs} parallel job(s)', flush=True)
 sources = sorted(p for p in root.rglob('*.py')
                  if not {'build', 'storage', 'uploads', '__pycache__'}.intersection(p.relative_to(root).parts))
 extensions, packages = [], []
@@ -18,11 +44,11 @@ for path in sources:
     extensions.append(Extension(name, [str(path)], extra_compile_args=['-O1']))
 
 setup(name='MAXProtectedRuntime', ext_modules=cythonize(
-    extensions, nthreads=1, compiler_directives={
+    extensions, nthreads=jobs, compiler_directives={
         'language_level': 3, 'annotation_typing': False, 'infer_types': False,
         'binding': True, 'always_allow_keywords': True, 'overflowcheck': True,
         'boundscheck': True, 'wraparound': True,
-    }), script_args=['build_ext', '--inplace', '--parallel', '1'])
+    }), script_args=['build_ext', '--inplace', '--parallel', str(jobs)])
 suffix = sysconfig.get_config_var('EXT_SUFFIX')
 for name, folder in packages:
     (root / (name.replace('.', '/') + suffix)).replace(folder / ('__init__' + suffix))
