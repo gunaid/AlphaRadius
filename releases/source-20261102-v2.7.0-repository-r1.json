@@ -194,7 +194,7 @@
     "services/userman_job_service.py": "1b2d3534cbad25dbe5e3ad13aa9f0bd2f5a20de18a011ea4b3ac5326710bd0ba",
     "services/voucher_edit_service.py": "3569fea9fffdad75d50b90340835dccc91ec0dbad69bcef5d99b81bab5562e61",
     "services/voucher_service.py": "819a6632f0704f542fca7dc9b546ab101208928fd4aadc07a8aa350af79a2143",
-    "services/whatsapp_service.py": "21d437da34e19720e4120ba22131e67faba82468abb3095fb05788272a131e09",
+    "services/whatsapp_service.py": "1b3c67373e46e698add563cce2bfde394c0064739b0f1fad7af43a7126fb8d30",
     "services/wireguard_service.py": "9cb07b9bed26ea7e36be46b1be4519f9ec94b89bb7358150e55b5a7a8a8fbc8f",
     "web/__init__.py": "5637c910991be1ce34854b035b8e94fac24fa5d6ef6ac7624386aed02ade8b25",
     "web/access_policy.py": "c0bd81f630ca821b3b088ecd0ec0ba831049bcc19234a174285f32586d292359",

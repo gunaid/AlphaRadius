@@ -343,7 +343,7 @@
     "services/userman_job_service.py": "1b2d3534cbad25dbe5e3ad13aa9f0bd2f5a20de18a011ea4b3ac5326710bd0ba",
     "services/voucher_edit_service.py": "e408ad5d130fdc73d2f1e1e4dbbd67d553880155ac9652da8305612229634148",
     "services/voucher_service.py": "76b5ffa0d664700eb61b1536f4aabea8132cd7cafbeb9cf87990ab5b31c5ee7d",
-    "services/whatsapp_service.py": "21d437da34e19720e4120ba22131e67faba82468abb3095fb05788272a131e09",
+    "services/whatsapp_service.py": "1b3c67373e46e698add563cce2bfde394c0064739b0f1fad7af43a7126fb8d30",
     "services/wireguard_service.py": "9cb07b9bed26ea7e36be46b1be4519f9ec94b89bb7358150e55b5a7a8a8fbc8f",
     "deploy/hosted-max/update_controller.py": "9f8aa28fc8c86ab3501c47ed3c137218dabc1bc9a6d2f9a9adc83bf3217963aa",
     "deploy/hosted-max/provision_update_controller.py": "6e85f640454399c56b115bea25a597990a9e7e68beab8ddca544bf955c3148f0",

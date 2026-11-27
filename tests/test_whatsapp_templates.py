@@ -114,6 +114,12 @@ class TemplateColumnsTests(unittest.TestCase):
         count = self.db.conn.execute('SELECT COUNT(*) FROM wisp_whatsapp_templates').fetchone()[0]
         self.assertEqual(count, len(self.service.DEFAULT_TEMPLATES))
 
+    def test_seeds_right_after_boot(self):
+        # time.monotonic() is close to 0 just after the machine boots.
+        with patch.object(self.service.time, 'monotonic', return_value=12.0):
+            self.assertEqual(len(self.service.get_all_templates()), len(self.service.DEFAULT_TEMPLATES))
+        self.assertTrue(self.service._seed_state['done'])
+
     def test_failed_seed_is_not_retried_on_every_call(self):
         self.db.conn.execute('DROP TABLE wisp_whatsapp_settings')
         with self.assertLogs('whatsapp_service', 'WARNING'):

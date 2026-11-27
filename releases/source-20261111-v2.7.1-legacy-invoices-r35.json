@@ -201,7 +201,7 @@
     "services/voucher_edit_service.py": "50177400d8bc279184c2c98a14e8c87abc625d59a0a3e5832f5a5237f2cedd47",
     "services/voucher_expiry_policy.py": "b16437a870bf66c01b021399dee7f63a6f8b4a6123a1b65dc11e178fb0234f78",
     "services/voucher_service.py": "819a6632f0704f542fca7dc9b546ab101208928fd4aadc07a8aa350af79a2143",
-    "services/whatsapp_service.py": "21d437da34e19720e4120ba22131e67faba82468abb3095fb05788272a131e09",
+    "services/whatsapp_service.py": "1b3c67373e46e698add563cce2bfde394c0064739b0f1fad7af43a7126fb8d30",
     "services/wireguard_service.py": "0ed3836b204c9616983f075bd73e04f0b67923c50cd1355a360ebb8401b42604",
     "storage/keys/master_public_key.pem": "a8b67f0e653ea0e00ebc12b96bcec62981b514890a4d325b83014b8afac28a06",
     "web/__init__.py": "5637c910991be1ce34854b035b8e94fac24fa5d6ef6ac7624386aed02ade8b25",

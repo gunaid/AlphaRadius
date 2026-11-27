@@ -39,7 +39,7 @@ _TEMPLATE_SELECT = ("SELECT id, template_key AS event_key, title, category, mess
 # Defaults are seeded once per process; a failed attempt is retried at most
 # every _SEED_RETRY_SECONDS instead of on every message.
 _SEED_RETRY_SECONDS = 300
-_seed_state = {'done': False, 'last_failure': 0.0}
+_seed_state = {'done': False, 'last_failure': None}
 _seed_lock = threading.Lock()
 
 # wisp_whatsapp_logs stores recipient_phone / entity_type, direction as
@@ -132,7 +132,10 @@ DEFAULT_TEMPLATES = [
 
 def seed_default_whatsapp_data():
     """Ensures default settings and templates exist in the database (once per process)."""
-    if _seed_state['done'] or time.monotonic() - _seed_state['last_failure'] < _SEED_RETRY_SECONDS:
+    # None = never failed. time.monotonic() starts near 0 at boot, so a 0.0 default
+    # skipped seeding for the first 5 minutes after every reboot.
+    last_failure = _seed_state['last_failure']
+    if _seed_state['done'] or (last_failure is not None and time.monotonic() - last_failure < _SEED_RETRY_SECONDS):
         return
     with _seed_lock:
         if _seed_state['done']:
