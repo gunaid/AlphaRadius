@@ -1231,6 +1231,18 @@ Implementation and local measurements are complete; see [implementation report](
 
 [السلوك والتفعيل والفحوص](ADMIN_PORT_SEPARATION_20261125.md): اختياري بـ`ALPHA_ADMIN_PORT` (مثل 43333): اللوحة على ذلك المنفذ، والرابط المباشر (80/5090) يفتح بوابة المشتركين فقط وصفحات المدير فيه 404؛ التصنيف بمقبس الاستماع لا بالترويسات (`web/panel_surface.py`).
 
+## 26 نوفمبر 2026 — تطابق سر فحص RADIUS بين Web وCore
+
+[الخلل والإصلاح والتطبيق وملاحظات التحديث](RADIUS_HEALTH_SECRET_20261126.md): السر العشوائي `RADIUS_HEALTH_SECRET` من `build_and_start.sh` يُمرر الآن إلى Core كـ`RADIUS_WEB_CLIENT_SECRET` لعميل `web_container` فقط، فيزول تنبيه `RADIUS_UNRESPONSIVE` الكاذب. يلزم إعادة إنشاء Core؛ Web لا تتغير.
+
+## 26 نوفمبر 2026 — قوالب واتساب بأسماء الأعمدة الفعلية
+
+[الخلل والأثر والإصلاح والفحوص](WHATSAPP_TEMPLATES_COLUMNS_20261126.md): `whatsapp_service` كان يستعلم بـ`event_key/template_text/is_enabled` والجدول `template_key/message_body/is_active`، فيفشل رد البوت الافتراضي ويُشغَّل مُصلح المخطط مع كل رسالة. الإصلاح في الكود فقط مع بذر مرة واحدة؛ لا ترحيل للقاعدة. المرحلة الثانية في الوثيقة نفسها: أعمدة سجل الرسائل وقيم enum، وجلسات البوت في الذاكرة لأن جدولها غير موجود، و`status` للمشتركين، ومحفظة الوكيل من `wisp_managers`.
+
+## 26 نوفمبر 2026 — معاينة استيراد User Manager بلا سرعة مخترعة
+
+[سرعات الباقات في الاستيراد](DOMAIN_SPEED_20261125.md#سرعات-الباقات): المعاينة كانت تعرض `10M / 5M` لبروفايلات بلا سرعة في الراوتر. المحللان لا يضعان قيمة افتراضية، والمعاينة تعرض «بدون سرعة» لأن الباقات المستوردة تُنشأ بلا سرعة.
+
 ## 27 نوفمبر 2026 — قالب Proxmox للتثبيت دون إنترنت
 
 [الخطوات في Proxmox والحماية والفحوص](PROXMOX_TEMPLATE_20261127.md): `deploy/proxmox/prepare_template.sh build|seal` يجهز VM بصور مبنية دون تشغيل، و`/opt/alpha-radius/first-boot.sh` يشغّل النظام عند العميل بأسرار عشوائية ودون تنزيل؛ الطرق القديمة كما هي. كلمات مرور قاعدة البيانات في compose أصبحت `ALPHA_DB_PASSWORD`/`ALPHA_DB_ROOT_PASSWORD` بالقيم الافتراضية نفسها.

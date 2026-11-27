@@ -6316,7 +6316,7 @@
     },
     {
       "file": "services/mikrotik_userman_importer.py",
-      "sha256": "eff70dfce79ae3ccf078bf53577aba098f237e3ccb3be24f55134cd1d4178067",
+      "sha256": "a9190d5f83bd3488cae6baee36600c443d7790825f527a19eaa5d33bfa1867cb",
       "imports": [
         "core.license_feature_policy",
         "core.mikrotik_api",
@@ -6385,47 +6385,47 @@
         },
         {
           "name": "BufferedRouterOSApiProtocol",
-          "line": 403,
+          "line": 404,
           "kind": "ClassDef"
         },
         {
           "name": "connect",
-          "line": 409,
+          "line": 410,
           "kind": "FunctionDef"
         },
         {
           "name": "_read_raw",
-          "line": 414,
+          "line": 415,
           "kind": "FunctionDef"
         },
         {
           "name": "_read_len",
-          "line": 437,
+          "line": 438,
           "kind": "FunctionDef"
         },
         {
           "name": "read_sentence",
-          "line": 457,
+          "line": 458,
           "kind": "FunctionDef"
         },
         {
           "name": "fetch_userman_via_api",
-          "line": 468,
+          "line": 469,
           "kind": "FunctionDef"
         },
         {
           "name": "read_rows",
-          "line": 489,
+          "line": 490,
           "kind": "FunctionDef"
         },
         {
           "name": "_clean_limit",
-          "line": 541,
+          "line": 542,
           "kind": "FunctionDef"
         },
         {
           "name": "execute_userman_import",
-          "line": 650,
+          "line": 652,
           "kind": "FunctionDef"
         }
       ]
@@ -10272,7 +10272,7 @@
     },
     {
       "file": "services/whatsapp_service.py",
-      "sha256": "49e12226d7d2c3f0017f7035d6cbd10d7a179319759fad7ce98068a6ca4784b7",
+      "sha256": "21d437da34e19720e4120ba22131e67faba82468abb3095fb05788272a131e09",
       "imports": [
         "core.config",
         "core.license_feature_policy",
@@ -10282,127 +10282,132 @@
       "definitions": [
         {
           "name": "seed_default_whatsapp_data",
-          "line": 100,
+          "line": 133,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_seed_default_whatsapp_rows",
+          "line": 148,
           "kind": "FunctionDef"
         },
         {
           "name": "get_whatsapp_settings",
-          "line": 124,
+          "line": 168,
           "kind": "FunctionDef"
         },
         {
           "name": "update_whatsapp_settings",
-          "line": 149,
+          "line": 193,
           "kind": "FunctionDef"
         },
         {
           "name": "get_evolution_qr_code",
-          "line": 182,
+          "line": 226,
           "kind": "FunctionDef"
         },
         {
           "name": "get_evolution_connection_state",
-          "line": 220,
+          "line": 264,
           "kind": "FunctionDef"
         },
         {
           "name": "restart_evolution_instance",
-          "line": 250,
-          "kind": "FunctionDef"
-        },
-        {
-          "name": "get_all_templates",
-          "line": 271,
-          "kind": "FunctionDef"
-        },
-        {
-          "name": "get_template_by_key",
-          "line": 278,
-          "kind": "FunctionDef"
-        },
-        {
-          "name": "save_template",
-          "line": 285,
-          "kind": "FunctionDef"
-        },
-        {
-          "name": "format_bytes_display",
           "line": 294,
           "kind": "FunctionDef"
         },
         {
+          "name": "get_all_templates",
+          "line": 315,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "get_template_by_key",
+          "line": 322,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "save_template",
+          "line": 330,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "format_bytes_display",
+          "line": 339,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "clean_phone_number",
-          "line": 307,
+          "line": 352,
           "kind": "FunctionDef"
         },
         {
           "name": "log_whatsapp_message",
-          "line": 319,
+          "line": 364,
           "kind": "FunctionDef"
         },
         {
           "name": "get_whatsapp_logs",
-          "line": 332,
+          "line": 383,
           "kind": "FunctionDef"
         },
         {
           "name": "clear_whatsapp_logs",
-          "line": 348,
+          "line": 401,
           "kind": "FunctionDef"
         },
         {
           "name": "send_whatsapp_message",
-          "line": 354,
+          "line": 407,
           "kind": "FunctionDef"
         },
         {
           "name": "get_or_create_session",
-          "line": 460,
+          "line": 513,
           "kind": "FunctionDef"
         },
         {
           "name": "update_session_state",
-          "line": 478,
+          "line": 530,
           "kind": "FunctionDef"
         },
         {
           "name": "query_voucher_status",
-          "line": 486,
+          "line": 541,
           "kind": "FunctionDef"
         },
         {
           "name": "query_subscriber_status",
-          "line": 538,
+          "line": 593,
           "kind": "FunctionDef"
         },
         {
           "name": "process_incoming_whatsapp_message",
-          "line": 586,
+          "line": 641,
           "kind": "FunctionDef"
         },
         {
           "name": "notify_voucher_issued",
-          "line": 772,
+          "line": 831,
           "kind": "FunctionDef"
         },
         {
           "name": "notify_quota_warning",
-          "line": 795,
+          "line": 854,
           "kind": "FunctionDef"
         },
         {
           "name": "notify_wallet_recharge",
-          "line": 814,
+          "line": 873,
           "kind": "FunctionDef"
         },
         {
           "name": "send_broadcast_campaign",
-          "line": 835,
+          "line": 894,
           "kind": "FunctionDef"
         },
         {
           "name": "_broadcast_worker",
-          "line": 868,
+          "line": 927,
           "kind": "FunctionDef"
         }
       ]
@@ -12835,7 +12840,7 @@
     },
     {
       "file": "web/routes/whatsapp.py",
-      "sha256": "3e9a26e1da4b1cdc3446af82ef76226335ae15dfdc30b1aa82ecae0e2f2d09e6",
+      "sha256": "f96cd5e68faa321719be5de2722541fc5fc02ceeb4bd1d6c1bb0e9eec980fa01",
       "imports": [
         "core.rbac",
         "database.db",
@@ -12846,77 +12851,77 @@
       "definitions": [
         {
           "name": "whatsapp_dashboard",
-          "line": 36,
+          "line": 37,
           "kind": "FunctionDef"
         },
         {
           "name": "whatsapp_templates_page",
-          "line": 63,
+          "line": 60,
           "kind": "FunctionDef"
         },
         {
           "name": "whatsapp_broadcast_page",
-          "line": 71,
+          "line": 68,
           "kind": "FunctionDef"
         },
         {
           "name": "whatsapp_logs_page",
-          "line": 85,
+          "line": 82,
           "kind": "FunctionDef"
         },
         {
           "name": "whatsapp_simulator_page",
-          "line": 100,
+          "line": 97,
           "kind": "FunctionDef"
         },
         {
           "name": "api_whatsapp_save_settings",
-          "line": 117,
+          "line": 114,
           "kind": "FunctionDef"
         },
         {
           "name": "api_whatsapp_save_template",
-          "line": 126,
+          "line": 123,
           "kind": "FunctionDef"
         },
         {
           "name": "api_whatsapp_send_test",
-          "line": 143,
+          "line": 140,
           "kind": "FunctionDef"
         },
         {
           "name": "api_whatsapp_send_broadcast",
-          "line": 157,
+          "line": 154,
           "kind": "FunctionDef"
         },
         {
           "name": "api_whatsapp_clear_logs",
-          "line": 173,
+          "line": 170,
           "kind": "FunctionDef"
         },
         {
           "name": "api_whatsapp_simulate_chat",
-          "line": 181,
+          "line": 178,
           "kind": "FunctionDef"
         },
         {
           "name": "api_whatsapp_webhook",
-          "line": 203,
+          "line": 200,
           "kind": "FunctionDef"
         },
         {
           "name": "api_whatsapp_qrcode",
-          "line": 268,
+          "line": 265,
           "kind": "FunctionDef"
         },
         {
           "name": "api_whatsapp_sync_status",
-          "line": 277,
+          "line": 274,
           "kind": "FunctionDef"
         },
         {
           "name": "api_whatsapp_restart_instance",
-          "line": 286,
+          "line": 283,
           "kind": "FunctionDef"
         }
       ]
@@ -16606,7 +16611,7 @@
       "endpoint": "whatsapp_dashboard",
       "handler": "whatsapp_dashboard",
       "file": "web/routes/whatsapp.py",
-      "line": 36
+      "line": 37
     },
     {
       "rule": "/whatsapp/templates",
@@ -16617,7 +16622,7 @@
       "endpoint": "whatsapp_templates_page",
       "handler": "whatsapp_templates_page",
       "file": "web/routes/whatsapp.py",
-      "line": 63
+      "line": 60
     },
     {
       "rule": "/whatsapp/broadcast",
@@ -16628,7 +16633,7 @@
       "endpoint": "whatsapp_broadcast_page",
       "handler": "whatsapp_broadcast_page",
       "file": "web/routes/whatsapp.py",
-      "line": 71
+      "line": 68
     },
     {
       "rule": "/whatsapp/logs",
@@ -16639,7 +16644,7 @@
       "endpoint": "whatsapp_logs_page",
       "handler": "whatsapp_logs_page",
       "file": "web/routes/whatsapp.py",
-      "line": 85
+      "line": 82
     },
     {
       "rule": "/whatsapp/simulator",
@@ -16650,7 +16655,7 @@
       "endpoint": "whatsapp_simulator_page",
       "handler": "whatsapp_simulator_page",
       "file": "web/routes/whatsapp.py",
-      "line": 100
+      "line": 97
     },
     {
       "rule": "/api/whatsapp/settings/save",
@@ -16661,7 +16666,7 @@
       "endpoint": "api_whatsapp_save_settings",
       "handler": "api_whatsapp_save_settings",
       "file": "web/routes/whatsapp.py",
-      "line": 117
+      "line": 114
     },
     {
       "rule": "/api/whatsapp/templates/save",
@@ -16672,7 +16677,7 @@
       "endpoint": "api_whatsapp_save_template",
       "handler": "api_whatsapp_save_template",
       "file": "web/routes/whatsapp.py",
-      "line": 126
+      "line": 123
     },
     {
       "rule": "/api/whatsapp/send-test",
@@ -16683,7 +16688,7 @@
       "endpoint": "api_whatsapp_send_test",
       "handler": "api_whatsapp_send_test",
       "file": "web/routes/whatsapp.py",
-      "line": 143
+      "line": 140
     },
     {
       "rule": "/api/whatsapp/broadcast/send",
@@ -16694,7 +16699,7 @@
       "endpoint": "api_whatsapp_send_broadcast",
       "handler": "api_whatsapp_send_broadcast",
       "file": "web/routes/whatsapp.py",
-      "line": 157
+      "line": 154
     },
     {
       "rule": "/api/whatsapp/logs/clear",
@@ -16705,7 +16710,7 @@
       "endpoint": "api_whatsapp_clear_logs",
       "handler": "api_whatsapp_clear_logs",
       "file": "web/routes/whatsapp.py",
-      "line": 173
+      "line": 170
     },
     {
       "rule": "/api/whatsapp/simulate-chat",
@@ -16716,7 +16721,7 @@
       "endpoint": "api_whatsapp_simulate_chat",
       "handler": "api_whatsapp_simulate_chat",
       "file": "web/routes/whatsapp.py",
-      "line": 181
+      "line": 178
     },
     {
       "rule": "/api/whatsapp/webhook",
@@ -16728,7 +16733,7 @@
       "endpoint": "api_whatsapp_webhook",
       "handler": "api_whatsapp_webhook",
       "file": "web/routes/whatsapp.py",
-      "line": 203
+      "line": 200
     },
     {
       "rule": "/api/whatsapp/qrcode",
@@ -16739,7 +16744,7 @@
       "endpoint": "api_whatsapp_qrcode",
       "handler": "api_whatsapp_qrcode",
       "file": "web/routes/whatsapp.py",
-      "line": 268
+      "line": 265
     },
     {
       "rule": "/api/whatsapp/sync-status",
@@ -16750,7 +16755,7 @@
       "endpoint": "api_whatsapp_sync_status",
       "handler": "api_whatsapp_sync_status",
       "file": "web/routes/whatsapp.py",
-      "line": 277
+      "line": 274
     },
     {
       "rule": "/api/whatsapp/restart-instance",
@@ -16761,7 +16766,7 @@
       "endpoint": "api_whatsapp_restart_instance",
       "handler": "api_whatsapp_restart_instance",
       "file": "web/routes/whatsapp.py",
-      "line": 286
+      "line": 283
     }
   ],
   "parse_errors": []

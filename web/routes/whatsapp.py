@@ -17,7 +17,8 @@ from services.whatsapp_service import (
     get_all_templates, get_template_by_key, save_template,
     get_whatsapp_logs, clear_whatsapp_logs, send_whatsapp_message,
     process_incoming_whatsapp_message, send_broadcast_campaign,
-    get_evolution_qr_code, get_evolution_connection_state, restart_evolution_instance
+    get_evolution_qr_code, get_evolution_connection_state, restart_evolution_instance,
+    LOG_STATUS_SUMMARY_SQL
 )
 from database.db import query_all, query_one
 
@@ -36,11 +37,7 @@ whatsapp_bp = Blueprint('whatsapp_bp', __name__)
 def whatsapp_dashboard():
     settings = get_whatsapp_settings()
     templates = get_all_templates()
-    logs_summary = query_all("""
-        SELECT status, COUNT(*) as cnt 
-        FROM wisp_whatsapp_logs 
-        GROUP BY status
-    """)
+    logs_summary = query_all(LOG_STATUS_SUMMARY_SQL)
     stats = {
         'total': sum(r['cnt'] for r in logs_summary) if logs_summary else 0,
         'sent': sum(r['cnt'] for r in logs_summary if r['status'] in ('sent', 'delivered')) if logs_summary else 0,

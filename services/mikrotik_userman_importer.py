@@ -321,8 +321,9 @@ def parse_rsc_content(raw_text):
                     
                     limitations[l_name] = {
                         'name': l_name,
-                        'rate_down': f"{rx_k}k" if rx_k else "10M",
-                        'rate_up': f"{tx_k}k" if tx_k else "5M",
+                        # Router speed for reference only; imported packages get no speed.
+                        'rate_down': f"{rx_k}k" if rx_k else "",
+                        'rate_up': f"{tx_k}k" if tx_k else "",
                         'quota_mb': download_mb,
                         'uptime_mins': uptime_mins
                     }
@@ -372,12 +373,12 @@ def parse_rsc_content(raw_text):
             profiles[p_name]['quota_mb'] = lim['quota_mb']
             profiles[p_name]['uptime_mins'] = lim['uptime_mins']
 
-    # Default fallback for profiles without explicit limitations
+    # Profiles without limitations have no speed (never an invented default).
     for p_name, p in profiles.items():
         if 'rate_down' not in p:
-            p['rate_down'] = '10M'
+            p['rate_down'] = ''
         if 'rate_up' not in p:
-            p['rate_up'] = '5M'
+            p['rate_up'] = ''
         if 'quota_mb' not in p:
             p['quota_mb'] = extract_quota_from_name(p.get('name')) or extract_quota_from_name(p.get('name_for_users'))
         if 'uptime_mins' not in p:
@@ -560,8 +561,9 @@ def fetch_userman_via_api(host, username, password, port=8728, use_ssl=False, ti
             uptime_mins = parse_mikrotik_uptime_to_mins(uptime_raw or 0) if uptime_raw else 0
 
             limit_map[l_name] = {
-                'rate_down': f"{rx_k}k" if rx_k else "10M",
-                'rate_up': f"{tx_k}k" if tx_k else "5M",
+                # Router speed for reference only; imported packages get no speed.
+                'rate_down': f"{rx_k}k" if rx_k else "",
+                'rate_up': f"{tx_k}k" if tx_k else "",
                 'quota_mb': quota_mb,
                 'uptime_mins': uptime_mins
             }
@@ -591,8 +593,8 @@ def fetch_userman_via_api(host, username, password, port=8728, use_ssl=False, ti
             'price': float(re.sub(r'[^\d.]', '', str(p.get('price', 0.0) or 0)) or 0.0),
             'validity_value': val_v,
             'validity_unit': val_u,
-            'rate_down': lim_info.get('rate_down', '10M'),
-            'rate_up': lim_info.get('rate_up', '5M'),
+            'rate_down': lim_info.get('rate_down', ''),
+            'rate_up': lim_info.get('rate_up', ''),
             'quota_mb': p_quota,
             'uptime_mins': lim_info.get('uptime_mins', 0),
             'override_shared_users': parse_shared_users(p.get('override-shared-users', 1))

@@ -1800,7 +1800,8 @@ function renderMikrotikPreview(data, sourceLabel) {
                 '<span>' + (p.name || '') + '</span>' +
                 (p.name_for_users && p.name_for_users !== p.name ? '<span class="text-[10px] text-slate-500">(' + p.name_for_users + ')</span>' : '') +
             '</td>' +
-            '<td class="p-3 text-cyan-300 font-mono">' + (p.rate_down || '10M') + ' / ' + (p.rate_up || '5M') + '</td>' +
+            // Imported packages never get a speed; cards use the hotspot domain speed if chosen.
+            '<td class="p-3 text-slate-400" title="الباقة تُنشأ بلا سرعة؛ تُطبق سرعة الدومين إن اختارها المستخدم">بدون سرعة</td>' +
             '<td class="p-3">' + (p.validity_value || 30) + ' ' + (p.validity_unit === 'days' ? 'أيام' : (p.validity_unit === 'hours' ? 'ساعات' : p.validity_unit)) + '</td>' +
             '<td class="p-3 font-mono">' + quotaText + '</td>' +
             '<td class="p-3 font-mono">' + uptimeText + '</td>' +

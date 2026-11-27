@@ -30,6 +30,39 @@ from core.time_service import get_system_now, get_system_now_str
 
 logger = logging.getLogger('whatsapp_service')
 
+# wisp_whatsapp_templates stores template_key / message_body / is_active
+# (database/schema_mysql.sql, schema_healer.py). Callers and the templates page
+# use event_key / template_text / is_enabled, so reads alias the real columns.
+_TEMPLATE_SELECT = ("SELECT id, template_key AS event_key, title, category, message_body AS template_text, "
+                    "is_active AS is_enabled, variables_hint, updated_at FROM wisp_whatsapp_templates")
+
+# Defaults are seeded once per process; a failed attempt is retried at most
+# every _SEED_RETRY_SECONDS instead of on every message.
+_SEED_RETRY_SECONDS = 300
+_seed_state = {'done': False, 'last_failure': 0.0}
+_seed_lock = threading.Lock()
+
+# wisp_whatsapp_logs stores recipient_phone / entity_type, direction as
+# enum('inbound','outbound') and status as enum('pending','sent','delivered',
+# 'read','failed'). The pages use phone_number / event_type, 'in'/'out' and
+# 'received' for inbound messages, so writes map and reads alias.
+_LOG_STATUSES = ('pending', 'sent', 'delivered', 'read', 'failed')
+_LOG_SELECT = ("SELECT id, CASE WHEN direction = 'inbound' THEN 'in' ELSE 'out' END AS direction, "
+               "recipient_phone AS phone_number, message_body, message_type, entity_type AS event_type, "
+               "CASE WHEN direction = 'inbound' THEN 'received' ELSE status END AS status, "
+               "error_message, entity_id, created_at FROM wisp_whatsapp_logs")
+LOG_STATUS_SUMMARY_SQL = ("SELECT CASE WHEN direction = 'inbound' THEN 'received' ELSE status END AS status, "
+                          "COUNT(*) AS cnt FROM wisp_whatsapp_logs "
+                          "GROUP BY CASE WHEN direction = 'inbound' THEN 'received' ELSE status END")
+
+# The schema has no bot-session table, so the conversation state ("awaiting a
+# card number") lives in this process for _SESSION_TTL_SECONDS of inactivity.
+# A Web restart returns an open conversation to the main menu.
+_SESSION_TTL_SECONDS = 1800
+_sessions = {}
+_sessions_lock = threading.Lock()
+_session_ids = iter(range(1, 2 ** 62))
+
 DEFAULT_TEMPLATES = [
     {
         'event_key': 'welcome_menu',
@@ -98,27 +131,38 @@ DEFAULT_TEMPLATES = [
 
 
 def seed_default_whatsapp_data():
-    """Ensures default settings and templates exist in the database."""
-    try:
-        settings = query_one("SELECT id FROM wisp_whatsapp_settings LIMIT 1")
-        if not settings:
-            execute_write(
-                """INSERT INTO wisp_whatsapp_settings 
-                (gateway_provider, api_endpoint, instance_name, is_bot_enabled, is_notifications_enabled, status)
-                VALUES ('simulator', 'http://localhost:8080', 'alpha_radius_bot', 1, 1, 'connected')"""
-            )
-            logger.info("Default WhatsApp settings initialized.")
+    """Ensures default settings and templates exist in the database (once per process)."""
+    if _seed_state['done'] or time.monotonic() - _seed_state['last_failure'] < _SEED_RETRY_SECONDS:
+        return
+    with _seed_lock:
+        if _seed_state['done']:
+            return
+        try:
+            _seed_default_whatsapp_rows()
+            _seed_state['done'] = True
+        except Exception as e:
+            _seed_state['last_failure'] = time.monotonic()
+            logger.warning(f"Error seeding WhatsApp default data: {e}")
 
-        for tmpl in DEFAULT_TEMPLATES:
-            exists = query_one("SELECT id FROM wisp_whatsapp_templates WHERE event_key = ?", (tmpl['event_key'],))
-            if not exists:
-                execute_write(
-                    """INSERT INTO wisp_whatsapp_templates (event_key, title, template_text, is_enabled)
-                    VALUES (?, ?, ?, 1)""",
-                    (tmpl['event_key'], tmpl['title'], tmpl['template_text'])
-                )
-    except Exception as e:
-        logger.warning(f"Error seeding WhatsApp default data: {e}")
+
+def _seed_default_whatsapp_rows():
+    settings = query_one("SELECT id FROM wisp_whatsapp_settings LIMIT 1")
+    if not settings:
+        execute_write(
+            """INSERT INTO wisp_whatsapp_settings
+            (gateway_provider, api_endpoint, instance_name, is_bot_enabled, is_notifications_enabled, status)
+            VALUES ('simulator', 'http://localhost:8080', 'alpha_radius_bot', 1, 1, 'connected')"""
+        )
+        logger.info("Default WhatsApp settings initialized.")
+
+    for tmpl in DEFAULT_TEMPLATES:
+        exists = query_one("SELECT id FROM wisp_whatsapp_templates WHERE template_key = ?", (tmpl['event_key'],))
+        if not exists:
+            execute_write(
+                """INSERT INTO wisp_whatsapp_templates (template_key, title, message_body, is_active)
+                VALUES (?, ?, ?, 1)""",
+                (tmpl['event_key'], tmpl['title'], tmpl['template_text'])
+            )
 
 
 def get_whatsapp_settings():
@@ -271,13 +315,14 @@ def restart_evolution_instance():
 def get_all_templates():
     """Fetches all customizable message templates."""
     seed_default_whatsapp_data()
-    rows = query_all("SELECT * FROM wisp_whatsapp_templates ORDER BY id ASC")
+    rows = query_all(_TEMPLATE_SELECT + " ORDER BY id ASC")
     return [dict(r) for r in rows] if rows else []
 
 
 def get_template_by_key(event_key):
-    """Fetches a specific template by event key."""
-    row = query_one("SELECT * FROM wisp_whatsapp_templates WHERE event_key = ?", (event_key,))
+    """Fetches a specific template by event key (stored as template_key)."""
+    seed_default_whatsapp_data()
+    row = query_one(_TEMPLATE_SELECT + " WHERE template_key = ?", (event_key,))
     return dict(row) if row else None
 
 
@@ -285,7 +330,7 @@ def get_template_by_key(event_key):
 def save_template(template_id, title, template_text, is_enabled=1):
     """Updates a message template."""
     execute_update(
-        "UPDATE wisp_whatsapp_templates SET title = ?, template_text = ?, is_enabled = ? WHERE id = ?",
+        "UPDATE wisp_whatsapp_templates SET title = ?, message_body = ?, is_active = ? WHERE id = ?",
         (title, template_text, is_enabled, template_id)
     )
     return True, "تم تحديث القالب بنجاح."
@@ -318,12 +363,18 @@ def clean_phone_number(raw_phone):
 
 def log_whatsapp_message(direction, phone_number, message_body, message_type='text', event_type='bot_reply', status='sent', error_message=None):
     """Logs message into database audit stream."""
+    inbound = direction in ('in', 'inbound')
+    if inbound:
+        status = 'delivered'   # the enum has no 'received'; reads report inbound rows as 'received'
+    elif status not in _LOG_STATUSES:
+        status = 'sent'
     try:
         execute_write(
-            """INSERT INTO wisp_whatsapp_logs 
-            (direction, phone_number, message_body, message_type, event_type, status, error_message)
+            """INSERT INTO wisp_whatsapp_logs
+            (direction, recipient_phone, message_body, message_type, entity_type, status, error_message)
             VALUES (?, ?, ?, ?, ?, ?, ?)""",
-            (direction, clean_phone_number(phone_number), message_body, message_type, event_type, status, error_message)
+            ('inbound' if inbound else 'outbound', (clean_phone_number(phone_number) or '')[:30],
+             message_body or '', (message_type or 'text')[:30], (event_type or '')[:30] or None, status, error_message)
         )
     except Exception as e:
         logger.error(f"Error logging WhatsApp message: {e}")
@@ -331,13 +382,15 @@ def log_whatsapp_message(direction, phone_number, message_body, message_type='te
 
 def get_whatsapp_logs(limit=100, filter_status=None, filter_phone=None):
     """Fetches message audit logs with optional filtering."""
-    sql = "SELECT * FROM wisp_whatsapp_logs WHERE 1=1"
+    sql = _LOG_SELECT + " WHERE 1=1"
     params = []
-    if filter_status and filter_status != 'all':
-        sql += " AND status = ?"
+    if filter_status == 'received':
+        sql += " AND direction = 'inbound'"
+    elif filter_status and filter_status != 'all':
+        sql += " AND direction = 'outbound' AND status = ?"
         params.append(filter_status)
     if filter_phone:
-        sql += " AND phone_number LIKE ?"
+        sql += " AND recipient_phone LIKE ?"
         params.append(f"%{filter_phone}%")
     sql += " ORDER BY id DESC LIMIT ?"
     params.append(int(limit))
@@ -460,27 +513,29 @@ def send_whatsapp_message(phone_number, message_text, event_type='manual', messa
 def get_or_create_session(phone_number, sender_name=''):
     """Retrieves or creates conversational state for the given phone number."""
     phone = clean_phone_number(phone_number)
-    row = query_one("SELECT * FROM wisp_whatsapp_sessions WHERE phone_number = ?", (phone,))
-    if not row:
-        execute_write(
-            "INSERT INTO wisp_whatsapp_sessions (phone_number, sender_name, current_state) VALUES (?, ?, 'idle')",
-            (phone, sender_name)
-        )
-        row = query_one("SELECT * FROM wisp_whatsapp_sessions WHERE phone_number = ?", (phone,))
-    else:
-        execute_update(
-            "UPDATE wisp_whatsapp_sessions SET last_interaction_at = CURRENT_TIMESTAMP, sender_name = ? WHERE id = ?",
-            (sender_name or row['sender_name'], row['id'])
-        )
-    return dict(row)
+    now = time.monotonic()
+    with _sessions_lock:
+        for key in [k for k, s in _sessions.items() if now - s['touched'] > _SESSION_TTL_SECONDS]:
+            del _sessions[key]
+        session = _sessions.get(phone)
+        if session is None:
+            session = _sessions[phone] = {'id': next(_session_ids), 'phone_number': phone, 'sender_name': sender_name,
+                                          'current_state': 'idle', 'session_data': None}
+        elif sender_name:
+            session['sender_name'] = sender_name
+        session['touched'] = now
+        return {k: v for k, v in session.items() if k != 'touched'}
 
 
 def update_session_state(session_id, state, data=None):
     """Updates the user session conversation state."""
-    execute_update(
-        "UPDATE wisp_whatsapp_sessions SET current_state = ?, session_data = ? WHERE id = ?",
-        (state, json.dumps(data) if data else None, session_id)
-    )
+    with _sessions_lock:
+        for session in _sessions.values():
+            if session['id'] == session_id:
+                session['current_state'] = state
+                session['session_data'] = json.dumps(data) if data else None
+                session['touched'] = time.monotonic()
+                return
 
 
 def query_voucher_status(search_term):
@@ -572,7 +627,7 @@ def query_subscriber_status(search_term):
     return {
         'username': s['username'],
         'full_name': s.get('full_name') or s['username'],
-        'status': 'نشط' if s.get('is_active', 1) else 'موقف',
+        'status': {'active': 'نشط', 'expired': 'منتهي'}.get(s.get('status') or 'active', 'موقف'),
         'package_name': s['package_name'] or 'باقة منزلية',
         'price': s['price'] or 0,
         'used_mb': used_mb,
@@ -722,7 +777,8 @@ _أرسل 0 للعودة للقائمة الرئيسية._"""
 📍 *إدارة شبكة:* {APP_NAME}"""
 
     # Direct card inquiry if user sends a voucher-like string directly (e.g. 4+ digits/chars)
-    elif len(cmd) >= 4 and not ' ' in cmd and not cmd in ('0', 'menu', 'قائمة', 'أوامر'):
+    # (the reseller words below are 4+ characters too and must reach their own branch)
+    elif len(cmd) >= 4 and not ' ' in cmd and not cmd in ('0', 'menu', 'قائمة', 'أوامر', 'محفظتي', 'وكيل'):
         v_auto = query_voucher_status(cmd)
         if v_auto:
             status_text = {
@@ -743,13 +799,16 @@ _أرسل 0 للعودة للقائمة الرئيسية._"""
 
     # Reseller Wallet Check shortcut (for registered resellers)
     elif cmd in ('محفظتي', 'رصيد المحفظة', 'وكيل'):
-        reseller = query_one("SELECT * FROM wisp_resellers WHERE phone = ? LIMIT 1", (phone,))
+        # Wallets live on wisp_managers (services/reseller_wallet_service.py); wisp_resellers is legacy.
+        reseller = query_one(
+            """SELECT full_name, username, wallet_balance, commission_percent FROM wisp_managers
+               WHERE phone = ? AND is_active = 1 AND is_deleted = 0 LIMIT 1""", (phone,))
         if reseller:
             return f"""💼 *بيانات محفظة الوكيل:*
 ━━━━━━━━━━━━━━━━━━
-👤 *الوكيل:* {reseller['name']}
-💰 *رصيد المحفظة الحالي:* *{reseller['wallet_balance']} ريال*
-📦 *نسبة الخصم:* {reseller.get('discount_percent', 0)}%
+👤 *الوكيل:* {reseller['full_name'] or reseller['username']}
+💰 *رصيد المحفظة الحالي:* *{reseller['wallet_balance'] or 0} ريال*
+📦 *نسبة العمولة:* {reseller['commission_percent'] or 0}%
 ━━━━━━━━━━━━━━━━━━"""
 
     # Default / Welcome Menu
@@ -843,7 +902,7 @@ def send_broadcast_campaign(target_audience, message_text, specific_reseller_id=
     if target_audience in ('all_subscribers', 'active_subscribers'):
         sql = "SELECT DISTINCT phone, username FROM wisp_subscribers WHERE phone IS NOT NULL AND phone != ''"
         if target_audience == 'active_subscribers':
-            sql += " AND is_active = 1"
+            sql += " AND status = 'active'"
         rows = query_all(sql)
         if rows:
             recipients.extend([r['phone'] for r in rows])
